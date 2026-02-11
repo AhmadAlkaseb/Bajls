@@ -32,8 +32,7 @@ Sadek Alsukafi
 | **List of figures** | *(To be filled in)* |
 | **List of appendices** | *(To be filled in)* |
 
-\thispagestyle{empty}
-\newpage
+<div style="page-break-before: always;"></div>
 
 ## 1. Introduction
 
@@ -73,7 +72,39 @@ The player experience includes:
 The game architecture must support both regular players and
 administrators who manage the system.
 
+### 1.2. Explanation of choices for databases and programming languages, and other tools
+
+The project uses **PostgreSQL** as the database system because the
+domain is strongly relational and depends on strict integrity rules.
+PostgreSQL gives stable transactional behavior, strong foreign-key
+enforcement, and good support for normalized schemas with bridge tables
+such as `gang_affiliations`.
+
+The application is implemented in **Java 17** with **Maven** as the
+build tool. Java was selected because the project team works with an
+object-oriented domain model, and Java integrates directly with JPA
+annotations for entity mapping. Maven provides predictable dependency
+management and reproducible builds across environments.
+
+For persistence, the project uses **Hibernate (JPA)**. This allows the
+team to model business entities (`Profile`, `GameCharacter`, `House`,
+`Gang`, lookup tables) directly in code and keep the SQL schema aligned
+through mapping metadata. Hibernate is configured for PostgreSQL and
+supports both local development and deployment profiles through
+environment variables.
+
+Additional tools include:
+
+-   **Lombok** for reducing boilerplate code in entities (getters,
+    setters, constructors, builders).
+-   **Testcontainers** for disposable PostgreSQL instances during tests,
+    which improves repeatability and reduces local setup variance.
+-   **pgAdmin** for visual inspection of the physical schema and foreign
+    key network.
+
 ------------------------------------------------------------------------
+
+<div style="page-break-before: always;"></div>
 
 ## 2. Requirements
 
@@ -82,6 +113,36 @@ inspired by Roblox. The purpose is to clearly define persons, profiles,
 characters, and their relationships in the system. The system must
 enforce strict rules to ensure data integrity, logical consistency, and
 reliable gameplay functionality.
+
+### 2.1. Intro to relational databases
+
+A relational database organizes information in tables connected by
+keys. This model is suitable for the RPG domain because core business
+rules are relationship-based: one profile can own many characters, each
+character must belong to exactly one profile, and gang membership is
+many-to-many through a bridge table.
+
+Relational systems are also appropriate when consistency is more
+important than schema flexibility. In this project, invalid states such
+as characters without profiles, houses without owners, or duplicate
+membership records must be prevented in the database itself. PostgreSQL
+handles this through primary keys, foreign keys, unique constraints, and
+transaction guarantees.
+
+### 2.2. Database design
+
+The database design follows a layered progression from requirements to
+implementation:
+
+-   First, domain requirements define mandatory entities and
+    cardinalities.
+-   Next, the conceptual and logical models translate those rules into
+    normalized relations.
+-   Finally, the physical model implements data types, keys, and
+    constraints in PostgreSQL/Hibernate.
+
+This process ensures that design decisions are traceable from business
+rules to concrete table definitions and mapping annotations.
 
 ### Profile and Role Requirements
 
@@ -185,7 +246,9 @@ database modeling.
 
 ------------------------------------------------------------------------
 
-## 2.2.1. Entity/Relationship Model (Conceptual -> Logical -> Physical model)
+<div style="page-break-before: always;"></div>
+
+### 2.2.1. Entity/Relationship Model (Conceptual -> Logical -> Physical model)
 
 This section presents the entity/relationship progression from
 conceptual understanding to logical structure, and prepares the
@@ -240,6 +303,33 @@ The model includes the following core entities:
     A character may join zero or more gangs, and each gang may contain
     multiple characters.
 
+### Cardinality and Modality
+
+In this project, relationship rules are described using both
+**cardinality** and **modality**:
+
+-   **Cardinality** defines the maximum number of related rows (for
+    example one-to-one, one-to-many, many-to-many).
+-   **Modality** defines whether participation is mandatory or optional
+    (minimum 1 or minimum 0).
+
+Applied to our model:
+
+-   `Profile` -> `Character`: cardinality is one-to-many, modality is
+    mandatory on `Character` side (every character must have one
+    profile) and optional on profile side (a profile can exist with zero
+    characters).
+-   `Character` -> `House`: cardinality is one-to-one, modality is
+    mandatory on character side in our JPA mapping because
+    `characters.house_id` is `NOT NULL` and `UNIQUE`. On house side, a
+    house can exist without being referenced by a character unless extra
+    business rules are added.
+-   `Character` <-> `Gang`: cardinality is many-to-many via
+    `gang_affiliations`, modality is optional on both sides (0..N).
+-   `Character` -> attribute lookup tables (`Gender`, `Weight`,
+    `Height`, `EyeColor`, `SkinColor`): cardinality is many-to-one,
+    modality is mandatory on character side because each FK is required.
+
 The conceptual model also defines participation rules. Participation is
 mandatory for `Character` to `Profile`, `Character` to `House`, and
 `Character` to each appearance category because these are required for
@@ -280,7 +370,7 @@ enough to be implemented consistently.
     `gender_id` FK, `weight_id` FK, `height_id` FK, `eyecolor_id` FK,
     `skincolor_id` FK)
 -   **Houses** (`house_id` PK, amount_rooms, amount_bathrooms,
-    `character_id` FK UNIQUE)
+    inverse 1:1 link)
 -   **Gangs** (`gang_id` PK, name, type)
 -   **Gang_Affiliations** (`character_id` FK, `gang_id` FK, join_date,
     composite PK)
@@ -302,7 +392,7 @@ editing every character row.
 -   Each `Character` must reference exactly one value in each attribute
     lookup table.
 -   `Character` and `House` are modeled as a one-to-one relation via a
-    unique foreign key.
+    unique foreign key (`characters.house_id`).
 -   `Character` and `Gang` are modeled through the bridge table
     `Gang_Affiliations` (many-to-many).
 
@@ -313,7 +403,7 @@ strategy and uniqueness boundaries:
     tables.
 -   `username` should be unique at profile level to guarantee a single
     login identity per player.
--   `houses.character_id` is unique to enforce one house per character.
+-   `characters.house_id` is unique to enforce one house per character.
 -   `gang_affiliations` uses a composite key (`character_id`, `gang_id`)
     to prevent duplicate membership records.
 
@@ -326,7 +416,9 @@ before physical optimization in PostgreSQL.
 
 ------------------------------------------------------------------------
 
-## 2.2.2. Normalization process
+<div style="page-break-before: always;"></div>
+
+### 2.2.2. Normalization process
 
 Normalization is applied to ensure that data is stored once, updated in
 one place, and queried without contradictions. The goal is to eliminate
@@ -369,6 +461,8 @@ reliable base for physical implementation.
 
 ------------------------------------------------------------------------
 
+<div style="page-break-before: always;"></div>
+
 ## 2.3. Physical data model
 
 The physical model is the concrete PostgreSQL implementation of the
@@ -379,14 +473,14 @@ table structure and foreign-key network used by the project.
 
 ### Physical Diagram
 
-![Physical data model in PostgreSQL (pgAdmin)](images/physical-model-2026-02-10.png)
+![Physical data model in PostgreSQL](images/physical-model-2026-02-10.png)
 
 ### Implementation Details
 
 -   Primary keys are implemented as integer identifiers (`id`).
 -   Foreign keys are created between dependent tables to enforce
     referential integrity.
--   The `houses.character_id` column is unique, enforcing one house per
+-   The `characters.house_id` column is unique, enforcing one house per
     character.
 -   The `gang_affiliations` table stores many-to-many links between
     characters and gangs, including `join_date`.
@@ -415,7 +509,27 @@ Operationally, the physical design also supports maintainability:
 -   Stable lookup tables for controlled enumerations.
 -   Predictable join paths for reporting and administration tools.
 
-### Data Types
+### Cardinality and Modality in the Physical Model
+
+At the physical level, cardinality and modality are enforced through
+foreign keys, uniqueness, and nullability:
+
+-   `profiles.role_id` is `NOT NULL` and references `roles.id`, so each
+    profile must have exactly one role (mandatory many-to-one).
+-   `characters.profile_id` is `NOT NULL`, so each character must belong
+    to one profile, while a profile can still have zero or many
+    characters.
+-   `characters.house_id` is both `NOT NULL` and `UNIQUE`, enforcing one
+    mandatory house per character and preventing multiple characters from
+    referencing the same house.
+-   Attribute foreign keys in `characters` (`gender_id`, `weight_id`,
+    `height_id`, `eyecolor_id`, `skincolor_id`) are mandatory, which
+    enforces complete character definitions.
+-   `gang_affiliations` implements optional many-to-many membership:
+    both sides can have zero or many links, while each link row must
+    reference exactly one character and one gang.
+
+### 2.3.1. Data types
 
 -   `INTEGER` for primary and foreign keys
 -   `VARCHAR(20)` for names and short text values
@@ -429,3 +543,48 @@ and date storage supports timeline analysis of gang membership. If
 future requirements demand larger values or stricter validation, the
 model can be extended with wider text constraints, check constraints,
 and additional indexes without breaking the current structure.
+
+### 2.3.2. Primary and foreign keys
+
+Primary keys are implemented as surrogate integer IDs with
+auto-generation (`GenerationType.IDENTITY`) in all main tables. This
+gives stable identifiers independent of mutable business attributes.
+
+Foreign keys encode the core relationships:
+
+-   `characters.profile_id` -> `profiles.id`
+-   `characters.gender_id` -> `genders.id`
+-   `characters.skincolor_id` -> `skincolors.id`
+-   `characters.eyecolor_id` -> `eyecolors.id`
+-   `characters.height_id` -> `heights.id`
+-   `characters.weight_id` -> `weights.id`
+-   `profiles.role_id` -> `roles.id`
+-   `characters.house_id` -> `houses.id` (unique)
+-   `gang_affiliations.character_id` -> `characters.id`
+-   `gang_affiliations.gang_id` -> `gangs.id`
+
+The many-to-many relation between characters and gangs is implemented
+with `gang_affiliations`, where the composite key
+(`character_id`, `gang_id`) prevents duplicate memberships for the same
+pair.
+
+### 2.3.4. Constraints and referential integrity
+
+The schema enforces integrity through a combination of column
+constraints and relationship constraints:
+
+-   `NOT NULL` is used on mandatory attributes (for example profile
+    names, credentials, role references, character references, and
+    `join_date`).
+-   `UNIQUE` constraints prevent duplicates on identity-like values:
+    `profiles.email`, `profiles.username`, `gangs.name`, and
+    `characters.house_id`.
+-   Foreign-key constraints ensure references remain valid across table
+    boundaries. Examples include `fk_profiles_role`,
+    `fk_characters_profile`, `fk_characters_house`, `fk_gang_aff_char`,
+    and `fk_gang_aff_gang`.
+
+In JPA/Hibernate mappings, required references are also marked with
+`optional = false`, which aligns object-level validation with database
+rules. Together, these constraints protect against orphan rows,
+inconsistent ownership, and duplicate relationship records.

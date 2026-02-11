@@ -3,7 +3,6 @@ package persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +53,13 @@ public class GameCharacter {
     @ToString.Exclude
     private Weight weight;
 
-    @OneToOne(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "house_id",
+            nullable = false,
+            unique = true,
+            foreignKey = @ForeignKey(name = "fk_characters_house")
+    )
     @ToString.Exclude
     private House house;
 

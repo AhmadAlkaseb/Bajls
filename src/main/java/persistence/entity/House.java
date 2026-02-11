@@ -19,14 +19,7 @@ public class House {
     @Column(name = "amount_bathrooms", nullable = false)
     private int amountBathrooms;
 
-    // 1:1 til character
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "character_id",
-            nullable = false,
-            unique = true,
-            foreignKey = @ForeignKey(name = "fk_houses_character")
-    )
+    @OneToOne(mappedBy = "house", fetch = FetchType.LAZY, optional = false)
     @ToString.Exclude
     private GameCharacter character;
 }
