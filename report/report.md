@@ -10,10 +10,8 @@ header-includes:
 
 <div align="center">
 
-# RPG Game Database Design
-### Final Version
-
-**Prepared by Group 1**
+## RPG Game Database Design
+Version 1
 
 Ahmad Abdel Razak Hussein Alkaseb  
 Benjamin Sebastian Barrales Hernandez  
@@ -72,12 +70,14 @@ The player experience includes:
 The game architecture must support both regular players and
 administrators who manage the system.
 
+<div style="page-break-before: always;"></div>
+
 ### 1.2. Explanation of choices for databases and programming languages, and other tools
 
 The project uses **PostgreSQL** as the database system because the
 domain is strongly relational and depends on strict integrity rules.
 PostgreSQL gives stable transactional behavior, strong foreign-key
-enforcement, and good support for normalized schemas with bridge tables
+enforcement, and good support for normalized schemas with junction tables
 such as `gang_affiliations`.
 
 The application is implemented in **Java 17** with **Maven** as the
@@ -88,7 +88,8 @@ management and reproducible builds across environments.
 
 For persistence, the project uses **Hibernate (JPA)**. This allows the
 team to model business entities (`Profile`, `GameCharacter`, `House`,
-`Gang`, lookup tables) directly in code and keep the SQL schema aligned
+`Gang`, `Role`, `Gender`, `Weight`, `Height`, `EyeColor`, `SkinColor`)
+directly in code and keep the SQL schema aligned
 through mapping metadata. Hibernate is configured for PostgreSQL and
 supports both local development and deployment profiles through
 environment variables.
@@ -120,7 +121,7 @@ A relational database organizes information in tables connected by
 keys. This model is suitable for the RPG domain because core business
 rules are relationship-based: one profile can own many characters, each
 character must belong to exactly one profile, and gang membership is
-many-to-many through a bridge table.
+many-to-many through a junction table.
 
 Relational systems are also appropriate when consistency is more
 important than schema flexibility. In this project, invalid states such
@@ -134,8 +135,7 @@ transaction guarantees.
 The database design follows a layered progression from requirements to
 implementation:
 
--   First, domain requirements define mandatory entities and
-    cardinalities.
+-   First, domain requirements define mandatory entities.
 -   Next, the conceptual and logical models translate those rules into
     normalized relations.
 -   Finally, the physical model implements data types, keys, and
@@ -144,9 +144,11 @@ implementation:
 This process ensures that design decisions are traceable from business
 rules to concrete table definitions and mapping annotations.
 
+<div style="page-break-before: always;"></div>
+
 ### Profile and Role Requirements
 
-#### Person and Profile
+### Person and Profile
 
 -   A person can have exactly one profile in the system.
 -   The profile represents the player's digital identity.
@@ -157,7 +159,7 @@ rules to concrete table definitions and mapping annotations.
 This ensures that each real-world player is connected to one controlled
 game identity.
 
-#### Role System
+### Role System
 
 -   A profile must have exactly one role.
 -   The role can be either `User` or `Admin`.
@@ -169,7 +171,7 @@ This establishes role-based access control in the game.
 
 ### Character Requirements
 
-#### Profile to Character Relationship
+### Profile to Character Relationship
 
 -   A profile can have one or more characters.
 -   A character must belong to exactly one profile.
@@ -178,7 +180,7 @@ This establishes role-based access control in the game.
 This creates a one-to-many relationship between `Profile` and
 `Character`.
 
-#### Character Attributes
+### Character Attributes
 
 Each character must have exactly one of each required attribute:
 
@@ -229,12 +231,11 @@ missing houses, missing roles, or duplicate role assignments.
 
 ### Relationship Summary
 
--   `Person` to `Profile`: One-to-One
--   `Profile` to `Role`: One-to-One
+-   `Profile` to `Role`: Many-to-One
 -   `Profile` to `Character`: One-to-Many
 -   `Character` to `House`: One-to-One (Mandatory)
 -   `Character` to `Gang`: Optional Many-to-Many
--   `Character` to Attributes: Exactly one value per required attribute
+-   `Character` to Attributes: Many-to-One
 
 ### Conclusion
 
@@ -284,6 +285,8 @@ The model includes the following core entities:
     attribute domains used to define mandatory character appearance
     traits.
 
+<div style="page-break-before: always;"></div>
+
 ### Key Relationships in the Diagram
 
 -   `Profiles` to `Roles`: many-to-one.
@@ -326,7 +329,7 @@ Applied to our model:
     business rules are added.
 -   `Character` <-> `Gang`: cardinality is many-to-many via
     `gang_affiliations`, modality is optional on both sides (0..N).
--   `Character` -> attribute lookup tables (`Gender`, `Weight`,
+-   `Character` -> attribute reference tables (`Gender`, `Weight`,
     `Height`, `EyeColor`, `SkinColor`): cardinality is many-to-one,
     modality is mandatory on character side because each FK is required.
 
@@ -348,14 +351,13 @@ models. It communicates business meaning to both technical and
 non-technical stakeholders, verifies that rules are complete before
 implementation, and reduces redesign risk later in the project.
 
+<div style="page-break-before: always;"></div>
+
 ### Logical Model
 
 The logical model translates the conceptual design into a normalized
-relational structure. At this level, entities are expressed as tables,
-relationships are expressed using primary and foreign keys, and business
-rules are transformed into enforceable structural constraints. The
-logical model remains DBMS-independent in principle, but it is precise
-enough to be implemented consistently.
+relational structure. At this level business rules are transformed into
+enforceable structural constraints with attributes.
 
 ### Logical Diagram
 
@@ -363,25 +365,19 @@ enough to be implemented consistently.
 
 ### Main Tables
 
--   **Profiles** (`profile_id` PK, first_name, last_name, email,
-    username, password, `role_id` FK)
--   **Roles** (`role_id` PK, name)
--   **Characters** (`character_id` PK, name, balance, `profile_id` FK,
-    `gender_id` FK, `weight_id` FK, `height_id` FK, `eyecolor_id` FK,
-    `skincolor_id` FK)
--   **Houses** (`house_id` PK, amount_rooms, amount_bathrooms,
-    inverse 1:1 link)
--   **Gangs** (`gang_id` PK, name, type)
--   **Gang_Affiliations** (`character_id` FK, `gang_id` FK, join_date,
-    composite PK)
--   **Genders, Weights, Heights, Eyecolors, Skincolors**
-    (`id` PK, `name`)
+-   **Profiles** (first_name, last_name, email, username, password)
+-   **Roles** (name)
+-   **Characters** (name, balance)
+-   **Houses** (amount_rooms, amount_bathrooms)
+-   **Gangs** (name, type)
+-   **Gang_Affiliations** (join_date)
+-   **Genders, Weights, Heights, Eyecolors, Skincolors** (name)
 
 The table layout intentionally separates high-change data from
 low-change reference data. `characters` is transaction-heavy and
-contains gameplay-relevant state, while lookup tables hold stable
+contains gameplay-relevant state, while reference tables hold stable
 classification values. This design reduces redundancy and makes updates
-predictable. For example, changing a lookup label does not require
+predictable. For example, changing a reference label does not require
 editing every character row.
 
 ### Logical Relationship Rules
@@ -390,80 +386,28 @@ editing every character row.
     profiles.
 -   One `Profile` can own many `Characters`.
 -   Each `Character` must reference exactly one value in each attribute
-    lookup table.
--   `Character` and `House` are modeled as a one-to-one relation via a
-    unique foreign key (`characters.house_id`).
--   `Character` and `Gang` are modeled through the bridge table
+    category.
+-   `Character` and `House` are modeled as a mandatory one-to-one
+    relationship.
+-   `Character` and `Gang` are modeled through the junction table
     `Gang_Affiliations` (many-to-many).
 
 In addition to these cardinalities, the logical model defines key
 strategy and uniqueness boundaries:
 
--   Surrogate keys (`id`) are used for stable identity across all main
-    tables.
 -   `username` should be unique at profile level to guarantee a single
     login identity per player.
--   `characters.house_id` is unique to enforce one house per character.
--   `gang_affiliations` uses a composite key (`character_id`, `gang_id`)
-    to prevent duplicate membership records.
 
-This structure supports both correctness and scalability. As the number
-of players grows, relationships remain clear and query paths remain
-deterministic. Typical queries, such as "all characters for profile X"
-or "all gangs for character Y," map directly to key-based joins.
-Logical clarity at this stage is critical because it minimizes ambiguity
-before physical optimization in PostgreSQL.
+This structure keeps the data model clear and easier to maintain.
+Relationships are defined in a simple way, so common queries are easier
+to build and understand before implementing the final PostgreSQL
+optimization.
 
 ------------------------------------------------------------------------
 
 <div style="page-break-before: always;"></div>
 
-### 2.2.2. Normalization process
-
-Normalization is applied to ensure that data is stored once, updated in
-one place, and queried without contradictions. The goal is to eliminate
-redundancy and avoid insertion, update, and deletion anomalies that
-would otherwise appear in gameplay data.
-
-### First Normal Form (1NF)
-
-1NF requires atomic attributes and no repeating groups in a single
-column. In this schema, all tables satisfy 1NF because each column holds
-one value per row. For example, a character does not store multiple eye
-colors or multiple gang IDs in one field. Multi-valued relationships are
-modeled through separate tables (especially `gang_affiliations`).
-
-### Second Normal Form (2NF)
-
-2NF requires that non-key attributes depend on the full primary key, not
-part of it. This is especially relevant in tables with composite keys.
-`gang_affiliations` satisfies 2NF because `join_date` depends on the
-specific combination of `character_id` and `gang_id` rather than only
-one of them. No partial dependency is present.
-
-### Third Normal Form (3NF)
-
-3NF removes transitive dependencies where non-key attributes depend on
-other non-key attributes. The schema satisfies this by separating roles,
-appearance categories, and gangs into dedicated tables referenced by
-foreign keys. For example, role names are not duplicated in `profiles`,
-and appearance labels are not duplicated in `characters`.
-
-The resulting 3NF design improves consistency and maintainability:
-
--   Changes are localized to one table.
--   Duplicate text values are minimized.
--   Integrity constraints become easier to enforce.
--   Query semantics remain stable as data volume grows.
-
-The final logical schema therefore satisfies **3NF** and provides a
-reliable base for physical implementation.
-
-------------------------------------------------------------------------
-
-<div style="page-break-before: always;"></div>
-
-## 2.3. Physical data model
+### 2.3. Physical data mode
 
 The physical model is the concrete PostgreSQL implementation of the
 logical schema. At this stage, abstract relations are converted into
@@ -484,7 +428,7 @@ table structure and foreign-key network used by the project.
     character.
 -   The `gang_affiliations` table stores many-to-many links between
     characters and gangs, including `join_date`.
--   Lookup tables (`genders`, `weights`, `heights`, `eyecolors`,
+-   Reference tables (`genders`, `weights`, `heights`, `eyecolors`,
     `skincolors`, `roles`) reduce redundancy and centralize valid
     values.
 
@@ -505,8 +449,8 @@ for common gameplay queries.
 Operationally, the physical design also supports maintainability:
 
 -   Clear naming conventions for tables and columns.
--   Dedicated bridge table for many-to-many associations.
--   Stable lookup tables for controlled enumerations.
+-   Dedicated junction table for many-to-many associations.
+-   Stable reference tables for controlled enumerations.
 -   Predictable join paths for reporting and administration tools.
 
 ### Cardinality and Modality in the Physical Model
@@ -546,9 +490,8 @@ and additional indexes without breaking the current structure.
 
 ### 2.3.2. Primary and foreign keys
 
-Primary keys are implemented as surrogate integer IDs with
-auto-generation (`GenerationType.IDENTITY`) in all main tables. This
-gives stable identifiers independent of mutable business attributes.
+Primary keys use auto-generated integer IDs (`GenerationType.IDENTITY`)
+in all main tables. This gives each row a simple and stable identifier.
 
 Foreign keys encode the core relationships:
 
@@ -584,7 +527,53 @@ constraints and relationship constraints:
     `fk_characters_profile`, `fk_characters_house`, `fk_gang_aff_char`,
     and `fk_gang_aff_gang`.
 
-In JPA/Hibernate mappings, required references are also marked with
-`optional = false`, which aligns object-level validation with database
-rules. Together, these constraints protect against orphan rows,
-inconsistent ownership, and duplicate relationship records.
+In JPA/Hibernate, required references are marked as mandatory. This
+matches the database rules and helps prevent missing links, unclear
+ownership, and duplicate relationships.
+------------------------------------------------------------------------
+
+<div style="page-break-before: always;"></div>
+
+### 2.2.2. Normalization process
+
+Normalization keeps data in one place and makes updates and queries more
+consistent. The goal is to eliminate
+redundancy and avoid insertion, update, and deletion anomalies that
+would otherwise appear in gameplay data.
+
+### First Normal Form (1NF)
+
+1NF requires atomic attributes and no repeating groups in a single
+column. In this schema, all tables satisfy 1NF because each column holds
+one value per row. For example, a character does not store multiple eye
+colors or multiple gang IDs in one field. Multi-valued relationships are
+modeled through separate tables (especially `gang_affiliations`).
+
+### Second Normal Form (2NF)
+
+2NF requires that non-key attributes depend on the full primary key, not
+part of it. This is especially relevant in tables with composite keys.
+`gang_affiliations` satisfies 2NF because `join_date` depends on the
+specific combination of `character_id` and `gang_id` rather than only
+one of them. No partial dependency is present.
+
+### Third Normal Form (3NF)
+
+3NF removes transitive dependencies where non-key attributes depend on
+other non-key attributes. The schema satisfies this by separating roles,
+appearance categories, and gangs into dedicated tables referenced by
+foreign keys. For example, role names are not duplicated in `profiles`,
+and appearance labels are not duplicated in `characters`.
+
+The resulting 3NF design improves consistency and maintainability:
+
+-   Changes are localized to one table.
+-   Duplicate text values are minimized.
+-   Integrity constraints become easier to enforce.
+-   Queries stay clear and consistent as data grows.
+
+The final logical schema therefore satisfies **3NF** and provides a
+reliable base for physical implementation.
+
+
+
