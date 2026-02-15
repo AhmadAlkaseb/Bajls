@@ -30,7 +30,7 @@ Sadek Alsukafi
 | **List of figures** | *(To be filled in)* |
 | **List of appendices** | *(To be filled in)* |
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ## 1. Introduction
 
@@ -70,7 +70,7 @@ The player experience includes:
 The game architecture must support both regular players and
 administrators who manage the system.
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ### 1.2. Explanation of choices for databases and programming languages, and other tools
 
@@ -105,7 +105,7 @@ Additional tools include:
 
 ------------------------------------------------------------------------
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ## 2. Requirements
 
@@ -144,7 +144,7 @@ implementation:
 This process ensures that design decisions are traceable from business
 rules to concrete table definitions and mapping annotations.
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ### Profile and Role Requirements
 
@@ -247,7 +247,7 @@ database modeling.
 
 ------------------------------------------------------------------------
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ### 2.2.1. Entity/Relationship Model (Conceptual -> Logical -> Physical model)
 
@@ -268,6 +268,7 @@ character entities.
 ### Conceptual Diagram
 
 ![Conceptual data model](images/conceptual-model-2026-02-10.png)
+*Date: 10.2.2026*
 
 The model includes the following core entities:
 
@@ -285,7 +286,7 @@ The model includes the following core entities:
     attribute domains used to define mandatory character appearance
     traits.
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ### Key Relationships in the Diagram
 
@@ -351,7 +352,7 @@ models. It communicates business meaning to both technical and
 non-technical stakeholders, verifies that rules are complete before
 implementation, and reduces redesign risk later in the project.
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ### Logical Model
 
@@ -362,6 +363,7 @@ enforceable structural constraints with attributes.
 ### Logical Diagram
 
 ![Logical data model](images/logical-model-2026-02-10.png)
+*Date: 10.2.2026*
 
 ### Main Tables
 
@@ -405,7 +407,7 @@ optimization.
 
 ------------------------------------------------------------------------
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ### 2.3. Physical data mode
 
@@ -418,6 +420,7 @@ table structure and foreign-key network used by the project.
 ### Physical Diagram
 
 ![Physical data model in PostgreSQL](images/physical-model-2026-02-10.png)
+*Date: 10.2.2026*
 
 ### Implementation Details
 
@@ -532,7 +535,7 @@ matches the database rules and helps prevent missing links, unclear
 ownership, and duplicate relationships.
 ------------------------------------------------------------------------
 
-<div style="page-break-before: always;"></div>
+\newpage
 
 ### 2.2.2. Normalization process
 
@@ -575,5 +578,62 @@ The resulting 3NF design improves consistency and maintainability:
 The final logical schema therefore satisfies **3NF** and provides a
 reliable base for physical implementation.
 
+------------------------------------------------------------------------
 
+\newpage
 
+## 3. Realistic Data
+
+### Introduction
+
+The project includes a dedicated seed script, `seedl.sql`, used to
+populate the database with consistent and realistic test data. The script
+is intended for repeatable demos, validation of constraints, and manual
+query testing.
+
+### Script Structure
+
+The script starts a transaction and resets all project tables with
+identity restart (`seedl.sql:1`, `seedl.sql:3`, `seedl.sql:15`).
+
+```sql
+BEGIN;
+TRUNCATE TABLE ... RESTART IDENTITY CASCADE;
+```
+
+It then inserts stable reference values (roles and character attributes)
+followed by gangs and profiles (`seedl.sql:17`, `seedl.sql:21`,
+`seedl.sql:26`, `seedl.sql:31`, `seedl.sql:36`, `seedl.sql:42`,
+`seedl.sql:47`, `seedl.sql:59`).
+
+```sql
+INSERT INTO roles (id, name) VALUES (1, 'USER'), (2, 'ADMIN');
+INSERT INTO genders (id, name) VALUES (1, 'MALE'), (2, 'FEMALE'), (3, 'OTHER');
+```
+
+### Schema-Aware Character and House Seeding
+
+To support schema variants, the script checks whether the foreign key is
+stored in `characters.house_id` or `houses.character_id` and inserts data
+accordingly (`seedl.sql:71`, `seedl.sql:92`, `seedl.sql:119`).
+
+```sql
+DO $$
+-- detect FK placement and insert houses/characters in valid order
+END $$;
+```
+
+### Gang Membership Data
+
+Gang membership is optional in the model, so only a subset of characters
+receives rows in `gang_affiliations` (`seedl.sql:151`). This intentionally
+demonstrates both states: characters with and without gang membership.
+
+```sql
+INSERT INTO gang_affiliations (character_id, gang_id, join_date) VALUES
+    (1, 2, '2025-01-12'),
+    (2, 1, '2025-02-03'),
+    (3, 7, '2025-03-22');
+```
+
+The script commits at the end (`seedl.sql:159`).
