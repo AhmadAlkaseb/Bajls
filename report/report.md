@@ -1,11 +1,14 @@
 ---
 header-includes:
-  - \usepackage{fancyhdr}
-  - \pagestyle{fancy}
-  - \fancyhf{}
-  - \fancyfoot[R]{\thepage}
-  - \renewcommand{\headrulewidth}{0pt}
-  - \renewcommand{\footrulewidth}{0pt}
+  - '\usepackage{fancyhdr}'
+  - '\pagestyle{fancy}'
+  - '\fancyhf{}'
+  - '\fancyhead[L]{\today}'
+  - '\fancyhead[C]{Database course}'
+  - '\fancyhead[R]{Bajls}'
+  - '\fancyfoot[R]{\thepage}'
+  - '\renewcommand{\headrulewidth}{0pt}'
+  - '\renewcommand{\footrulewidth}{0pt}'
 ---
 
 <div align="center">
@@ -29,6 +32,22 @@ Sadek Alsukafi
 | **Date of delivery** | *(To be filled in)* |
 | **List of figures** | *(To be filled in)* |
 | **List of appendices** | *(To be filled in)* |
+| **Number of characters (including spaces)** | 26913 |
+
+\vspace{0.5cm}
+\begin{center}
+\begin{tabular}{ccc}
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/Document3.png} &
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/Graph-Database.png} &
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/what-is-a-relational-database.jpg}
+\end{tabular}
+\end{center}
+
+\thispagestyle{empty}
+
+\newpage
+
+\tableofcontents
 
 \newpage
 
@@ -72,27 +91,32 @@ administrators who manage the system.
 
 \newpage
 
-### 1.2. Explanation of choices for databases and programming languages, and other tools
+### 1.1. Explanation of choices for databases and programming languages, and other tools
 
-The project uses **PostgreSQL** as the database system because the
+The project uses **PostgreSQL**[^postgres] as the database system because the
 domain is strongly relational and depends on strict integrity rules.
 PostgreSQL gives stable transactional behavior, strong foreign-key
 enforcement, and good support for normalized schemas with junction tables
 such as `gang_affiliations`.
 
-The application is implemented in **Java 17** with **Maven** as the
+The application is implemented in **Java 17**[^java17] with **Maven**[^maven] as the
 build tool. Java was selected because the project team works with an
 object-oriented domain model, and Java integrates directly with JPA
 annotations for entity mapping. Maven provides predictable dependency
 management and reproducible builds across environments.
 
-For persistence, the project uses **Hibernate (JPA)**. This allows the
+For persistence, the project uses **Hibernate (JPA)**[^hibernate]. This allows the
 team to model business entities (`Profile`, `GameCharacter`, `House`,
 `Gang`, `Role`, `Gender`, `Weight`, `Height`, `EyeColor`, `SkinColor`)
 directly in code and keep the SQL schema aligned
 through mapping metadata. Hibernate is configured for PostgreSQL and
 supports both local development and deployment profiles through
 environment variables.
+
+[^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
+[^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
+[^maven]: Apache Maven Documentation: https://maven.apache.org/guides/
+[^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/
 
 Additional tools include:
 
@@ -148,7 +172,7 @@ rules to concrete table definitions and mapping annotations.
 
 ### Profile and Role Requirements
 
-### Person and Profile
+#### Person and Profile
 
 -   A person can have exactly one profile in the system.
 -   The profile represents the player's digital identity.
@@ -159,7 +183,7 @@ rules to concrete table definitions and mapping annotations.
 This ensures that each real-world player is connected to one controlled
 game identity.
 
-### Role System
+#### Role System
 
 -   A profile must have exactly one role.
 -   The role can be either `User` or `Admin`.
@@ -171,7 +195,7 @@ This establishes role-based access control in the game.
 
 ### Character Requirements
 
-### Profile to Character Relationship
+#### Profile to Character Relationship
 
 -   A profile can have one or more characters.
 -   A character must belong to exactly one profile.
@@ -180,7 +204,7 @@ This establishes role-based access control in the game.
 This creates a one-to-many relationship between `Profile` and
 `Character`.
 
-### Character Attributes
+#### Character Attributes
 
 Each character must have exactly one of each required attribute:
 
@@ -195,7 +219,7 @@ have multiple values for any of these attributes. The system must
 validate that all required attributes are present before a character can
 be created.
 
-### Housing Requirement
+#### Housing Requirement
 
 -   A character must have exactly one house.
 -   A character cannot exist without an assigned house.
@@ -206,7 +230,7 @@ This creates a mandatory one-to-one relationship between `Character` and
 `House`. The system must prevent characters without houses and houses
 without assigned characters.
 
-### Gang Membership Requirement
+#### Gang Membership Requirement
 
 -   Gang membership is optional.
 -   A character can belong to zero or more gangs.
@@ -215,7 +239,7 @@ without assigned characters.
 This establishes an optional many-to-many relationship between
 `Character` and `Gang`.
 
-### Data Integrity Rules
+#### Data Integrity Rules
 
 The system must enforce the following constraints:
 
@@ -229,7 +253,7 @@ The system must enforce the following constraints:
 The system must prevent invalid states such as orphan characters,
 missing houses, missing roles, or duplicate role assignments.
 
-### Relationship Summary
+#### Relationship Summary
 
 -   `Profile` to `Role`: Many-to-One
 -   `Profile` to `Character`: One-to-Many
@@ -237,7 +261,7 @@ missing houses, missing roles, or duplicate role assignments.
 -   `Character` to `Gang`: Optional Many-to-Many
 -   `Character` to Attributes: Many-to-One
 
-### Conclusion
+#### Conclusion
 
 These requirements define the structural foundation of the RPG system.
 They ensure clear identity management, controlled permissions, complete
@@ -409,7 +433,7 @@ optimization.
 
 \newpage
 
-### 2.3. Physical data mode
+### 2.3. Physical data model
 
 The physical model is the concrete PostgreSQL implementation of the
 logical schema. At this stage, abstract relations are converted into
@@ -514,7 +538,7 @@ with `gang_affiliations`, where the composite key
 (`character_id`, `gang_id`) prevents duplicate memberships for the same
 pair.
 
-### 2.3.4. Constraints and referential integrity
+### 2.3.3. Constraints and referential integrity
 
 The schema enforces integrity through a combination of column
 constraints and relationship constraints:
@@ -537,7 +561,7 @@ ownership, and duplicate relationships.
 
 \newpage
 
-### 2.2.2. Normalization process
+### 2.4. Normalization process
 
 Normalization keeps data in one place and makes updates and queries more
 consistent. The goal is to eliminate
@@ -582,58 +606,103 @@ reliable base for physical implementation.
 
 \newpage
 
-## 3. Realistic Data
+## Realistic Data
 
 ### Introduction
 
-The project includes a dedicated seed script, `seedl.sql`, used to
-populate the database with consistent and realistic test data. The script
-is intended for repeatable demos, validation of constraints, and manual
-query testing.
+The project includes a dedicated seed script, `seedl.sql`, that creates a
+realistic baseline dataset for demos, testing, and validation. Instead
+of random values, the script inserts coherent player profiles,
+characters, houses, and gang memberships, so queries return believable
+results and relationship rules can be verified in practice.
 
 ### Script Structure
 
-The script starts a transaction and resets all project tables with
-identity restart (`seedl.sql:1`, `seedl.sql:3`, `seedl.sql:15`).
+The script starts by opening a transaction and resetting all relevant
+tables. This makes each run deterministic and easy to repeat.
+
+In this context, *deterministic* means that the script produces the same
+data state every time it is executed on the same schema.
 
 ```sql
 BEGIN;
-TRUNCATE TABLE ... RESTART IDENTITY CASCADE;
+TRUNCATE TABLE
+    gang_affiliations,
+    characters,
+    profiles,
+    gangs,
+    houses,
+    roles,
+    genders,
+    weights,
+    heights,
+    eyecolors,
+    skincolors
+RESTART IDENTITY CASCADE;
 ```
 
-It then inserts stable reference values (roles and character attributes)
-followed by gangs and profiles (`seedl.sql:17`, `seedl.sql:21`,
-`seedl.sql:26`, `seedl.sql:31`, `seedl.sql:36`, `seedl.sql:42`,
-`seedl.sql:47`, `seedl.sql:59`).
+`TRUNCATE` removes all rows from the listed tables very quickly.
+`RESTART IDENTITY` resets auto-increment IDs back to their starting
+values, and `CASCADE` ensures dependent tables are also cleared safely.
+
+After reset, the script inserts stable reference data first, followed by
+gangs and player profiles.
 
 ```sql
 INSERT INTO roles (id, name) VALUES (1, 'USER'), (2, 'ADMIN');
 INSERT INTO genders (id, name) VALUES (1, 'MALE'), (2, 'FEMALE'), (3, 'OTHER');
+INSERT INTO weights (id, name) VALUES (1, 'LIGHT'), (2, 'AVERAGE'), (3, 'HEAVY');
+INSERT INTO heights (id, name) VALUES (1, 'SHORT'), (2, 'AVERAGE'), (3, 'TALL');
 ```
 
 ### Schema-Aware Character and House Seeding
 
-To support schema variants, the script checks whether the foreign key is
-stored in `characters.house_id` or `houses.character_id` and inserts data
-accordingly (`seedl.sql:71`, `seedl.sql:92`, `seedl.sql:119`).
+To support schema variants, seeding for `characters` and `houses` is
+handled in a `DO` block. It checks where the foreign key is placed and
+inserts in the correct order to avoid referential errors.
 
 ```sql
-DO $$
--- detect FK placement and insert houses/characters in valid order
-END $$;
+IF characters_has_house_id AND NOT houses_has_character_id THEN
+    INSERT INTO houses (id, amount_rooms, amount_bathrooms) VALUES
+        (1, 2, 1), (2, 3, 2), (3, 1, 1);
+
+    INSERT INTO characters (
+        id, name, balance, profile_id, gender_id, skincolor_id,
+        eyecolor_id, height_id, weight_id, house_id
+    ) VALUES
+        (1, 'ShadowMia', 2450.50, 1, 2, 1, 2, 2, 2, 1),
+        (2, 'SteelNoah', 1320.00, 2, 1, 2, 1, 3, 3, 2);
+END IF;
 ```
+
+The condition means: if `characters` contains `house_id` and `houses`
+does not contain `character_id`, then the foreign key points from
+`characters` to `houses`. In that case, `houses` must be inserted first.
+
+For `INSERT INTO houses (id, amount_rooms, amount_bathrooms)`, each tuple
+follows that exact column order:
+
+- `(1, 2, 1)` = `id = 1`, `amount_rooms = 2`, `amount_bathrooms = 1`
+- `(2, 3, 2)` = `id = 2`, `amount_rooms = 3`, `amount_bathrooms = 2`
+- `(3, 1, 1)` = `id = 3`, `amount_rooms = 1`, `amount_bathrooms = 1`
 
 ### Gang Membership Data
 
 Gang membership is optional in the model, so only a subset of characters
-receives rows in `gang_affiliations` (`seedl.sql:151`). This intentionally
-demonstrates both states: characters with and without gang membership.
+receives rows in `gang_affiliations`. This intentionally demonstrates
+both valid states: characters with gang membership and characters
+without gang membership.
 
 ```sql
 INSERT INTO gang_affiliations (character_id, gang_id, join_date) VALUES
     (1, 2, '2025-01-12'),
     (2, 1, '2025-02-03'),
-    (3, 7, '2025-03-22');
+    (3, 7, '2025-03-22'),
+    (4, 5, '2025-04-10');
 ```
 
-The script commits at the end (`seedl.sql:159`).
+Finally, all inserts are persisted in one atomic commit.
+
+```sql
+COMMIT;
+```
