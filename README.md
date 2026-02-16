@@ -16,8 +16,8 @@ cph-bh226@stud.ek.dk
 cph-jk469@stud.ek.dk  
 @JeppeKoch  
 
-**Laith**
-cph-la356@stud.ek.dk
+**Laith**  
+cph-la356@stud.ek.dk  
 @Mingo-inc
 
 **How to:**  
