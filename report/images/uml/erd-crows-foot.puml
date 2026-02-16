@@ -18,7 +18,7 @@ entity PROFILE {
   role_id: int <<FK>>
 }
 
-entity GAME_CHARACTER {
+entity CHARACTERS {
   id: int <<PK>>
   name: string
   balance: float
@@ -69,19 +69,20 @@ entity GANG {
 }
 
 entity GANG_AFFILIATION {
-  character_id: int <<PK,FK>>
-  gang_id: int <<PK,FK>>
+  id: int <<PK>>
+  character_id: int <<FK>>
+  gang_id: int <<FK>>
   join_date: date
 }
 
 ROLE ||--o{ PROFILE : has
-PROFILE ||--o{ GAME_CHARACTER : owns
-GENDER ||--o{ GAME_CHARACTER : classifies
-SKINCOLOR ||--o{ GAME_CHARACTER : classifies
-EYECOLOR ||--o{ GAME_CHARACTER : classifies
-HEIGHT ||--o{ GAME_CHARACTER : classifies
-WEIGHT ||--o{ GAME_CHARACTER : classifies
-GAME_CHARACTER ||--|| HOUSE : lives_in
-GAME_CHARACTER ||--o{ GANG_AFFILIATION : has
+PROFILE ||--o{ CHARACTERS : owns
+GENDER ||--o{ CHARACTERS : classifies
+SKINCOLOR ||--o{ CHARACTERS : classifies
+EYECOLOR ||--o{ CHARACTERS : classifies
+HEIGHT ||--o{ CHARACTERS : classifies
+WEIGHT ||--o{ CHARACTERS : classifies
+CHARACTERS ||--|| HOUSE : lives_in
+CHARACTERS ||--o{ GANG_AFFILIATION : has
 GANG ||--o{ GANG_AFFILIATION : has
 @enduml
