@@ -1,4 +1,4 @@
----
+﻿---
 header-includes:
   - '\usepackage{fancyhdr}'
   - '\pagestyle{fancy}'
@@ -32,14 +32,14 @@ Sadek Alsukafi
 | **Date of delivery** | *(To be filled in)* |
 | **List of figures** | *(To be filled in)* |
 | **List of appendices** | *(To be filled in)* |
-| **Number of characters (including spaces)** | 26913 |
+| **Number of characters (including spaces)** | 27032 |
 
 \vspace{0.5cm}
 \begin{center}
 \begin{tabular}{ccc}
-\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/Document3.png} &
-\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/Graph-Database.png} &
-\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/what-is-a-relational-database.jpg}
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Document3.png} &
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Graph-Database.png} &
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/what-is-a-relational-database.jpg}
 \end{tabular}
 \end{center}
 
