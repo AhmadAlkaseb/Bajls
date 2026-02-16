@@ -148,12 +148,12 @@ BEGIN
     END IF;
 END $$;
 
-INSERT INTO gang_affiliations (character_id, gang_id, join_date) VALUES
-    (1, 2, '2025-01-12'),
-    (2, 1, '2025-02-03'),
-    (3, 7, '2025-03-22'),
-    (4, 5, '2025-04-10'),
-    (6, 6, '2025-06-16'),
-    (9, 10, '2025-09-25');
+INSERT INTO gang_affiliations (id, character_id, gang_id, join_date) VALUES
+    (1, 1, 2, '2025-01-12'),
+    (2, 2, 1, '2025-02-03'),
+    (3, 3, 7, '2025-03-22'),
+    (4, 4, 5, '2025-04-10'),
+    (5, 6, 6, '2025-06-16'),
+    (6, 9, 10, '2025-09-25');
 
 COMMIT;

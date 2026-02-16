@@ -291,7 +291,7 @@ character entities.
 
 ### Conceptual Diagram
 
-![Conceptual data model](images/conceptual-model-2026-02-10.png)
+![Conceptual data model](images/conceptual-logical-physical/conceptual-model-2026-02-10.png)
 *Date: 10.2.2026*
 
 The model includes the following core entities:
@@ -386,7 +386,7 @@ enforceable structural constraints with attributes.
 
 ### Logical Diagram
 
-![Logical data model](images/logical-model-2026-02-10.png)
+![Logical data model](images/conceptual-logical-physical/logical-model-2026-02-10.png)
 *Date: 10.2.2026*
 
 ### Main Tables
@@ -443,7 +443,7 @@ table structure and foreign-key network used by the project.
 
 ### Physical Diagram
 
-![Physical data model in PostgreSQL](images/physical-model-2026-02-10.png)
+![Physical data model in PostgreSQL](images/conceptual-logical-physical/physical-model-2026-02-10.png)
 *Date: 10.2.2026*
 
 ### Implementation Details
@@ -610,7 +610,7 @@ reliable base for physical implementation.
 
 ### Introduction
 
-The project includes a dedicated seed script, `seedl.sql`, that creates a
+The project includes a dedicated seed script, `sqls/seedl.sql`, that creates a
 realistic baseline dataset for demos, testing, and validation. Instead
 of random values, the script inserts coherent player profiles,
 characters, houses, and gang memberships, so queries return believable
