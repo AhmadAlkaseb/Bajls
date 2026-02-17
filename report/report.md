@@ -706,3 +706,188 @@ Finally, all inserts are persisted in one atomic commit.
 ```sql
 COMMIT;
 ```
+### 2.4 Stored Database Objects
+ CHECK IF THIS IS ACTUALLY THE RIGHT NAME FOR IT
+### Introduction
+
+Database objects are logical structures stored within a database that define how data is stored, organized, accessed and manipulated. They include tables, views, stored procedures, functions, triggers and events. These objects help enforce business rules, automate processes and structure the database system.
+
+### Stored Functions
+
+A stored function is a programmable database object that encapsulates reusable SQL logic and always returns a single value. It is created using the `CREATE FUNCTION` statement and followed up using the `END$$`. The function is stored within the database for repeated use. If one was to use a specific calculation for several queries, then a function would have a perfect usecase in that scenario. 
+
+#### What defines a stored function:
+
+* It's created by the user
+
+* It's stored inside the database
+
+* Belongs to a schema
+
+* Accepts input parameters
+
+* Must return exactly one value
+
+* Can be used inside SQL statements (e.g., in SELECT, WHERE, ORDER BY)
+
+#### Example of Stored Function Usage in the Project
+
+Stored functions have a sea of applications in our project for example PlayerLevel, WantedStars and maxAmmo among many others. The code snippet provided below, is an example of the implementation of a function that calculates the rewards from a mission.
+
+```sql
+CREATE FUNCTION CalculateMissionReward(
+    base_reward DECIMAL(10,2),
+    difficulty_multiplier DECIMAL(3,2),
+    time_bonus DECIMAL(10,2)
+)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN (base_reward * difficulty_multiplier) + time_bonus;
+END;
+```
+* ``CREATE FUNCTION`` -> Tells the database you are creating a new stored function named ``CalculateMissionReward`` with 3 input parameters. 
+
+* ``base_reward DECIMAL(10,2)`` -> Input called ``base_reward`` which stores a decimal number with up to 10 digits, 2 after the decimal.
+
+* ``difficulty_multiplier DECIMAL(3,2)`` -> Input for difficulty scaling (e.g., 1.25).
+
+* ``time_bonus DECIMAL(10,2)`` -> Input for bonus reward based on completion time.
+
+* ``RETURNS DECIMAL(10,2)`` -> The function will output a decimal number (10 digits total, 2 after the decimal).
+
+* ``DETERMINISTIC`` -> Means the function always returns the same output for the same input. If the input could be random numbers, it would not be ``DETERMINISTIC``.
+
+* ``BEGIN ... END;`` -> Marks the start and end of the function body. Inside, you put the logic or calculations the function performs.
+
+* Takes ``base_reward``, multiplies it by ``difficulty_multiplier``, then adds ``time_bonus``. The ``RETURN`` keyword sends the result back to wherever the function was called.
+
+* How to use it once created -> This example ``SELECT CalculateMissionReward(100, 1.5, 20);`` would be returning ``(100 * 1.5) + 20 = 170.00``
+
+### Stored procedures
+
+Stored procedures are used to group SQL statements and business logic into a single reusable unit that runs inside the database. Unlike a stored function, a procedure does not have to return a value and is typically used to perform actions on the database, such as inserting, updating, or deleting records or running multiple SQL operations in sequence. Aside from the apparent benefit which is reusability, the standaridizations of actions/procedures helps with the enforcement of consistent business rules across systems.
+
+The example provided below consists of a procedure that handles the required operations after a completed mission. The procedure ``CompleteMisson`` also uses the stored function ``CalculateMissionReward`` to calculate the reward from the given completed mission. 
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE CompleteMission(
+    IN player_id INT,
+    IN base_reward DECIMAL(10,2),
+    IN difficulty_multiplier DECIMAL(3,2),
+    IN time_bonus DECIMAL(10,2)
+)
+BEGIN
+    DECLARE reward DECIMAL(10,2);
+
+    -- Call the stored function to calculate reward
+    SET reward = CalculateMissionReward(base_reward, difficulty_multiplier, time_bonus);
+
+    -- Update player's cash balance
+    UPDATE Players
+    SET cash_balance = cash_balance + reward
+    WHERE id = player_id;
+
+    -- Update player's experience points
+    UPDATE Players
+    SET experience_points = experience_points + FLOOR(reward / 10)
+    WHERE id = player_id;
+
+    -- TODO: insert auditing/logging
+    
+END;
+//
+```
+
+* Changes the statement ``DELIMITER`` temporarily from ``;`` to ``//`` so the database doesn’t think the ``;`` inside the procedure ends it prematurely. At the end, we reset it with ``DELIMITER ;``.
+
+* ``CREATE PROCEDURE`` -> Declares a new stored procedure with the ``CompleteMission``. The procedure has 4 parameters ``player_id INT``, ``base_reward DECIMAL``, ``difficulty_multiplier DECIMAL`` and ``time_bonus DECIMAL``. 
+
+* ``BEGIN ... END;`` -> Marks the body of the procedure and
+contains all SQL statements executed when the procedure is called.
+
+* ``DECLARE reward`` -> Declares the local variable ``reward`` inside the procedure.
+
+* ``SET reward`` -> Calls the stored function ``CalculateMissionReward``, which we wrote earlier and stores the result in the local variable ``reward``.
+
+* ``UPDATE players`` -> Updates the player’s cash and experience points.
+
+* What to add: some form of logging or auditing.
+
+### 2.5. Transactions. Explanation of the structure and implementation of transactions
+
+A transaction is a group of one or more SQL operations that are executed as one unit. All operations in a transaction either succeed together or fail together. This approach ensures the database remains consistent, even if something goes wrong during the process. A good real world example of this could be in banking. If you tried to send somone money to somone, but something went wrong during the process, it would be very problematic if the amount left your bank account, while the recipient did not recieve the funds. Transactions prevent this by making sure either the entire transfer happens or nothing happens at all.
+
+ACID is a set of principles that transactions follow to ensure they are reliable and maintain the integrity of the database.
+
+* Atomicity: A transaction is either fully completed or fully rolled back. If any part fails, the entire transaction fails.
+* Consistency: A transaction moves the database from one valid state to another while following all rules and constraints.
+* Isolation: Transactions run independently of each other, even when executed at the same time.
+* Durability: Once a transaction is committed, its changes remain permanent, even after a system failure
+
+#### Example of transaction implementation
+
+To keep a consistent flow, we will continue building on the ``CompleteMission`` procedure. If the player finishes a mission and while the procedure is executing a failure happens. What now? Is it okay for his ``cash_balance`` to update, but not ``experience_points``?
+
+The answer to the question above is obviously now. It is evident transactions are important for the procedure because they ensure data integrity and reliability when multiple related database operations happen together.
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE CompleteMissionAuditTx(
+    IN player_id INT,
+    IN base_reward DECIMAL(10,2),
+    IN difficulty_multiplier DECIMAL(3,2),
+    IN time_bonus DECIMAL(10,2),
+    IN performed_by VARCHAR(50)
+)
+BEGIN
+    DECLARE reward DECIMAL(10,2);
+    DECLARE old_cash DECIMAL(10,2);
+    DECLARE old_xp INT;
+
+    -- Start transaction
+    START TRANSACTION;
+
+    BEGIN
+        -- Get current player values
+        SELECT cash_balance, experience_points INTO old_cash, old_xp
+        FROM Players
+        WHERE id = player_id;
+
+        -- Calculate reward
+        SET reward = CalculateMissionReward(base_reward, difficulty_multiplier, time_bonus);
+
+        -- Update player cash
+        UPDATE Players
+        SET cash_balance = cash_balance + reward
+        WHERE id = player_id;
+
+        -- Update player XP
+        UPDATE Players
+        SET experience_points = experience_points + FLOOR(reward / 10)
+        WHERE id = player_id;
+
+        -- Commit transaction if all successful
+        COMMIT;
+    EXCEPTION
+        -- Rollback if any error occurs
+        WHEN SQLEXCEPTION THEN
+            ROLLBACK;
+    END;
+END;
+//
+
+DELIMITER ;
+```
+* ``START TRANSACTION;`` -> This intiates the transaction block
+* ``COMMIT`` -> This signals that all operations inside the transaction succeded and makes all changes permanent in the database. 
+* ``EXCEPTION`` -> When an ``SQLEXCEPTION`` is raised during the procedure, the transaction is undone completely.
+
+### 2.6. Auditing. Explanation of the audit structure implemented with triggers
+
+SQL auditing is the process of tracking, recording, and analyzing database activities. such as logins, data modifications  and permission changes to ensure security, accountability and compliance with regulations like GDPR or HIPAA.
+
+
