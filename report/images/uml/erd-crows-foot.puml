@@ -1,0 +1,88 @@
+@startuml
+hide methods
+hide circle
+skinparam linetype ortho
+
+entity ROLE {
+  id: int <<PK>>
+  name: string <<UK>>
+}
+
+entity PROFILE {
+  id: int <<PK>>
+  first_name: string
+  last_name: string
+  email: string <<UK>>
+  username: string <<UK>>
+  password: string
+  role_id: int <<FK>>
+}
+
+entity CHARACTERS {
+  id: int <<PK>>
+  name: string
+  balance: float
+  profile_id: int <<FK>>
+  gender_id: int <<FK>>
+  skincolor_id: int <<FK>>
+  eyecolor_id: int <<FK>>
+  height_id: int <<FK>>
+  weight_id: int <<FK>>
+  house_id: int <<FK,UK>>
+}
+
+entity HOUSE {
+  id: int <<PK>>
+  amount_rooms: int
+  amount_bathrooms: int
+}
+
+entity GENDER {
+  id: int <<PK>>
+  name: string <<UK>>
+}
+
+entity SKINCOLOR {
+  id: int <<PK>>
+  name: string <<UK>>
+}
+
+entity EYECOLOR {
+  id: int <<PK>>
+  name: string <<UK>>
+}
+
+entity HEIGHT {
+  id: int <<PK>>
+  name: string <<UK>>
+}
+
+entity WEIGHT {
+  id: int <<PK>>
+  name: string <<UK>>
+}
+
+entity GANG {
+  id: int <<PK>>
+  name: string <<UK>>
+  type: string
+}
+
+entity GANG_AFFILIATION {
+  id: int <<PK>>
+  character_id: int <<FK>>
+  gang_id: int <<FK>>
+  join_date: date
+}
+
+ROLE ||--o{ PROFILE : has
+PROFILE ||--o{ CHARACTERS : owns
+GENDER ||--o{ CHARACTERS : classifies
+SKINCOLOR ||--o{ CHARACTERS : classifies
+EYECOLOR ||--o{ CHARACTERS : classifies
+HEIGHT ||--o{ CHARACTERS : classifies
+WEIGHT ||--o{ CHARACTERS : classifies
+CHARACTERS ||--|| HOUSE : lives_in
+CHARACTERS ||--o{ GANG_AFFILIATION : has
+GANG ||--o{ GANG_AFFILIATION : has
+@enduml

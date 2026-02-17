@@ -16,6 +16,10 @@ cph-bh226@stud.ek.dk
 cph-jk469@stud.ek.dk  
 @JeppeKoch  
 
+**Laith**  
+cph-la356@stud.ek.dk  
+@Mingo-inc
+
 **How to:**  
 Make sure you have created the following name database: **bajls**.
 And added the following environment variables:  
