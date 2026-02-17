@@ -1,33 +1,28 @@
 ---
-header-includes:
-  - \usepackage{fancyhdr}
-  - \pagestyle{fancy}
-  - \fancyhf{}
-  - \fancyfoot[R]{\thepage}
-  - \renewcommand{\headrulewidth}{0pt}
-  - \renewcommand{\footrulewidth}{0pt}
+span
 ---
-
 <div align="center">
 
 ## RPG Game Database Design
+
 Version 1
 
-Ahmad Abdel Razak Hussein Alkaseb  
-Benjamin Sebastian Barrales Hernandez  
-Jeppe Ronning Koch  
-Laith Abdel Razak Hussein Alkaseb  
+Ahmad Abdel Razak Hussein Alkaseb
+Benjamin Sebastian Barrales Hernandez
+Jeppe Ronning Koch
+Laith Abdel Razak Hussein Alkaseb
 Sadek Alsukafi
 
 </div>
 
 ---
 
-| **Course** | Database |
-|---|---|
-| **Project** | RPG Game by Bajls |
-| **Date of delivery** | *(To be filled in)* |
-| **List of figures** | *(To be filled in)* |
+
+| **Course**             | Database            |
+| ---------------------- | ------------------- |
+| **Project**            | RPG Game by Bajls   |
+| **Date of delivery**   | *(To be filled in)* |
+| **List of figures**    | *(To be filled in)* |
 | **List of appendices** | *(To be filled in)* |
 
 <div style="page-break-before: always;"></div>
@@ -60,12 +55,12 @@ mandatory attributes.
 
 The player experience includes:
 
--   Creating a personal profile
--   Customizing characters with physical traits
--   Exploring the map
--   Owning a house
--   Optionally joining a gang
--   Interacting with other players
+- Creating a personal profile
+- Customizing characters with physical traits
+- Exploring the map
+- Owning a house
+- Optionally joining a gang
+- Interacting with other players
 
 The game architecture must support both regular players and
 administrators who manage the system.
@@ -96,14 +91,14 @@ environment variables.
 
 Additional tools include:
 
--   **Lombok** for reducing boilerplate code in entities (getters,
-    setters, constructors, builders).
--   **Testcontainers** for disposable PostgreSQL instances during tests,
-    which improves repeatability and reduces local setup variance.
--   **pgAdmin** for visual inspection of the physical schema and foreign
-    key network.
+- **Lombok** for reducing boilerplate code in entities (getters,
+  setters, constructors, builders).
+- **Testcontainers** for disposable PostgreSQL instances during tests,
+  which improves repeatability and reduces local setup variance.
+- **pgAdmin** for visual inspection of the physical schema and foreign
+  key network.
 
-------------------------------------------------------------------------
+---
 
 <div style="page-break-before: always;"></div>
 
@@ -135,11 +130,11 @@ transaction guarantees.
 The database design follows a layered progression from requirements to
 implementation:
 
--   First, domain requirements define mandatory entities.
--   Next, the conceptual and logical models translate those rules into
-    normalized relations.
--   Finally, the physical model implements data types, keys, and
-    constraints in PostgreSQL/Hibernate.
+- First, domain requirements define mandatory entities.
+- Next, the conceptual and logical models translate those rules into
+  normalized relations.
+- Finally, the physical model implements data types, keys, and
+  constraints in PostgreSQL/Hibernate.
 
 This process ensures that design decisions are traceable from business
 rules to concrete table definitions and mapping annotations.
@@ -150,22 +145,22 @@ rules to concrete table definitions and mapping annotations.
 
 ### Person and Profile
 
--   A person can have exactly one profile in the system.
--   The profile represents the player's digital identity.
--   A profile must be uniquely identifiable (for example by `profile_id`
-    or `username`).
--   A person is not allowed to create multiple profiles.
+- A person can have exactly one profile in the system.
+- The profile represents the player's digital identity.
+- A profile must be uniquely identifiable (for example by `profile_id`
+  or `username`).
+- A person is not allowed to create multiple profiles.
 
 This ensures that each real-world player is connected to one controlled
 game identity.
 
 ### Role System
 
--   A profile must have exactly one role.
--   The role can be either `User` or `Admin`.
--   A profile cannot have multiple roles at the same time.
--   `Admin` accounts have extended permissions compared to `User`
-    accounts, such as management and moderation functionality.
+- A profile must have exactly one role.
+- The role can be either `User` or `Admin`.
+- A profile cannot have multiple roles at the same time.
+- `Admin` accounts have extended permissions compared to `User`
+  accounts, such as management and moderation functionality.
 
 This establishes role-based access control in the game.
 
@@ -173,9 +168,9 @@ This establishes role-based access control in the game.
 
 ### Profile to Character Relationship
 
--   A profile can have one or more characters.
--   A character must belong to exactly one profile.
--   A character cannot exist without being linked to a profile.
+- A profile can have one or more characters.
+- A character must belong to exactly one profile.
+- A character cannot exist without being linked to a profile.
 
 This creates a one-to-many relationship between `Profile` and
 `Character`.
@@ -184,11 +179,11 @@ This creates a one-to-many relationship between `Profile` and
 
 Each character must have exactly one of each required attribute:
 
--   One gender
--   One weight
--   One height
--   One eye color
--   One skin color
+- One gender
+- One weight
+- One height
+- One eye color
+- One skin color
 
 All attributes are mandatory and cannot be empty. A character cannot
 have multiple values for any of these attributes. The system must
@@ -197,10 +192,10 @@ be created.
 
 ### Housing Requirement
 
--   A character must have exactly one house.
--   A character cannot exist without an assigned house.
--   A house belongs to exactly one character.
--   A house cannot be shared by multiple characters.
+- A character must have exactly one house.
+- A character cannot exist without an assigned house.
+- A house belongs to exactly one character.
+- A house cannot be shared by multiple characters.
 
 This creates a mandatory one-to-one relationship between `Character` and
 `House`. The system must prevent characters without houses and houses
@@ -208,9 +203,9 @@ without assigned characters.
 
 ### Gang Membership Requirement
 
--   Gang membership is optional.
--   A character can belong to zero or more gangs.
--   A gang can have zero or more characters.
+- Gang membership is optional.
+- A character can belong to zero or more gangs.
+- A gang can have zero or more characters.
 
 This establishes an optional many-to-many relationship between
 `Character` and `Gang`.
@@ -219,23 +214,23 @@ This establishes an optional many-to-many relationship between
 
 The system must enforce the following constraints:
 
--   Every person has at most one profile.
--   Every profile has exactly one role.
--   Every character belongs to exactly one profile.
--   Every character has all required physical attributes.
--   Every character has exactly one house.
--   A character may belong to zero or more gangs.
+- Every person has at most one profile.
+- Every profile has exactly one role.
+- Every character belongs to exactly one profile.
+- Every character has all required physical attributes.
+- Every character has exactly one house.
+- A character may belong to zero or more gangs.
 
 The system must prevent invalid states such as orphan characters,
 missing houses, missing roles, or duplicate role assignments.
 
 ### Relationship Summary
 
--   `Profile` to `Role`: Many-to-One
--   `Profile` to `Character`: One-to-Many
--   `Character` to `House`: One-to-One (Mandatory)
--   `Character` to `Gang`: Optional Many-to-Many
--   `Character` to Attributes: Many-to-One
+- `Profile` to `Role`: Many-to-One
+- `Profile` to `Character`: One-to-Many
+- `Character` to `House`: One-to-One (Mandatory)
+- `Character` to `Gang`: Optional Many-to-Many
+- `Character` to Attributes: Many-to-One
 
 ### Conclusion
 
@@ -245,7 +240,7 @@ character definitions, and mandatory housing ownership. This
 specification forms the basis for conceptual, logical, and physical
 database modeling.
 
-------------------------------------------------------------------------
+---
 
 <div style="page-break-before: always;"></div>
 
@@ -271,67 +266,67 @@ character entities.
 
 The model includes the following core entities:
 
--   **Profiles**: the persistent player identity used for login and
-    account-level ownership.
--   **Roles**: access-level definitions (`User` and `Admin`) connected
-    to profile permissions.
--   **Characters**: playable identities controlled by profiles inside
-    the game world.
--   **Houses**: character-owned properties used to represent private
-    assets and ownership constraints.
--   **Gangs**: social groups that support optional membership and
-    multi-character affiliation.
--   **Genders, Weights, Heights, Eyecolors, Skincolors**: controlled
-    attribute domains used to define mandatory character appearance
-    traits.
+- **Profiles**: the persistent player identity used for login and
+  account-level ownership.
+- **Roles**: access-level definitions (`User` and `Admin`) connected
+  to profile permissions.
+- **Characters**: playable identities controlled by profiles inside
+  the game world.
+- **Houses**: character-owned properties used to represent private
+  assets and ownership constraints.
+- **Gangs**: social groups that support optional membership and
+  multi-character affiliation.
+- **Genders, Weights, Heights, Eyecolors, Skincolors**: controlled
+  attribute domains used to define mandatory character appearance
+  traits.
 
 <div style="page-break-before: always;"></div>
 
 ### Key Relationships in the Diagram
 
--   `Profiles` to `Roles`: many-to-one.
-    Each profile has exactly one role, while one role can be assigned to
-    many profiles.
--   `Profiles` to `Characters`: one-to-many.
-    A profile can own multiple characters, and each character belongs to
-    one profile.
--   `Characters` to `Houses`: one-to-one (mandatory).
-    Each character must be linked to one house, and each house belongs
-    to one character.
--   `Characters` to appearance tables (`Genders`, `Weights`, `Heights`,
-    `Eyecolors`, `Skincolors`): many-to-one for each attribute.
-    Each character has exactly one value per attribute, and many
-    characters can share the same attribute value.
--   `Characters` to `Gangs`: optional many-to-many.
-    A character may join zero or more gangs, and each gang may contain
-    multiple characters.
+- `Profiles` to `Roles`: many-to-one.
+  Each profile has exactly one role, while one role can be assigned to
+  many profiles.
+- `Profiles` to `Characters`: one-to-many.
+  A profile can own multiple characters, and each character belongs to
+  one profile.
+- `Characters` to `Houses`: one-to-one (mandatory).
+  Each character must be linked to one house, and each house belongs
+  to one character.
+- `Characters` to appearance tables (`Genders`, `Weights`, `Heights`,
+  `Eyecolors`, `Skincolors`): many-to-one for each attribute.
+  Each character has exactly one value per attribute, and many
+  characters can share the same attribute value.
+- `Characters` to `Gangs`: optional many-to-many.
+  A character may join zero or more gangs, and each gang may contain
+  multiple characters.
 
 ### Cardinality and Modality
 
 In this project, relationship rules are described using both
 **cardinality** and **modality**:
 
--   **Cardinality** defines the maximum number of related rows (for
-    example one-to-one, one-to-many, many-to-many).
--   **Modality** defines whether participation is mandatory or optional
-    (minimum 1 or minimum 0).
+- **Cardinality** defines the maximum number of related rows (for
+  example one-to-one, one-to-many, many-to-many).
+- **Modality** defines whether participation is mandatory or optional
+  (minimum 1 or minimum 0).
 
 Applied to our model:
 
--   `Profile` -> `Character`: cardinality is one-to-many, modality is
-    mandatory on `Character` side (every character must have one
-    profile) and optional on profile side (a profile can exist with zero
-    characters).
--   `Character` -> `House`: cardinality is one-to-one, modality is
-    mandatory on character side in our JPA mapping because
-    `characters.house_id` is `NOT NULL` and `UNIQUE`. On house side, a
-    house can exist without being referenced by a character unless extra
-    business rules are added.
--   `Character` <-> `Gang`: cardinality is many-to-many via
-    `gang_affiliations`, modality is optional on both sides (0..N).
--   `Character` -> attribute reference tables (`Gender`, `Weight`,
-    `Height`, `EyeColor`, `SkinColor`): cardinality is many-to-one,
-    modality is mandatory on character side because each FK is required.
+- `Profile` -> `Character`: cardinality is one-to-many, modality is
+  mandatory on `Character` side (every character must have one
+  profile) and optional on profile side (a profile can exist with zero
+  characters).
+- `Character` -> `House`: cardinality is one-to-one, modality is
+  mandatory on character side in our JPA mapping because
+  `characters.house_id` is `NOT NULL` and `UNIQUE`. On house side, a
+  house can exist without being referenced by a character unless extra
+  business rules are added.
+- `Character` <-> `Gang`: cardinality is many-to-many via
+  `gang_affiliations`, modality is optional on both sides (0..N).
+- `Character` -> attribute reference tables (`Gender`, `Weight`,
+  `Height`, `EyeColor`, `SkinColor`): cardinality is many-to-one,
+  modality is mandatory on character side because each FK is required.
 
 The conceptual model also defines participation rules. Participation is
 mandatory for `Character` to `Profile`, `Character` to `House`, and
@@ -365,13 +360,13 @@ enforceable structural constraints with attributes.
 
 ### Main Tables
 
--   **Profiles** (first_name, last_name, email, username, password)
--   **Roles** (name)
--   **Characters** (name, balance)
--   **Houses** (amount_rooms, amount_bathrooms)
--   **Gangs** (name, type)
--   **Gang_Affiliations** (join_date)
--   **Genders, Weights, Heights, Eyecolors, Skincolors** (name)
+- **Profiles** (first_name, last_name, email, username, password)
+- **Roles** (name)
+- **Characters** (name, balance)
+- **Houses** (amount_rooms, amount_bathrooms)
+- **Gangs** (name, type)
+- **Gang_Affiliations** (join_date)
+- **Genders, Weights, Heights, Eyecolors, Skincolors** (name)
 
 The table layout intentionally separates high-change data from
 low-change reference data. `characters` is transaction-heavy and
@@ -382,28 +377,28 @@ editing every character row.
 
 ### Logical Relationship Rules
 
--   One `Profile` belongs to one `Role`; one `Role` can be used by many
-    profiles.
--   One `Profile` can own many `Characters`.
--   Each `Character` must reference exactly one value in each attribute
-    category.
--   `Character` and `House` are modeled as a mandatory one-to-one
-    relationship.
--   `Character` and `Gang` are modeled through the junction table
-    `Gang_Affiliations` (many-to-many).
+- One `Profile` belongs to one `Role`; one `Role` can be used by many
+  profiles.
+- One `Profile` can own many `Characters`.
+- Each `Character` must reference exactly one value in each attribute
+  category.
+- `Character` and `House` are modeled as a mandatory one-to-one
+  relationship.
+- `Character` and `Gang` are modeled through the junction table
+  `Gang_Affiliations` (many-to-many).
 
 In addition to these cardinalities, the logical model defines key
 strategy and uniqueness boundaries:
 
--   `username` should be unique at profile level to guarantee a single
-    login identity per player.
+- `username` should be unique at profile level to guarantee a single
+  login identity per player.
 
 This structure keeps the data model clear and easier to maintain.
 Relationships are defined in a simple way, so common queries are easier
 to build and understand before implementing the final PostgreSQL
 optimization.
 
-------------------------------------------------------------------------
+---
 
 <div style="page-break-before: always;"></div>
 
@@ -421,16 +416,16 @@ table structure and foreign-key network used by the project.
 
 ### Implementation Details
 
--   Primary keys are implemented as integer identifiers (`id`).
--   Foreign keys are created between dependent tables to enforce
-    referential integrity.
--   The `characters.house_id` column is unique, enforcing one house per
-    character.
--   The `gang_affiliations` table stores many-to-many links between
-    characters and gangs, including `join_date`.
--   Reference tables (`genders`, `weights`, `heights`, `eyecolors`,
-    `skincolors`, `roles`) reduce redundancy and centralize valid
-    values.
+- Primary keys are implemented as integer identifiers (`id`).
+- Foreign keys are created between dependent tables to enforce
+  referential integrity.
+- The `characters.house_id` column is unique, enforcing one house per
+  character.
+- The `gang_affiliations` table stores many-to-many links between
+  characters and gangs, including `join_date`.
+- Reference tables (`genders`, `weights`, `heights`, `eyecolors`,
+  `skincolors`, `roles`) reduce redundancy and centralize valid
+  values.
 
 The PostgreSQL schema is designed to enforce business rules at database
 level, not only in application code. Mandatory fields are protected with
@@ -448,38 +443,38 @@ for common gameplay queries.
 
 Operationally, the physical design also supports maintainability:
 
--   Clear naming conventions for tables and columns.
--   Dedicated junction table for many-to-many associations.
--   Stable reference tables for controlled enumerations.
--   Predictable join paths for reporting and administration tools.
+- Clear naming conventions for tables and columns.
+- Dedicated junction table for many-to-many associations.
+- Stable reference tables for controlled enumerations.
+- Predictable join paths for reporting and administration tools.
 
 ### Cardinality and Modality in the Physical Model
 
 At the physical level, cardinality and modality are enforced through
 foreign keys, uniqueness, and nullability:
 
--   `profiles.role_id` is `NOT NULL` and references `roles.id`, so each
-    profile must have exactly one role (mandatory many-to-one).
--   `characters.profile_id` is `NOT NULL`, so each character must belong
-    to one profile, while a profile can still have zero or many
-    characters.
--   `characters.house_id` is both `NOT NULL` and `UNIQUE`, enforcing one
-    mandatory house per character and preventing multiple characters from
-    referencing the same house.
--   Attribute foreign keys in `characters` (`gender_id`, `weight_id`,
-    `height_id`, `eyecolor_id`, `skincolor_id`) are mandatory, which
-    enforces complete character definitions.
--   `gang_affiliations` implements optional many-to-many membership:
-    both sides can have zero or many links, while each link row must
-    reference exactly one character and one gang.
+- `profiles.role_id` is `NOT NULL` and references `roles.id`, so each
+  profile must have exactly one role (mandatory many-to-one).
+- `characters.profile_id` is `NOT NULL`, so each character must belong
+  to one profile, while a profile can still have zero or many
+  characters.
+- `characters.house_id` is both `NOT NULL` and `UNIQUE`, enforcing one
+  mandatory house per character and preventing multiple characters from
+  referencing the same house.
+- Attribute foreign keys in `characters` (`gender_id`, `weight_id`,
+  `height_id`, `eyecolor_id`, `skincolor_id`) are mandatory, which
+  enforces complete character definitions.
+- `gang_affiliations` implements optional many-to-many membership:
+  both sides can have zero or many links, while each link row must
+  reference exactly one character and one gang.
 
 ### 2.3.1. Data types
 
--   `INTEGER` for primary and foreign keys
--   `VARCHAR(20)` for names and short text values
--   `REAL` for character balance
--   `DATE` for `join_date` in `gang_affiliations`
--   `NOT NULL` on mandatory columns
+- `INTEGER` for primary and foreign keys
+- `VARCHAR(20)` for names and short text values
+- `REAL` for character balance
+- `DATE` for `join_date` in `gang_affiliations`
+- `NOT NULL` on mandatory columns
 
 These choices balance simplicity and correctness. Integer keys are fast
 for joins, short varchar fields are sufficient for constrained labels,
@@ -495,16 +490,16 @@ in all main tables. This gives each row a simple and stable identifier.
 
 Foreign keys encode the core relationships:
 
--   `characters.profile_id` -> `profiles.id`
--   `characters.gender_id` -> `genders.id`
--   `characters.skincolor_id` -> `skincolors.id`
--   `characters.eyecolor_id` -> `eyecolors.id`
--   `characters.height_id` -> `heights.id`
--   `characters.weight_id` -> `weights.id`
--   `profiles.role_id` -> `roles.id`
--   `characters.house_id` -> `houses.id` (unique)
--   `gang_affiliations.character_id` -> `characters.id`
--   `gang_affiliations.gang_id` -> `gangs.id`
+- `characters.profile_id` -> `profiles.id`
+- `characters.gender_id` -> `genders.id`
+- `characters.skincolor_id` -> `skincolors.id`
+- `characters.eyecolor_id` -> `eyecolors.id`
+- `characters.height_id` -> `heights.id`
+- `characters.weight_id` -> `weights.id`
+- `profiles.role_id` -> `roles.id`
+- `characters.house_id` -> `houses.id` (unique)
+- `gang_affiliations.character_id` -> `characters.id`
+- `gang_affiliations.gang_id` -> `gangs.id`
 
 The many-to-many relation between characters and gangs is implemented
 with `gang_affiliations`, where the composite key
@@ -516,21 +511,21 @@ pair.
 The schema enforces integrity through a combination of column
 constraints and relationship constraints:
 
--   `NOT NULL` is used on mandatory attributes (for example profile
-    names, credentials, role references, character references, and
-    `join_date`).
--   `UNIQUE` constraints prevent duplicates on identity-like values:
-    `profiles.email`, `profiles.username`, `gangs.name`, and
-    `characters.house_id`.
--   Foreign-key constraints ensure references remain valid across table
-    boundaries. Examples include `fk_profiles_role`,
-    `fk_characters_profile`, `fk_characters_house`, `fk_gang_aff_char`,
-    and `fk_gang_aff_gang`.
+- `NOT NULL` is used on mandatory attributes (for example profile
+  names, credentials, role references, character references, and
+  `join_date`).
+- `UNIQUE` constraints prevent duplicates on identity-like values:
+  `profiles.email`, `profiles.username`, `gangs.name`, and
+  `characters.house_id`.
+- Foreign-key constraints ensure references remain valid across table
+  boundaries. Examples include `fk_profiles_role`,
+  `fk_characters_profile`, `fk_characters_house`, `fk_gang_aff_char`,
+  and `fk_gang_aff_gang`.
 
 In JPA/Hibernate, required references are marked as mandatory. This
 matches the database rules and helps prevent missing links, unclear
 ownership, and duplicate relationships.
-------------------------------------------------------------------------
+---------------------------------------
 
 <div style="page-break-before: always;"></div>
 
@@ -567,13 +562,100 @@ and appearance labels are not duplicated in `characters`.
 
 The resulting 3NF design improves consistency and maintainability:
 
--   Changes are localized to one table.
--   Duplicate text values are minimized.
--   Integrity constraints become easier to enforce.
--   Queries stay clear and consistent as data grows.
+- Changes are localized to one table.
+- Duplicate text values are minimized.
+- Integrity constraints become easier to enforce.
+- Queries stay clear and consistent as data grows.
 
 The final logical schema therefore satisfies **3NF** and provides a
 reliable base for physical implementation.
 
+### View
 
+Views are virtual tables defineed by an SQL query. Instead of storing data physically, a view presents data from one or more underlying tables based on a predefined query. This allows users and applications to access filtered, structured, or combined data without directly interacting with the base tables.
 
+A view behaves like a regular table in queries. Users can perform `SELECT` operations on view, while the database executes the underlying query dynamically and returns the result set. Because the data is not stured separately, a view always reflects the current state of the underlying table.
+
+Views are useful in systems where data should be presented in a controlled or simplified way. In this RPG project, views could be used to expose selected character information, player summaries, or administrative overviews whitout giving direct access to the full database structure.
+
+### Purpose of Views
+
+* **Simplification of complex queries:**
+  A view can encapsulate joins and filters that would otherwise require long and complex SQL statements. This makes application queries easier to write and maintain.
+* **Abstraction from physical structure:**
+  Views create a logical layer between the application and the database tables. If table structures change, only the view definition needs to be updated, while application queries can remain unchanged.
+* **Security and access control:**
+  Views can restrict access to sensitive data by exposing only selected columns or rows. For example, administrative or private fields such as passwords or internal identifiers can be hidden.
+* **Low storage overhead:**
+  Standard views do not store data physically, since they generate results dynamically from the base tables.
+
+### Limitations of Views
+
+* **Performance overhead:**
+  Since the underlying query is executed each time the view is accessed, complex views can reduce performance, especially when based on multiple joins or large tables.
+* **Dependency on base tables:**
+  A view depends on the structure of its underlying tables. If referenced columns or tables are changed or removed, the view may become invalid.
+* **Update Limitations:**
+  Not all views are updatable, particularly those involving joins, grouping, or complex calculations.
+
+### How Views Will Be Used in the RPG Project
+
+In the RPG system, many features require data from multiple related tables such as `profiles`, `characters` and `roles`.
+
+View will be used to:
+
+* **Simplify complex queries:**
+  Instead of writing long SQL statements with multiple joins, the application can query a single view.
+* **Provide abstraction:**
+  Views create a logical layer between the application and the physical database. If the table structure changes, only the view definition needs to be updated, reducing the impact on the application code.
+* **Improve security:**
+  Views can hide sensitive information such as passwords or internal identifiers and expose only the data needed by the application or administrative tools.
+* **Support administration and reporting:**
+  Views can present summarized information about players, characters, houses, and gang memberships in a clear and structured format.
+
+This approach improves maintainability and ensures controlled access to the game data.
+
+### Character Overview View
+
+The following example creates a view that provides an overview of each character, including the associated profile and any gang affiliations.
+
+`CREATE` `OR` REPLACE `VIEW` v_character_overview `AS`
+
+`SELECT`
+
+profiles.username `AS` username,
+
+characters.id `AS` id,
+
+characters.name `AS` name,
+
+characters.balance `AS` balance,
+
+`STRING_AGG`(gangs.name, ', ') `AS` affiliations
+
+`FROM` characters
+
+`JOIN` profiles `ON` profiles.id = characters.profile_id
+
+`LEFT` `JOIN` gang_affiliations `ON` gang_affiliations.character_id = characters.id
+
+`LEFT` `JOIN` gangs `ON` gangs.id = gang_affiliations.gang_id
+
+`GROUP` `BY`
+
+profiles.username,
+characters.id,
+characters.name,
+characters.balance;
+
+The `v_character_overview` view combines data from multiple related tables into a single logical structure. The purpose of this view is to present information together with the owning profile and any gang affiliations in a simplified format.
+
+The query is centered around the `characters` table, since characters represent the coreentity in the gameplay domain.
+
+### Gang Overview
+
+`CREATE` `or` REPLACE `view` v_gang_overview `AS`
+
+`SELEct`
+
+gang.name `AS` gang,
