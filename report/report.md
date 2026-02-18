@@ -40,6 +40,13 @@ Sadek Alsukafi
 \begin{tabular}{ccc}
 \includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Document3.png} &
 \includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Graph-Database.png} &
+
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/View-v_character_overview.png} &
+
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/View-v_gang_overview.png} &
+
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/View-v_character_appearance.png} &
+
 \includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/what-is-a-relational-database.jpg}
 \end{tabular}
 \end{center}
@@ -602,27 +609,26 @@ reliable base for physical implementation.
 
 \newpage
 
+## View
 
-### View
+Views are virtual tables defined by an SQL query. Instead of storing data physically, a view presents data from one or more underlying tables based on a predefined query. This allows users and applications to access filtered, structured, or combined data without directly interacting with the base tables.
 
-Views are virtual tables defineed by an SQL query. Instead of storing data physically, a view presents data from one or more underlying tables based on a predefined query. This allows users and applications to access filtered, structured, or combined data without directly interacting with the base tables.
+A view behaves like a regular table in queries. Users can perform `SELECT` operations on a view, while the database executes the underlying query dynamically and returns the result set. Because the data is not stored separately, a view always reflects the current state of the underlying tables.
 
-A view behaves like a regular table in queries. Users can perform `SELECT` operations on view, while the database executes the underlying query dynamically and returns the result set. Because the data is not stured separately, a view always reflects the current state of the underlying table.
-
-Views are useful in systems where data should be presented in a controlled or simplified way. In this RPG project, views could be used to expose selected character information, player summaries, or administrative overviews whitout giving direct access to the full database structure.
+Views are useful in systems where data should be presented in a controlled or simplified way. In this RPG project, views could be used to expose selected character information, player summaries, or administrative overviews without giving direct access to the full database structure.
 
 ### Purpose of Views
 
-Simplification of complex queries:
+**Simplification of complex queries:**
 A view can encapsulate joins and filters that would otherwise require long and complex SQL statements. This makes application queries easier to write and maintain.
 
-Abstraction from physical structure:
+**Abstraction from physical structure:**
 Views create a logical layer between the application and the database tables. If table structures change, only the view definition needs to be updated, while application queries can remain unchanged.
 
-Security and access control:
+**Security and access control:**
 Views can restrict access to sensitive data by exposing only selected columns or rows. For example, administrative or private fields such as passwords or internal identifiers can be hidden.
 
-Low storage overhead:
+**Low storage overhead:**
 Standard views do not store data physically, since they generate results dynamically from the base tables.
 
 ### Limitations of Views
@@ -636,15 +642,11 @@ A view depends on the structure of its underlying tables. If referenced columns 
 **Update Limitations:**
 Not all views are updatable, particularly those involving joins, grouping, or complex calculations.
 
-
-
 ### How Views Will Be Used in the RPG Project
 
-In the RPG system, many features require data from multiple related tables such as profiles, characters and roles.
+In the RPG system, many features require data from multiple related tables such as profiles, characters and gangs.
 
-View will be used to:
-
-**Simplify complex queries:**
+**Simplify complex queries:**  
 Instead of writing long SQL statements with multiple joins, the application can query a single view.
 
 **Provide abstraction:**
@@ -661,115 +663,92 @@ This approach improves maintainability and ensures controlled access to the game
 
 The following example creates a view that provides an overview of each character, including the associated profile and any gang affiliations.
 
-`CREATE` `OR ` `REPLACE` `VIEW` v_character_overview `AS`
+`CREATE` `OR` `REPLACE` `VIEW` v_character_overview `AS`
 
 `SELECT`
 
 profiles.username `AS` username,
-
-characters.id `AS` id,
-
 characters.name `AS` name,
-
-characters.balance `AS` balance,
-
-`STRING_AGG`(gangs.name, ', ') `AS` affiliations
+characters.balance `AS` balance,  
+`COALESCE`(STRING_AGG(gangs.name, ', '), 'Spineless') AS affiliations
 
 `FROM` characters
 
 `JOIN` profiles `ON` profiles.id = characters.profile_id
+`LEFT` `JOIN` gang_affiliations `ON` gang_affiliations.character_id = characters.id  
+`LEFT` `JOIN` gangs `ON` gangs.id = gang_affiliations.gang_id
 
-`LEFT` `JOIN`gang_affiliations`ON` gang_affiliations.character_id = characters.id
-
-`LEFT` `JOIN`gangs`ON` gangs.id = gang_affiliations.gang_id
-
-GROUP BY
+`GROUP` `BY`
 
 profiles.username,
-characters.id,
 characters.name,
 characters.balance;
 
-
-
-
 The v_character_overview view combines data from multiple related tables into a single logical structure. The purpose of this view is to present information together with the owning profile and any gang affiliations in a simplified format.
+The query is centered around the characters table, since characters represent the core entity in the gameplay domain.  
+The `view` uses `CREATE` `OR` `REPLACE` to allow changes to the query logic without recreating the view manually. However, PostgreSQL does not allow columns to be removed or added when using `OR` `REPLACE`. In such cases, the view must be dropped and created again.
 
-The query is centered around the characters table, since characters represent the coreentity in the gameplay domain.
-
-**Characters to Gangs (optional many-to-many relationship)**
+##### Characters to Gangs (optional many-to-many relationship)
 
 Gang membership is optional and modeled through the junction table gang_affiliations.
 
-A LEFT JOIN is used because a character may belong to zero or more gangs. This ensures that characters without gang membership are still included in the result. If no gang affiliation exists, the affiliations value will be NULL.
+A `LEFT` `JOIN` is used because a character may belong to zero or more gangs. This ensures that characters without gang membership are still included in the result.  
+The COALESCE function is applied to the STRING_AGG result:
+`COALESCE`(STRING_AGG(gangs.name, ', '), 'Spineless')
 
-Since the relationship is many-to-many, a character may be linked to multiple gangs.
+If a character has no gang affiliations, STRING_AGG returns NULL.
+`COALESCE` replaces this NULL value with the text 'Spineless', ensuring that characters without a gang are clearly identified instead of showing a NULL value. Since the relationship is many-to-many, a character may be linked to multiple gangs.
 
-**Aggregation and Grouping**
+##### Aggregation and Grouping
 
 To ensure that each character appears only once, the PostgreSQL aggregation function STRING_AGG is used:
 
 `STRING_AGG`(gangs.name, ', ') AS affiliations
 
 This function combines multiple gang names into a single comma-separated string.
-The grouping ensures that all rows belonging to the same character are combined into one result row. The characters.id uniquely identifies each character, so the final result contains one row per character, even if multiple gang memberships exist.
+The grouping ensures that all rows belonging to the same character are combined into one result row.
+The view does not expose characters.id. Instead, uniqueness is determined by the combination of username, character name, and balance.
+Hiding internal identifiers helps abstract the database structure and prevents exposing internal technical details, which can improve both security and data encapsulation. This ensures that each character appears only once, even if multiple gang memberships exist. All non-aggregated columns in the SELECT clause must be included in the GROUP BY clause to ensure deterministic results.
 
-All non-aggregated columns in the SELECT clause must be included in the GROUP BY clause to ensure deterministic results.
+##### Result
 
-Result
 When querying the view:
-`SELECT`* `FROM`v_overview_view;
+`SELECT` * `FROM` v_character_overview;
 
-
-
-| username    | id | name         | balance | affiliations           |
-| ----------- | -- | ------------ | ------- | ---------------------- |
-| mihansen    | 1  | ShadowMia    | 2450.5  | Neon Foxes, Night Owls |
-| nlarsen     | 2  | SteelNoah    | 1320    | Iron Wolves            |
-| enielsen    | 3  | RuneEmma     | 3890.75 | Solar Pact             |
-| lpedersen   | 4  | VoltLucas    | 980.25  | Crimson Tide           |
-| jjensen     | 5  | NovaIda      | 4150    | [null]                 |
-| omadsen     | 6  | HexOliver    | 2100.4  | Frost Syndicate        |
-| skristensen | 7  | BlazeSofia   | 1750.1  | [null]                 |
-| wolsen      | 8  | FrostWill    | 2999.99 | [null]                 |
-| aandersen   | 9  | AdminAsta    | 5000    | Echo Unit              |
-| vsorensen   | 10 | ModVictor    | 4600.6  | [null]                 |
-| mihansen    | 13 | ShadowMiaAlt | 1500    | [null]                 |
-
-
-
-
-
+![v_character_overview](images/frontpage/View-v_character_overview.png)
 
 This structure provides a clear and compact overview suitable for application use, administration, and reporting.
-
 
 ### Gang Overview View
 
 The v_gang_overview view provides a summarized overview of each gang and its members.
 
-
 `CREATE` `OR` `REPLACE` `VIEW` v_gang_overview `AS`
+
 `SELECT`
-gangs.id `AS` id,
-gangs.name `AS` gang_name,
 
-
-`STRING_AGG`(characters.name, ', ') `AS` members
+gangs.name `AS` gang_name,  
+`COALESCE`(STRING_AGG(characters.name, ', '), 'No members') `AS` members
 
 `FROM` gangs
-`LEFT` `JOIN` gang_affiliations `ON ` gang_affiliations.gang_id = gangs.id
 
-`LEFT` `JOIN`characters `ON` characters.id = gang_affiliations.character_id
+`LEFT` `JOIN` gang_affiliations `ON` gang_affiliations.gang_id = gangs.id  
+`LEFT` `JOIN` characters `ON` characters.id = gang_affiliations.character_id
 
 `GROUP` `BY`
-gangs.id,
 gangs.name;
 
 
-The view combines data from the `gangs`, `gang_affiliations`, and `characters` tables to present gang information in a simplified format.
 
-A `LEFT JOIN` is used to ensure that all gangs are included in the result, even if they currently have no members. The PostgreSQL function `STRING_AGG` is used to combine multiple character names into a single comma-separated column, so that each gang appears only once.
+
+##### Result
+
+When querying the view:  
+`SELECT` * `FROM` v_gang_overview;
+
+![v_character_overview](images/frontpage/View-v_gang_overview.png)
+
+The view combines data from the `gangs`, `gang_affiliations`, and `characters` tables to present gang information in a simplified format.
 
 ### Character Appearance Overview View
 
@@ -777,43 +756,37 @@ The v_character_appearance view provides a structured overview of each character
 
 `CREATE` `OR` REPLACE `VIEW` v_character_appearance `AS`
 
-
 `SELECT`
 
-characters.id `AS` id,
-
-characters.name `AS` character_name,
-
+characters.name `AS` character_name,  
 characters.balance `AS` balance,
-
 genders.name `AS` gender,
-
 weights.name `AS` weight,
-
 heights.name `AS` height,
-
 eyecolors.name `AS` eye_color,
-
 skincolors.name `AS` skin_color
 
 `FROM` characters
 
 `JOIN` genders `ON` genders.id = characters.gender_id
-
 `JOIN` weights `ON` weights.id = characters.weight_id
-
 `JOIN` heights `ON` heights.id = characters.height_id
-
-`JOIN` eyecolors `ON` eyecolors.id = characters.eyecolor_id
-
+`JOIN` eyecolors `ON` eyecolors.id = characters.eyecolor_id  
 `JOIN` skincolors `ON` skincolors.id = characters.skincolor_id;
 
 Each of these attributes is stored as a foreign key in the `characters` table and linked to a corresponding lookup table. By using joins, the view replaces internal identifier values with readable attribute names. This makes the data easier to understand and use in application features, administration, and reporting.
 
+
+##### Result
+
+When querying the view:
+`SELECT` * `FROM` v_character_appearance;
+
+![v_character_overview](images/frontpage/View-v_character_appearance.png)
+
 The view simplifies queries by collecting all appearance-related information in a single logical structure and supports the normalized database design by keeping descriptive values in dedicated reference tables.
 
 \newpage
-
 
 ## Realistic Data
 
