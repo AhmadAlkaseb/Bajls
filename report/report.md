@@ -706,3 +706,110 @@ Finally, all inserts are persisted in one atomic commit.
 ```sql
 COMMIT;
 ```
+### Triggers
+
+### Introduction
+
+A trigger is a piece of sql code that automatically executes in response to certain events on a
+particular table. A trigger can be set to execute either before or after an insert, update, or delete operation.
+Triggers are commonly used to enforce complex business rules, maintain data integrity, or perform automatic updates based on changes in the database.
+
+### Purpose of trigger in this project
+
+In this project, a trigger is linked to the characters table. The
+purpose of the trigger is to automatically react whenever a new
+character is created.
+
+Character creation is a core operation in our RPG game. Each time a
+new character is inserted into the database, the system should generate
+a message indicating that the character has been successfully created.
+Rather than implementing this behavior solely in application code, it is
+defined directly in PostgreSQL. This guarantees that the behavior is
+executed consistently, even if data insertion occurs from administrative
+scripts, test environments, or other services.
+
+### Trigger Implementation
+
+The trigger is defined as an AFTER INSERT trigger on the
+characters table and executes once per inserted row (FOR EACH ROW).
+When a new character is inserted, PostgreSQL invokes the trigger
+function and exposes the inserted row through the special record
+variable NEW.
+
+The trigger function uses RAISE NOTICE to send a notice containing
+the newly created character’s name. Because the trigger
+runs after the insert operation, referential integrity is guaranteed at
+the time the message is produced.
+
+The trigger looks like this:
+
+```sql
+CREATE OR REPLACE FUNCTION fn_character_notice()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RAISE NOTICE 'Welcome! Your new character created: name=%', NEW.name;
+RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_character_notice ON characters;
+
+CREATE TRIGGER trg_character_notice
+    AFTER INSERT ON characters
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_character_notice();
+```
+
+The message is not stored in a database table. 
+Instead, it is sent as a notice to the client application that performed the insert. 
+This allows for real-time feedback without modifying the data model or adding extra tables for logging.
+
+### Design considerations
+Using a trigger for this purpose has both advantages and disadvantages:
+
+- **Advantages**:
+  - Ensures consistent behavior regardless of how data is inserted.
+  - Centralizes the logic in the database, reducing reliance on application code.
+  - Provides immediate feedback to users or administrators when characters are created.
+- **Disadvantages**:
+  - Reduces transparency of system control flow.
+  - Debugging may require inspecting database-level logic.
+  - The message is not stored for later retrieval.
+
+Given the limited scope of the project, this approach provides a clear
+demonstration of automated database behavior without introducing
+additional complexity.
+
+### Events
+
+An event is a piece of SQL code that is scheduled to execute at a specific time or interval. 
+Events are commonly used for tasks such as periodic data cleanup, scheduled reporting, or automated maintenance.
+As we are using Postgres in this project, we do not have access to scheduled events.
+So instead we will show an example of how it would be done in MySQL.
+
+### Purpose of event in this project
+Our thought was that we would use a weekly scheduled event to announce the richest person in our game.
+The event would run every week and execute a query to find the character with the highest balance. 
+Then it would raise notice with the name of the richest character and their balance.
+We thought about creating a Notification table to store the results of the event, but we decided to keep it simple and just use RAISE NOTICE for demonstration purposes.
+
+### Event Implementation
+```sql
+
+```
+### decision not made yet. work in progress
+
+
+### Design considerations
+Using an event for this purpose has both advantages and disadvantages:
+
+- **Advantages**:
+  - Automates regular tasks without manual intervention.
+  - Provides timely updates to users or administrators.
+  - Can be used for a wide range of scheduled operations.
+- **Disadvantages**:
+  - May require additional setup and configuration in the database.
+  - Debugging scheduled events can be more complex than triggers.
+  - The output may not be easily accessible if not stored in a table.
