@@ -3,10 +3,9 @@ CREATE OR REPLACE VIEW v_character_overview AS
 SELECT
 
 profiles.username AS username,
-characters.id AS id,
 characters.name AS name,
 characters.balance AS balance,
-STRING_AGG(gangs.name, ', ') AS affiliations
+COALESCE(STRING_AGG(gangs.name, ', '), 'Spineless') AS affiliations
 
 FROM characters
 
@@ -17,12 +16,8 @@ LEFT JOIN gangs ON gangs.id = gang_affiliations.gang_id
 GROUP BY
 
 profiles.username,
-characters.id,
 characters.name,
 characters.balance;
-
-
-
 
 
 
@@ -33,9 +28,8 @@ CREATE OR REPLACE VIEW v_gang_overview AS
 
 SELECT
 
-gangs.id AS id,
 gangs.name AS gang_name,
-STRING_AGG(characters.name, ', ') AS members
+COALESCE(STRING_AGG(characters.name, ', '), 'No members') AS members
 
 FROM gangs
 
@@ -44,9 +38,7 @@ LEFT JOIN characters ON characters.id = gang_affiliations.character_id
 
 GROUP BY
 
-gangs.id,
 gangs.name;
-
 
 
 
@@ -55,10 +47,8 @@ gangs.name;
 
 CREATE OR REPLACE VIEW v_character_appearance AS
 
-
 SELECT
 
-characters.id AS id,
 characters.name AS character_name,
 characters.balance AS balance,
 genders.name AS gender,
