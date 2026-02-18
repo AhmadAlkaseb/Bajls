@@ -1,0 +1,1 @@
+-- Optional init SQL for db_2sem
