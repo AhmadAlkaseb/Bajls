@@ -1301,3 +1301,80 @@ project requirements.
 - images/frontpage/View-v_gang_overview.png
 - images/frontpage/View-v_character_appearance.png
 
+### 2.5 Stored Functions & Procedures
+### Introduction
+
+Stored functions and procedures are database objects that encapsulate SQL code for reuse. Functions return values and can be used in queries, while procedures perform actions and is not required to return a value. Both improve performance, reduce redundancy, and centralize business logic within the database.
+
+### Stored Functions
+
+A stored function is a programmable database object that encapsulates reusable SQL logic and always returns a single value. It is created using the `CREATE FUNCTION` statement and followed up using the `END$$`. The function is stored within the database for repeated use. If one was to use a specific calculation for several queries, then a function would have a perfect usecase in that scenario. All functions are located in the ``/sql/functions`` directory
+
+#### What defines a stored function:
+
+* It's created by the user
+
+* It's stored inside the database
+
+* Belongs to a schema
+
+* Accepts input parameters
+
+* Must return exactly one value
+
+* Can be used inside SQL statements (e.g., in SELECT, WHERE, ORDER BY)
+
+#### Example of Stored Function Usage in the Project
+
+Stored functions have numerous applications in our project for example calculations of PlayerLevel, WantedStars and maxAmmo among many others. The code snippet provided below, is an example of the implementation of a function that returns the wealth status of a character based on their balance.
+
+```sql
+CREATE OR REPLACE FUNCTION get_wealth_status(p_balance numeric)
+RETURNS text
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_balance < 1000 THEN
+        RETURN 'poor';
+    ELSIF p_balance < 3000 THEN
+        RETURN 'middleclass';
+    ELSE
+        RETURN 'rich';
+    END IF;
+END;
+$$;
+```
+1. Input:
+    * The function expects a numeric input called p_balance (which represents a person's balance, or wealth).
+
+2. Process (Conditional Logic):
+    * The function uses a series of conditional statements (IF-ELSIF-ELSE) to determine the wealth status based on the balance.
+
+        * Condition 1: If the balance is less than 1000, the function returns the text 'poor'.
+        * Condition 2: If the balance is between 1000 and 2999, the function returns 'middleclass'.
+        * Condition 3: If the balance is 3000 or higher, the function returns 'rich'.
+
+3.  Output:
+    * The output is a text value representing the person's wealth status, based on their balance.
+
+### Stored procedures
+
+Stored procedures are used to group SQL statements and business logic into a single reusable unit that runs inside the database. Unlike a stored function, a procedure does not have to return a value and is typically used to perform actions on the database, such as inserting, updating, or deleting records or running multiple SQL operations in sequence. Aside from the apparent benefit which is reusability, the standaridizations of actions/procedures helps with the enforcement of consistent business rules across systems. all procedures are located in the ``/sql/procedures`` directory.
+
+The example provided below consists of a procedure that handles the required operations for creating a character with a house associated. This procedure takes in multiple input parameters to specify details for both the house and character.
+
+The full code for this procedure can be found in the ``create_character_with_house.sql`` file located in the ``/sql/procedures`` directory.
+
+Prodecure workflow:
+
+1. Input parameters:
+    * The procedure accepts multiple parameters including name, balance, profile, gender, skin color, eye color, height, weight and house details such as the number of rooms.
+2. Sequence adjustments:
+    * The sequence for the house table (house_id_seq) is reset to the current maximum id in the houses table. This ensures the next ``INSERT`` statement will generate a unique ID for the new house. This was need when working with the data populated using `seedl.sql`
+3. House creation:
+    * A new row is inserted into the ``houses`` table using the number of rooms and bathrooms provided in the input parameter. The ``RETURNING`` clause captures the newly generated id for the house, which is then stored in the ``v_house_id`` variable.
+4. Character creation:
+    * Once the house is created, the procedure proceeds to create a new ``character`` in the characters table, linking the new character to the ``house_id`` of the house just created. The details for the character are passed in as parameters.
+
+
+
