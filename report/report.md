@@ -896,3 +896,101 @@ COMMIT;
 [^maven]: Apache Maven Documentation: https://maven.apache.org/guides/
     
 [^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/
+## Events
+
+### Introduction
+
+In many relational database courses, "events" usually means scheduled
+database tasks that run automatically at fixed times. PostgreSQL does
+not provide a built-in `CREATE EVENT` feature like MySQL. For this
+reason, this project implements scheduled behavior using a cron-based
+approach instead.
+
+The implementation is placed in `sqls/daily_loyalty_bonus.sql`.
+
+### Why Cron Jobs in PostgreSQL
+
+Because PostgreSQL has no native event scheduler syntax, we use the
+`pg_cron` extension to execute SQL commands on a defined schedule. This
+gives us event-like behavior while staying inside PostgreSQL.
+
+In this project, the scheduled task runs every day at **00:01** and
+updates each character's balance according to gang membership rules:
+
+- Characters with gang affiliation receive a loyalty bonus.
+- Characters without gang affiliation receive a fixed fallback bonus of
+  `100`.
+
+### Cron Job File Walkthrough
+
+The full implementation is in `sqls/daily_loyalty_bonus.sql` and is
+structured in three parts:
+
+1. Enable extension:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+```
+
+This ensures cron scheduling is available in the current database.
+
+2. Replace existing job with same name:
+
+```sql
+DO $$
+DECLARE
+    v_job_id integer;
+BEGIN
+    SELECT jobid
+    INTO v_job_id
+    FROM cron.job
+    WHERE jobname = 'daily_loyalty_bonus';
+
+    IF v_job_id IS NOT NULL THEN
+        PERFORM cron.unschedule(v_job_id);
+    END IF;
+END $$;
+```
+
+This prevents duplicate schedules if the script is executed multiple
+times.
+
+3. Schedule daily payout at `00:01`:
+
+```sql
+SELECT cron.schedule(
+    'daily_loyalty_bonus',
+    '1 0 * * *',
+    $cron$
+    UPDATE characters c
+    SET balance = c.balance + COALESCE(b.bonus, 100)
+    FROM (
+        SELECT
+            c2.id AS character_id,
+            SUM(GREATEST((CURRENT_DATE - ga.join_date), 0))::double precision AS bonus
+        FROM characters c2
+        LEFT JOIN gang_affiliations ga
+            ON ga.character_id = c2.id
+        GROUP BY c2.id
+    ) b
+    WHERE c.id = b.character_id;
+    $cron$
+);
+```
+
+How this works:
+
+- `'1 0 * * *'` means every day at 00:01.
+- `LEFT JOIN` keeps all characters in scope, even without gang rows.
+- `CURRENT_DATE - ga.join_date` calculates number of days in gang.
+- `SUM(...)` adds bonus days if a character has multiple affiliations.
+- `COALESCE(b.bonus, 100)` applies fallback `100` when no gang bonus is
+  available.
+
+### Summary
+
+PostgreSQL does not have native event objects, so scheduled automation
+is implemented using cron jobs. In this project, the daily loyalty
+payout is implemented as a reusable SQL script in
+`sqls/daily_loyalty_bonus.sql`, providing predictable and fully
+database-side automation.
