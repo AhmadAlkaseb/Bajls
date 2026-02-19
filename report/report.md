@@ -38,7 +38,7 @@ Sadek Alsukafi
 | **Date of delivery**                        | 8/3/2026 |
 | **List of figures**                         | 9 |
 | **List of appendices**                      | 17 |
-| **Number of characters (including spaces)** | 48909 |
+| **Number of characters (including spaces)** | 53616 |
 
 \vspace{0.5cm}
 \begin{center}
@@ -1253,54 +1253,6 @@ COMMIT;
 
 \newpage
 
-## 2.6. Security and access control
-
-### 2.6.1. Explanation of users and privileges
-
-The system uses only two roles: `User` and `Admin`.
-
-- `User`: regular player role with access to normal gameplay features
-  (profile and character usage).
-- `Admin`: administrative role with extended permissions for management
-  and moderation tasks.
-
-Each profile has exactly one role, and a profile cannot have both roles
-at the same time. This keeps access control simple and aligned with the
-project requirements.
-
-[^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
-
-[^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
-
-[^maven]: Apache Maven Documentation: https://maven.apache.org/guides/
-
-[^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/
-
-\newpage
-
-## Appendix A. Links and file references
-
-- https://www.postgresql.org/docs/
-- https://docs.oracle.com/en/java/javase/17/
-- https://maven.apache.org/guides/
-- https://hibernate.org/orm/documentation/
-
-### File references used in report
-
-- docker-compose.yml
-- sqls/schema.sql
-- sqls/daily_loyalty_bonus.sql
-- sqls/seed.sql
-- images/frontpage/Document3.png
-- images/frontpage/Graph-Database.png
-- images/frontpage/what-is-a-relational-database.jpg
-- images/conceptual-logical-physical/conceptual-model-2026-02-10.png
-- images/conceptual-logical-physical/logical-model-2026-02-10.png
-- images/conceptual-logical-physical/physical-model-2026-02-10.png
-- images/frontpage/View-v_character_overview.png
-- images/frontpage/View-v_gang_overview.png
-- images/frontpage/View-v_character_appearance.png
-
 ### 2.5 Stored Functions & Procedures
 ### Introduction
 
@@ -1376,5 +1328,50 @@ Prodecure workflow:
 4. Character creation:
     * Once the house is created, the procedure proceeds to create a new ``character`` in the characters table, linking the new character to the ``house_id`` of the house just created. The details for the character are passed in as parameters.
 
+## 2.6. Security and access control
 
+### 2.6.1. Explanation of users and privileges
 
+The system uses only two roles: `User` and `Admin`.
+
+- `User`: regular player role with access to normal gameplay features
+  (profile and character usage).
+- `Admin`: administrative role with extended permissions for management
+  and moderation tasks.
+
+Each profile has exactly one role, and a profile cannot have both roles
+at the same time. This keeps access control simple and aligned with the
+project requirements.
+
+[^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
+
+[^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
+
+[^maven]: Apache Maven Documentation: https://maven.apache.org/guides/
+
+[^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/
+
+\newpage
+
+## Appendix A. Links and file references
+
+- https://www.postgresql.org/docs/
+- https://docs.oracle.com/en/java/javase/17/
+- https://maven.apache.org/guides/
+- https://hibernate.org/orm/documentation/
+
+### File references used in report
+
+- docker-compose.yml
+- sqls/schema.sql
+- sqls/daily_loyalty_bonus.sql
+- sqls/seed.sql
+- images/frontpage/Document3.png
+- images/frontpage/Graph-Database.png
+- images/frontpage/what-is-a-relational-database.jpg
+- images/conceptual-logical-physical/conceptual-model-2026-02-10.png
+- images/conceptual-logical-physical/logical-model-2026-02-10.png
+- images/conceptual-logical-physical/physical-model-2026-02-10.png
+- images/frontpage/View-v_character_overview.png
+- images/frontpage/View-v_gang_overview.png
+- images/frontpage/View-v_character_appearance.png
