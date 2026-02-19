@@ -12,7 +12,7 @@ if (-not (Test-Path $reportPath)) {
 }
 
 $content = Get-Content -Path $reportPath -Raw -Encoding UTF8
-$pattern = '(?m)^\| \*\*Number of characters \(including spaces\)\*\* \| .* \|$'
+$pattern = '(?m)^\| \*\*Number of characters \(including spaces\)\*\* \| .* \|\r?$'
 
 if (-not [regex]::IsMatch($content, $pattern)) {
     throw 'Could not find the table row for "Number of characters (including spaces)".'
