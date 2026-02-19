@@ -9,10 +9,11 @@ header-includes:
   - '\fancyfoot[R]{\thepage}'
   - '\renewcommand{\headrulewidth}{0pt}'
   - '\renewcommand{\footrulewidth}{0pt}'
+  - '\setcounter{tocdepth}{3}'
 ---
 <div align="center">
 
-## RPG Game Database Design
+**RPG Game Database Design**
 
 Version 1
 
@@ -33,20 +34,13 @@ Sadek Alsukafi
 | **Date of delivery**                        | *(To be filled in)* |
 | **List of figures**                         | *(To be filled in)* |
 | **List of appendices**                      | *(To be filled in)* |
-| **Number of characters (including spaces)** | 27032               |
+| **Number of characters (including spaces)** | 46033               |
 
 \vspace{0.5cm}
 \begin{center}
 \begin{tabular}{ccc}
 \includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Document3.png} &
 \includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Graph-Database.png} &
-
-\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/View-v_character_overview.png} &
-
-\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/View-v_gang_overview.png} &
-
-\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/View-v_character_appearance.png} &
-
 \includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/what-is-a-relational-database.jpg}
 \end{tabular}
 \end{center}
@@ -59,7 +53,7 @@ Sadek Alsukafi
 
 \newpage
 
-## 1. Introduction
+# 1. Introduction
 
 Our goal is to design and develop a next-generation RPG game inspired by
 the creative freedom and social interaction found in platforms like
@@ -97,9 +91,58 @@ The player experience includes:
 The game architecture must support both regular players and
 administrators who manage the system.
 
+## 1.1. System overview and cloud architecture
+
+This project is organized as a Java application with a PostgreSQL
+database. The same logical architecture is used in cloud deployment and
+in local development, while runtime setup differs by environment.
+
+### Architecture diagram (cloud deployment)
+
+```text
+[Client / Browser / API Consumer]
+                |
+                v
+       [Java Application Service]
+         (REST + business logic)
+                |
+                v
+         [PostgreSQL Database]
+                |
+                v
+     [Persistent Cloud Volume/Storage]
+```
+
+In cloud environments, the application service and database run as
+separate managed workloads. The database persists data on dedicated
+storage, while the application scales independently.
+
+### Local development deployment (`docker-compose`)
+
+The local setup uses `docker-compose.yml` in the project root to start
+application and database services in one command.
+
+```text
+docker-compose.yml
+    |
+    +-- service: app (Java 17 + Maven/Hibernate)
+    |       |
+    |       +-- depends_on: db
+    |
+    +-- service: db (PostgreSQL)
+            |
+            +-- volume: local persistent data
+```
+
+Typical local startup command:
+
+```bash
+docker compose up -d
+```
+
 \newpage
 
-### 1.1. Explanation of choices for databases and programming languages, and other tools
+## 1.2. Explanation of choices for databases and programming languages, and other tools
 
 The project uses **PostgreSQL**[^postgres] as the database system because the
 domain is strongly relational and depends on strict integrity rules.
@@ -130,11 +173,14 @@ Additional tools include:
 - **pgAdmin** for visual inspection of the physical schema and foreign
   key network.
 
+The next chapter turns these technology choices into concrete database
+rules and schema decisions.
+
 ---
 
 \newpage
 
-## 2. Requirements
+# 2. Relational database
 
 This section defines the functional requirements for our RPG game
 inspired by Roblox. The purpose is to clearly define persons, profiles,
@@ -142,7 +188,12 @@ characters, and their relationships in the system. The system must
 enforce strict rules to ensure data integrity, logical consistency, and
 reliable gameplay functionality.
 
-### 2.1. Intro to relational databases
+To keep a clear thread through the chapter, we move in this order:
+requirements -> conceptual/logical design -> normalization -> physical
+implementation -> stored database objects -> realistic seed data ->
+access control.
+
+## 2.1. Intro to relational databases
 
 A relational database organizes information in tables connected by
 keys. This model is suitable for the RPG domain because core business
@@ -157,7 +208,7 @@ membership records must be prevented in the database itself. PostgreSQL
 handles this through primary keys, foreign keys, unique constraints, and
 transaction guarantees.
 
-### 2.2. Database design
+## 2.2. Database design
 
 The database design follows a layered progression from requirements to
 implementation:
@@ -282,7 +333,7 @@ This section presents the entity/relationship progression from
 conceptual understanding to logical structure, and prepares the
 transition to the physical implementation in Section 2.3.
 
-### Conceptual Model
+#### Conceptual Model
 
 The conceptual model describes the business domain without technical
 implementation details such as data types, indexes, or SQL syntax. Its
@@ -292,7 +343,7 @@ project, `Characters` is the central concept because most game actions,
 ownership rules, and social interactions are represented through
 character entities.
 
-### Conceptual Diagram
+#### Conceptual Diagram
 
 ![Conceptual data model](images/conceptual-logical-physical/conceptual-model-2026-02-10.png)
 *Date: 10.2.2026*
@@ -315,7 +366,7 @@ The model includes the following core entities:
 
 \newpage
 
-### Key Relationships in the Diagram
+#### Key Relationships in the Diagram
 
 - `Profiles` to `Roles`: many-to-one.
   Each profile has exactly one role, while one role can be assigned to
@@ -334,7 +385,7 @@ The model includes the following core entities:
   A character may join zero or more gangs, and each gang may contain
   multiple characters.
 
-### Cardinality and Modality
+#### Cardinality and Modality
 
 In this project, relationship rules are described using both
 **cardinality** and **modality**:
@@ -381,18 +432,18 @@ implementation, and reduces redesign risk later in the project.
 
 \newpage
 
-### Logical Model
+#### Logical Model
 
 The logical model translates the conceptual design into a normalized
 relational structure. At this level business rules are transformed into
 enforceable structural constraints with attributes.
 
-### Logical Diagram
+#### Logical Diagram
 
 ![Logical data model](images/conceptual-logical-physical/logical-model-2026-02-10.png)
 *Date: 10.2.2026*
 
-### Main Tables
+#### Main Tables
 
 - **Profiles** (first_name, last_name, email, username, password)
 - **Roles** (name)
@@ -409,7 +460,7 @@ classification values. This design reduces redundancy and makes updates
 predictable. For example, changing a reference label does not require
 editing every character row.
 
-### Logical Relationship Rules
+#### Logical Relationship Rules
 
 - One `Profile` belongs to one `Role`; one `Role` can be used by many
   profiles.
@@ -432,11 +483,171 @@ Relationships are defined in a simple way, so common queries are easier
 to build and understand before implementing the final PostgreSQL
 optimization.
 
+### 2.2.2. Normalization process
+
+Normalization keeps data in one place and makes updates and queries more
+consistent. The goal is to eliminate
+redundancy and avoid insertion, update, and deletion anomalies that
+would otherwise appear in gameplay data.
+
+#### First Normal Form (1NF)
+
+1NF requires atomic attributes and no repeating groups in a single
+column. In this schema, all tables satisfy 1NF because each column holds
+one value per row. For example, a character does not store multiple eye
+colors or multiple gang IDs in one field. Multi-valued relationships are
+modeled through separate tables (especially `gang_affiliations`).
+
+#### Second Normal Form (2NF)
+
+2NF requires that non-key attributes depend on the full primary key, not
+part of it. This is especially relevant in tables with composite keys.
+`gang_affiliations` satisfies 2NF because `join_date` depends on the
+specific combination of `character_id` and `gang_id` rather than only
+one of them. No partial dependency is present.
+
+#### Third Normal Form (3NF)
+
+3NF removes transitive dependencies where non-key attributes depend on
+other non-key attributes. The schema satisfies this by separating roles,
+appearance categories, and gangs into dedicated tables referenced by
+foreign keys. For example, role names are not duplicated in `profiles`,
+and appearance labels are not duplicated in `characters`.
+
+The resulting 3NF design improves consistency and maintainability:
+
+- Changes are localized to one table.
+- Duplicate text values are minimized.
+- Integrity constraints become easier to enforce.
+- Queries stay clear and consistent as data grows.
+
+The final logical schema therefore satisfies **3NF** and provides a
+reliable base for physical implementation.
+
 ---
 
 \newpage
 
-### 2.3. Physical data model
+## 2.3. Physical data model
+
+#### Database setup and schema execution
+
+The physical database can be created directly from
+`sqls/schema.sql`. This makes onboarding simple: one script builds the
+tables, keys, and constraints used by the project.
+
+#### Schema export
+
+To make the database reproducible without access to the project host, a
+full schema export is included as `sqls/schema.sql`. The file is
+generated with `pg_dump` and contains the DDL (Data Definition Language)
+needed to recreate the database structure: tables, constraints, foreign
+keys, indexes, and sequences.
+
+The schema file acts as a portable snapshot of the physical data model.
+Anyone cloning the repository can create an identical empty database by
+running:
+
+```bash
+psql -U postgres -d bajls -f sqls/schema.sql
+```
+
+If your local database name is different, replace `bajls` with your own
+database name (for example `bajls_db`).
+
+Minimum setup:
+
+```bash
+createdb bajls_db
+psql -d bajls_db -f sqls/schema.sql
+```
+
+Clean reset (useful during development):
+
+```bash
+dropdb --if-exists bajls_db
+createdb bajls_db
+psql -d bajls_db -f sqls/schema.sql
+```
+
+If your PostgreSQL user is not the default user, specify it explicitly:
+
+```bash
+psql -U postgres -d bajls_db -f sqls/schema.sql
+```
+
+#### What the schema script creates
+
+The script creates the database structure in a logical order:
+
+- Reference tables first (for controlled values), such as `roles`,
+  `genders`, `weights`, `heights`, `eyecolors`, and `skincolors`.
+- Core business tables next, such as `profiles`, `characters`, `houses`,
+  and `gangs`.
+- Relationship table last: `gang_affiliations`, which links characters
+  and gangs in a many-to-many pattern.
+
+This order matters because foreign keys can only point to tables that
+already exist.
+
+#### How constraints implement business rules
+
+Example from the same pattern used in `sqls/schema.sql`:
+
+```sql
+CREATE TABLE characters (
+    id SERIAL PRIMARY KEY,
+    profile_id INTEGER NOT NULL REFERENCES profiles(id),
+    house_id INTEGER NOT NULL UNIQUE REFERENCES houses(id)
+);
+```
+
+This simple definition enforces important rules at database level:
+
+- `PRIMARY KEY` gives each character a stable identity.
+- `NOT NULL` makes profile and house assignment mandatory.
+- `REFERENCES` prevents invalid IDs that do not exist in parent tables.
+- `UNIQUE` on `house_id` enforces one house per character (one-to-one).
+
+Many-to-many membership is handled with a junction table:
+
+```sql
+CREATE TABLE gang_affiliations (
+    character_id INTEGER REFERENCES characters(id),
+    gang_id INTEGER REFERENCES gangs(id),
+    join_date DATE,
+    PRIMARY KEY (character_id, gang_id)
+);
+```
+
+The composite primary key prevents duplicate memberships for the same
+character-gang pair.
+
+#### Quick verification after running the script
+
+After importing `sqls/schema.sql`, a developer can run short checks:
+
+```sql
+-- list created tables
+\dt
+
+-- inspect columns and constraints
+\d characters
+\d gang_affiliations
+```
+
+And a quick join test:
+
+```sql
+SELECT c.id, p.username, h.id AS house_id
+FROM characters c
+JOIN profiles p ON p.id = c.profile_id
+JOIN houses h ON h.id = c.house_id
+LIMIT 5;
+```
+
+If these queries run successfully, the schema is loaded and core
+relationships are working as expected.
 
 The physical model is the concrete PostgreSQL implementation of the
 logical schema. At this stage, abstract relations are converted into
@@ -444,12 +655,12 @@ actual database objects with column types, constraints, and execution
 characteristics. The implementation shown in pgAdmin reflects the final
 table structure and foreign-key network used by the project.
 
-### Physical Diagram
+#### Physical Diagram
 
 ![Physical data model in PostgreSQL](images/conceptual-logical-physical/physical-model-2026-02-10.png)
 *Date: 10.2.2026*
 
-### Implementation Details
+#### Implementation Details
 
 - Primary keys are implemented as integer identifiers (`id`).
 - Foreign keys are created between dependent tables to enforce
@@ -483,7 +694,7 @@ Operationally, the physical design also supports maintainability:
 - Stable reference tables for controlled enumerations.
 - Predictable join paths for reporting and administration tools.
 
-### Cardinality and Modality in the Physical Model
+#### Cardinality and Modality in the Physical Model
 
 At the physical level, cardinality and modality are enforced through
 foreign keys, uniqueness, and nullability:
@@ -541,7 +752,7 @@ with `gang_affiliations`, where the composite key
 (`character_id`, `gang_id`) prevents duplicate memberships for the same
 pair.
 
-### 2.3.3. Constraints and referential integrity
+### 2.3.4. Constraints and referential integrity
 
 The schema enforces integrity through a combination of column
 constraints and relationship constraints:
@@ -564,52 +775,7 @@ ownership, and duplicate relationships.
 
 \newpage
 
-### 2.4. Normalization process
-
-Normalization keeps data in one place and makes updates and queries more
-consistent. The goal is to eliminate
-redundancy and avoid insertion, update, and deletion anomalies that
-would otherwise appear in gameplay data.
-
-### First Normal Form (1NF)
-
-1NF requires atomic attributes and no repeating groups in a single
-column. In this schema, all tables satisfy 1NF because each column holds
-one value per row. For example, a character does not store multiple eye
-colors or multiple gang IDs in one field. Multi-valued relationships are
-modeled through separate tables (especially `gang_affiliations`).
-
-### Second Normal Form (2NF)
-
-2NF requires that non-key attributes depend on the full primary key, not
-part of it. This is especially relevant in tables with composite keys.
-`gang_affiliations` satisfies 2NF because `join_date` depends on the
-specific combination of `character_id` and `gang_id` rather than only
-one of them. No partial dependency is present.
-
-### Third Normal Form (3NF)
-
-3NF removes transitive dependencies where non-key attributes depend on
-other non-key attributes. The schema satisfies this by separating roles,
-appearance categories, and gangs into dedicated tables referenced by
-foreign keys. For example, role names are not duplicated in `profiles`,
-and appearance labels are not duplicated in `characters`.
-
-The resulting 3NF design improves consistency and maintainability:
-
-- Changes are localized to one table.
-- Duplicate text values are minimized.
-- Integrity constraints become easier to enforce.
-- Queries stay clear and consistent as data grows.
-
-The final logical schema therefore satisfies **3NF** and provides a
-reliable base for physical implementation.
-
----
-
-\newpage
-
-## View
+## 2.4. Stored objects - views, triggers, events
 
 Views are virtual tables defined by an SQL query. Instead of storing data physically, a view presents data from one or more underlying tables based on a predefined query. This allows users and applications to access filtered, structured, or combined data without directly interacting with the base tables.
 
@@ -617,7 +783,11 @@ A view behaves like a regular table in queries. Users can perform `SELECT` opera
 
 Views are useful in systems where data should be presented in a controlled or simplified way. In this RPG project, views could be used to expose selected character information, player summaries, or administrative overviews without giving direct access to the full database structure.
 
-### Purpose of Views
+In short: this section covers read-oriented objects (`views`),
+write-time validation (`triggers`), and time-based automation (`events`
+through `pg_cron`).
+
+### 2.4.1. Views
 
 **Simplification of complex queries:**
 A view can encapsulate joins and filters that would otherwise require long and complex SQL statements. This makes application queries easier to write and maintain.
@@ -631,7 +801,7 @@ Views can restrict access to sensitive data by exposing only selected columns or
 **Low storage overhead:**
 Standard views do not store data physically, since they generate results dynamically from the base tables.
 
-### Limitations of Views
+#### Limitations of Views
 
 **Performance overhead:**
 Since the underlying query is executed each time the view is accessed, complex views can reduce performance, especially when based on multiple joins or large tables.
@@ -642,7 +812,7 @@ A view depends on the structure of its underlying tables. If referenced columns 
 **Update Limitations:**
 Not all views are updatable, particularly those involving joins, grouping, or complex calculations.
 
-### How Views Will Be Used in the RPG Project
+#### How Views Will Be Used in the RPG Project
 
 In the RPG system, many features require data from multiple related tables such as profiles, characters and gangs.
 
@@ -659,30 +829,23 @@ Views can hide sensitive information such as passwords or internal identifiers a
 Views can present summarized information about players, characters, houses, and gang memberships in a clear and structured format.
 This approach improves maintainability and ensures controlled access to the game data.
 
-### Character Overview View
+#### Character Overview View
 
 The following example creates a view that provides an overview of each character, including the associated profile and any gang affiliations.
 
-`CREATE` `OR` `REPLACE` `VIEW` v_character_overview `AS`
-
-`SELECT`
-
-profiles.username `AS` username,
-characters.name `AS` name,
-characters.balance `AS` balance,  
-`COALESCE`(STRING_AGG(gangs.name, ', '), 'Spineless') AS affiliations
-
-`FROM` characters
-
-`JOIN` profiles `ON` profiles.id = characters.profile_id
-`LEFT` `JOIN` gang_affiliations `ON` gang_affiliations.character_id = characters.id  
-`LEFT` `JOIN` gangs `ON` gangs.id = gang_affiliations.gang_id
-
-`GROUP` `BY`
-
-profiles.username,
-characters.name,
-characters.balance;
+```sql
+CREATE OR REPLACE VIEW v_character_overview AS
+SELECT
+    profiles.username AS username,
+    characters.name AS name,
+    characters.balance AS balance,
+    COALESCE(STRING_AGG(gangs.name, ', '), 'Spineless') AS affiliations
+FROM characters
+JOIN profiles ON profiles.id = characters.profile_id
+LEFT JOIN gang_affiliations ON gang_affiliations.character_id = characters.id
+LEFT JOIN gangs ON gangs.id = gang_affiliations.gang_id
+GROUP BY profiles.username, characters.name, characters.balance;
+```
 
 The v_character_overview view combines data from multiple related tables into a single logical structure. The purpose of this view is to present information together with the owning profile and any gang affiliations in a simplified format.
 The query is centered around the characters table, since characters represent the core entity in the gameplay domain.  
@@ -710,195 +873,108 @@ The grouping ensures that all rows belonging to the same character are combined 
 The view does not expose characters.id. Instead, uniqueness is determined by the combination of username, character name, and balance.
 Hiding internal identifiers helps abstract the database structure and prevents exposing internal technical details, which can improve both security and data encapsulation. This ensures that each character appears only once, even if multiple gang memberships exist. All non-aggregated columns in the SELECT clause must be included in the GROUP BY clause to ensure deterministic results.
 
-##### Result
+**Result**
 
 When querying the view:
-`SELECT` * `FROM` v_character_overview;
+`SELECT * FROM v_character_overview;`
 
 ![v_character_overview](images/frontpage/View-v_character_overview.png)
 
 This structure provides a clear and compact overview suitable for application use, administration, and reporting.
 
-### Gang Overview View
+#### Gang Overview View
 
 The v_gang_overview view provides a summarized overview of each gang and its members.
 
-`CREATE` `OR` `REPLACE` `VIEW` v_gang_overview `AS`
-
-`SELECT`
-
-gangs.name `AS` gang_name,  
-`COALESCE`(STRING_AGG(characters.name, ', '), 'No members') `AS` members
-
-`FROM` gangs
-
-`LEFT` `JOIN` gang_affiliations `ON` gang_affiliations.gang_id = gangs.id  
-`LEFT` `JOIN` characters `ON` characters.id = gang_affiliations.character_id
-
-`GROUP` `BY`
-gangs.name;
+```sql
+CREATE OR REPLACE VIEW v_gang_overview AS
+SELECT
+    gangs.name AS gang_name,
+    COALESCE(STRING_AGG(characters.name, ', '), 'No members') AS members
+FROM gangs
+LEFT JOIN gang_affiliations ON gang_affiliations.gang_id = gangs.id
+LEFT JOIN characters ON characters.id = gang_affiliations.character_id
+GROUP BY gangs.name;
+```
 
 
 
 
-##### Result
+**Result**
 
 When querying the view:  
-`SELECT` * `FROM` v_gang_overview;
+`SELECT * FROM v_gang_overview;`
 
 ![v_character_overview](images/frontpage/View-v_gang_overview.png)
 
 The view combines data from the `gangs`, `gang_affiliations`, and `characters` tables to present gang information in a simplified format.
 
-### Character Appearance Overview View
+#### Character Appearance Overview View
 
 The v_character_appearance view provides a structured overview of each character’s physical attributes
 
-`CREATE` `OR` REPLACE `VIEW` v_character_appearance `AS`
-
-`SELECT`
-
-characters.name `AS` character_name,  
-characters.balance `AS` balance,
-genders.name `AS` gender,
-weights.name `AS` weight,
-heights.name `AS` height,
-eyecolors.name `AS` eye_color,
-skincolors.name `AS` skin_color
-
-`FROM` characters
-
-`JOIN` genders `ON` genders.id = characters.gender_id
-`JOIN` weights `ON` weights.id = characters.weight_id
-`JOIN` heights `ON` heights.id = characters.height_id
-`JOIN` eyecolors `ON` eyecolors.id = characters.eyecolor_id  
-`JOIN` skincolors `ON` skincolors.id = characters.skincolor_id;
+```sql
+CREATE OR REPLACE VIEW v_character_appearance AS
+SELECT
+    characters.name AS character_name,
+    characters.balance AS balance,
+    genders.name AS gender,
+    weights.name AS weight,
+    heights.name AS height,
+    eyecolors.name AS eye_color,
+    skincolors.name AS skin_color
+FROM characters
+JOIN genders ON genders.id = characters.gender_id
+JOIN weights ON weights.id = characters.weight_id
+JOIN heights ON heights.id = characters.height_id
+JOIN eyecolors ON eyecolors.id = characters.eyecolor_id
+JOIN skincolors ON skincolors.id = characters.skincolor_id;
+```
 
 Each of these attributes is stored as a foreign key in the `characters` table and linked to a corresponding lookup table. By using joins, the view replaces internal identifier values with readable attribute names. This makes the data easier to understand and use in application features, administration, and reporting.
 
 
-##### Result
+**Result**
 
 When querying the view:
-`SELECT` * `FROM` v_character_appearance;
+`SELECT * FROM v_character_appearance;`
 
 ![v_character_overview](images/frontpage/View-v_character_appearance.png)
 
 The view simplifies queries by collecting all appearance-related information in a single logical structure and supports the normalized database design by keeping descriptive values in dedicated reference tables.
 
-\newpage
+### 2.4.2. Triggers
 
-## Realistic Data
+The current repository does not include a dedicated trigger script, but
+triggers are relevant for enforcing automatic business rules at write
+time. A trigger can, for example, prevent negative balances even if an
+application bug sends invalid updates.
 
-### Introduction
-
-The project includes a dedicated seed script, `sqls/seedl.sql`, that creates a
-realistic baseline dataset for demos, testing, and validation. Instead
-of random values, the script inserts coherent player profiles,
-characters, houses, and gang memberships, so queries return believable
-results and relationship rules can be verified in practice.
-
-### Script Structure
-
-The script starts by opening a transaction and resetting all relevant
-tables. This makes each run deterministic and easy to repeat.
-
-In this context, *deterministic* means that the script produces the same
-data state every time it is executed on the same schema.
+Example trigger logic:
 
 ```sql
-BEGIN;
-TRUNCATE TABLE
-    gang_affiliations,
-    characters,
-    profiles,
-    gangs,
-    houses,
-    roles,
-    genders,
-    weights,
-    heights,
-    eyecolors,
-    skincolors
-RESTART IDENTITY CASCADE;
+CREATE OR REPLACE FUNCTION prevent_negative_balance()
+RETURNS trigger AS $$
+BEGIN
+    IF NEW.balance < 0 THEN
+        RAISE EXCEPTION 'balance cannot be negative';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_negative_balance
+BEFORE INSERT OR UPDATE ON characters
+FOR EACH ROW
+EXECUTE FUNCTION prevent_negative_balance();
 ```
 
-`TRUNCATE` removes all rows from the listed tables very quickly.
-`RESTART IDENTITY` resets auto-increment IDs back to their starting
-values, and `CASCADE` ensures dependent tables are also cleared safely.
+This keeps critical validation in the database itself and protects data
+integrity across all clients.
 
-After reset, the script inserts stable reference data first, followed by
-gangs and player profiles.
+### 2.4.3. Events
 
-```sql
-INSERT INTO roles (id, name) VALUES (1, 'USER'), (2, 'ADMIN');
-INSERT INTO genders (id, name) VALUES (1, 'MALE'), (2, 'FEMALE'), (3, 'OTHER');
-INSERT INTO weights (id, name) VALUES (1, 'LIGHT'), (2, 'AVERAGE'), (3, 'HEAVY');
-INSERT INTO heights (id, name) VALUES (1, 'SHORT'), (2, 'AVERAGE'), (3, 'TALL');
-```
-
-### Schema-Aware Character and House Seeding
-
-To support schema variants, seeding for `characters` and `houses` is
-handled in a `DO` block. It checks where the foreign key is placed and
-inserts in the correct order to avoid referential errors.
-
-```sql
-IF characters_has_house_id AND NOT houses_has_character_id THEN
-    INSERT INTO houses (id, amount_rooms, amount_bathrooms) VALUES
-        (1, 2, 1), (2, 3, 2), (3, 1, 1);
-
-    INSERT INTO characters (
-        id, name, balance, profile_id, gender_id, skincolor_id,
-        eyecolor_id, height_id, weight_id, house_id
-    ) VALUES
-        (1, 'ShadowMia', 2450.50, 1, 2, 1, 2, 2, 2, 1),
-        (2, 'SteelNoah', 1320.00, 2, 1, 2, 1, 3, 3, 2);
-END IF;
-```
-
-The condition means: if `characters` contains `house_id` and `houses`
-does not contain `character_id`, then the foreign key points from
-`characters` to `houses`. In that case, `houses` must be inserted first.
-
-For `INSERT INTO houses (id, amount_rooms, amount_bathrooms)`, each tuple
-follows that exact column order:
-
-- `(1, 2, 1)` = `id = 1`, `amount_rooms = 2`, `amount_bathrooms = 1`
-- `(2, 3, 2)` = `id = 2`, `amount_rooms = 3`, `amount_bathrooms = 2`
-- `(3, 1, 1)` = `id = 3`, `amount_rooms = 1`, `amount_bathrooms = 1`
-
-### Gang Membership Data
-
-Gang membership is optional in the model, so only a subset of characters
-receives rows in `gang_affiliations`. This intentionally demonstrates
-both valid states: characters with gang membership and characters
-without gang membership.
-
-```sql
-INSERT INTO gang_affiliations (character_id, gang_id, join_date) VALUES
-    (1, 2, '2025-01-12'),
-    (2, 1, '2025-02-03'),
-    (3, 7, '2025-03-22'),
-    (4, 5, '2025-04-10');
-```
-
-Finally, all inserts are persisted in one atomic commit.
-
-```sql
-COMMIT;
-```
-
-[^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
-    
-[^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
-    
-[^maven]: Apache Maven Documentation: https://maven.apache.org/guides/
-    
-[^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/
-## Events
-
-### Introduction
+#### Introduction
 
 In many relational database courses, "events" usually means scheduled
 database tasks that run automatically at fixed times. PostgreSQL does
@@ -908,7 +984,7 @@ approach instead.
 
 The implementation is placed in `sqls/daily_loyalty_bonus.sql`.
 
-### Why Cron Jobs in PostgreSQL
+#### Why Cron Jobs in PostgreSQL
 
 Because PostgreSQL has no native event scheduler syntax, we use the
 `pg_cron` extension to execute SQL commands on a defined schedule. This
@@ -921,7 +997,7 @@ updates each character's balance according to gang membership rules:
 - Characters without gang affiliation receive a fixed fallback bonus of
   `100`.
 
-### Cron Job File Walkthrough
+#### Cron Job File Walkthrough
 
 The full implementation is in `sqls/daily_loyalty_bonus.sql` and is
 structured in three parts:
@@ -987,10 +1063,165 @@ How this works:
 - `COALESCE(b.bonus, 100)` applies fallback `100` when no gang bonus is
   available.
 
-### Summary
+#### Summary
 
 PostgreSQL does not have native event objects, so scheduled automation
 is implemented using cron jobs. In this project, the daily loyalty
 payout is implemented as a reusable SQL script in
 `sqls/daily_loyalty_bonus.sql`, providing predictable and fully
 database-side automation.
+
+\newpage
+
+## 2.6. Realistic data
+
+### Introduction
+
+The project includes a dedicated seed script, `sqls/seed.sql`, that creates a
+realistic baseline dataset for demos, testing, and validation. Instead
+of random values, the script inserts coherent player profiles,
+characters, houses, and gang memberships, so queries return believable
+results and relationship rules can be verified in practice.
+
+### Script Structure
+
+The script starts by opening a transaction and resetting all relevant
+tables. This makes each run deterministic and easy to repeat.
+
+In this context, *deterministic* means that the script produces the same
+data state every time it is executed on the same schema.
+
+```sql
+BEGIN;
+TRUNCATE TABLE
+    gang_affiliations,
+    characters,
+    profiles,
+    gangs,
+    houses,
+    roles,
+    genders,
+    weights,
+    heights,
+    eyecolors,
+    skincolors
+RESTART IDENTITY CASCADE;
+```
+
+`TRUNCATE` removes all rows from the listed tables very quickly.
+`RESTART IDENTITY` resets auto-increment IDs back to their starting
+values, and `CASCADE` ensures dependent tables are also cleared safely.
+
+After reset, the script inserts stable reference data first, followed by
+gangs and player profiles.
+
+```sql
+INSERT INTO roles (id, name) VALUES (1, 'USER'), (2, 'ADMIN');
+INSERT INTO genders (id, name) VALUES (1, 'MALE'), (2, 'FEMALE'), (3, 'OTHER');
+INSERT INTO weights (id, name) VALUES (1, 'LIGHT'), (2, 'AVERAGE'), (3, 'HEAVY');
+INSERT INTO heights (id, name) VALUES (1, 'SHORT'), (2, 'AVERAGE'), (3, 'TALL');
+```
+
+### Schema-aware character and house seeding
+
+To support schema variants, seeding for `characters` and `houses` is
+handled in a `DO` block. It checks where the foreign key is placed and
+inserts in the correct order to avoid referential errors.
+
+```sql
+IF characters_has_house_id AND NOT houses_has_character_id THEN
+    INSERT INTO houses (id, amount_rooms, amount_bathrooms) VALUES
+        (1, 2, 1), (2, 3, 2), (3, 1, 1);
+
+    INSERT INTO characters (
+        id, name, balance, profile_id, gender_id, skincolor_id,
+        eyecolor_id, height_id, weight_id, house_id
+    ) VALUES
+        (1, 'ShadowMia', 2450.50, 1, 2, 1, 2, 2, 2, 1),
+        (2, 'SteelNoah', 1320.00, 2, 1, 2, 1, 3, 3, 2);
+END IF;
+```
+
+The condition means: if `characters` contains `house_id` and `houses`
+does not contain `character_id`, then the foreign key points from
+`characters` to `houses`. In that case, `houses` must be inserted first.
+
+For `INSERT INTO houses (id, amount_rooms, amount_bathrooms)`, each tuple
+follows that exact column order:
+
+- `(1, 2, 1)` = `id = 1`, `amount_rooms = 2`, `amount_bathrooms = 1`
+- `(2, 3, 2)` = `id = 2`, `amount_rooms = 3`, `amount_bathrooms = 2`
+- `(3, 1, 1)` = `id = 3`, `amount_rooms = 1`, `amount_bathrooms = 1`
+
+### Gang membership data
+
+Gang membership is optional in the model, so only a subset of characters
+receives rows in `gang_affiliations`. This intentionally demonstrates
+both valid states: characters with gang membership and characters
+without gang membership.
+
+```sql
+INSERT INTO gang_affiliations (character_id, gang_id, join_date) VALUES
+    (1, 2, '2025-01-12'),
+    (2, 1, '2025-02-03'),
+    (3, 7, '2025-03-22'),
+    (4, 5, '2025-04-10');
+```
+
+Finally, all inserts are persisted in one atomic commit.
+
+```sql
+COMMIT;
+```
+
+## 2.7. Security and access control
+
+### 2.7.1. Explanation of users and privileges
+
+Database access should follow least-privilege principles, so each role
+gets only the permissions required for its tasks. A typical split is:
+
+- `app_user`: runtime role for the Java application (`SELECT`, `INSERT`,
+  `UPDATE`, `DELETE` on business tables).
+- `report_user`: read-only role for analytics and reporting (`SELECT`
+  only, especially on views).
+- `admin_user`: migration and maintenance role (`CREATE`, `ALTER`,
+  `DROP`, and role management).
+
+Example grants:
+
+```sql
+CREATE ROLE app_user LOGIN PASSWORD 'change_me';
+CREATE ROLE report_user LOGIN PASSWORD 'change_me';
+
+GRANT USAGE ON SCHEMA public TO app_user, report_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+GRANT SELECT ON v_character_overview, v_gang_overview, v_character_appearance TO report_user;
+```
+
+This model prevents accidental schema changes from application accounts
+and limits exposure of sensitive data to only what each user type needs.
+
+## 2.8. Chapter summary
+
+This chapter moved from requirements to implementation in a single
+traceable line:
+
+- business rules were defined,
+- relationships were modeled and normalized,
+- schema execution and integrity constraints were documented,
+- views/triggers/events were explained as stored objects,
+- realistic seed data and privilege strategy completed the operational
+  setup.
+
+Together, these elements make the database understandable, reproducible,
+and ready for both development and deployment.
+
+[^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
+
+[^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
+
+[^maven]: Apache Maven Documentation: https://maven.apache.org/guides/
+
+[^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/
+
