@@ -1,4 +1,4 @@
-﻿---
+---
 header-includes:
   - '\usepackage{fancyhdr}'
   - '\pagestyle{fancy}'
@@ -34,7 +34,7 @@ Sadek Alsukafi
 | **Date of delivery**                        | 8/3/2026 |
 | **List of figures**                         | 9 |
 | **List of appendices**                      | 17 |
-| **Number of characters (including spaces)** | 50933 |
+| **Number of characters (including spaces)** | 51014 |
 
 \vspace{0.5cm}
 \begin{center}
@@ -90,6 +90,8 @@ The player experience includes:
 
 The game architecture must support both regular players and
 administrators who manage the system.
+
+\newpage
 
 ## 1.1. System overview and cloud architecture
 
@@ -273,6 +275,8 @@ have multiple values for any of these attributes. The system must
 validate that all required attributes are present before a character can
 be created.
 
+\newpage
+
 #### Housing Requirement
 
 - A character must have exactly one house.
@@ -336,7 +340,7 @@ transition to the physical implementation in Section 2.3.
 #### Conceptual Model
 
 The conceptual model describes the business domain without technical
-implementation details such as data types, indexes, or SQL syntax. Its
+implementation details such as data types or SQL syntax. Its
 purpose is to show what information the system must manage and how core
 concepts are related from a game and business perspective. In this
 project, `Characters` is the central concept because most game actions,
@@ -345,8 +349,11 @@ character entities.
 
 #### Conceptual Diagram
 
-![Conceptual data model](images/conceptual-logical-physical/conceptual-model-2026-02-10.png)
-*Date: 10.2.2026*
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{images/conceptual-logical-physical/conceptual-model-2026-02-10.png}
+\caption{Conceptual data model (Date: 10.2.2026)}
+\end{figure}
 
 The model includes the following core entities:
 
@@ -363,8 +370,6 @@ The model includes the following core entities:
 - **Genders, Weights, Heights, Eyecolors, Skincolors**: controlled
   attribute domains used to define mandatory character appearance
   traits.
-
-\newpage
 
 #### Key Relationships in the Diagram
 
@@ -440,8 +445,11 @@ enforceable structural constraints with attributes.
 
 #### Logical Diagram
 
-![Logical data model](images/conceptual-logical-physical/logical-model-2026-02-10.png)
-*Date: 10.2.2026*
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{images/conceptual-logical-physical/logical-model-2026-02-10.png}
+\caption{Logical data model (Date: 10.2.2026)}
+\end{figure}
 
 #### Main Tables
 
@@ -453,12 +461,11 @@ enforceable structural constraints with attributes.
 - **Gang_Affiliations** (join_date)
 - **Genders, Weights, Heights, Eyecolors, Skincolors** (name)
 
-The table layout intentionally separates high-change data from
-low-change reference data. `characters` is transaction-heavy and
-contains gameplay-relevant state, while reference tables hold stable
-classification values. This design reduces redundancy and makes updates
-predictable. For example, changing a reference label does not require
-editing every character row.
+The table layout separates frequently changing data from stable
+reference data. `characters` contains active gameplay data, while
+reference tables store fixed classification values. This reduces
+redundancy and makes updates easier. For example, changing a reference
+label does not require updating every character row.
 
 #### Logical Relationship Rules
 
