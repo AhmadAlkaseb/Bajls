@@ -1,6 +1,11 @@
 ---
 header-includes:
   - '\usepackage{fancyhdr}'
+  - '\usepackage{tcolorbox}'
+  - '\usepackage{fvextra}'
+  - '\usepackage{float}'
+  - '\tcbuselibrary{breakable}'
+  - '\AtBeginDocument{\fvset{breaklines=true,breakanywhere=true}}'
   - '\pagestyle{fancy}'
   - '\fancyhf{}'
   - '\fancyhead[L]{\today}'
@@ -9,21 +14,20 @@ header-includes:
   - '\fancyfoot[R]{\thepage}'
   - '\renewcommand{\headrulewidth}{0pt}'
   - '\renewcommand{\footrulewidth}{0pt}'
+  - '\renewenvironment{Shaded}{\begin{tcolorbox}[breakable,colback=white,colframe=black,boxrule=0.4pt,arc=1.5pt,left=4pt,right=4pt,top=4pt,bottom=4pt]}{\end{tcolorbox}}'
   - '\setcounter{tocdepth}{3}'
 ---
-<div align="center">
-
-**RPG Game Database Design**
+\begin{center}
+\textbf{RPG Game Database Design}
 
 Version 1
 
-Ahmad Abdel Razak Hussein Alkaseb
-Benjamin Sebastian Barrales Hernandez
-Jeppe Ronning Koch
-Laith Abdel Razak Hussein Alkaseb
+Ahmad Abdel Razak Hussein Alkaseb\\
+Benjamin Sebastian Barrales Hernandez\\
+Jeppe Ronning Koch\\
+Laith Abdel Razak Hussein Alkaseb\\
 Sadek Alsukafi
-
-</div>
+\end{center}
 
 ---
 
@@ -34,7 +38,7 @@ Sadek Alsukafi
 | **Date of delivery**                        | 8/3/2026 |
 | **List of figures**                         | 9 |
 | **List of appendices**                      | 17 |
-| **Number of characters (including spaces)** | 51014 |
+| **Number of characters (including spaces)** | 48909 |
 
 \vspace{0.5cm}
 \begin{center}
@@ -664,8 +668,11 @@ table structure and foreign-key network used by the project.
 
 #### Physical Diagram
 
-![Physical data model in PostgreSQL](images/conceptual-logical-physical/physical-model-2026-02-10.png)
-*Date: 10.2.2026*
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{images/conceptual-logical-physical/physical-model-2026-02-10.png}
+\caption{Physical data model in PostgreSQL (Date: 10.2.2026)}
+\end{figure}
 
 #### Implementation Details
 
@@ -687,12 +694,11 @@ entity identity is protected with primary-key constraints. This reduces
 the risk of inconsistent data even if multiple services or scripts write
 to the same database.
 
-For relationship-heavy queries, indexing strategy is important. Primary
-keys are indexed automatically, and foreign-key columns should be
-indexed to improve join performance, especially for frequent operations
-such as loading profile characters, character attributes, or gang
-memberships. As data volume increases, this prevents full-table scans
-for common gameplay queries.
+For relationship-heavy queries, performance is important. Primary keys
+and foreign keys help the database connect tables efficiently for common
+operations such as loading profile characters, character attributes, and
+gang memberships. As data volume grows, this helps avoid scanning entire
+tables for routine gameplay queries.
 
 Operationally, the physical design also supports maintainability:
 
@@ -720,6 +726,8 @@ foreign keys, uniqueness, and nullability:
 - `gang_affiliations` implements optional many-to-many membership:
   both sides can have zero or many links, while each link row must
   reference exactly one character and one gang.
+
+\newpage
 
 ### 2.3.1. Data types
 
@@ -758,6 +766,8 @@ The many-to-many relation between characters and gangs is implemented
 with `gang_affiliations`, where the composite key
 (`character_id`, `gang_id`) prevents duplicate memberships for the same
 pair.
+
+\newpage
 
 ### 2.3.3. Constraints and referential integrity
 
@@ -858,7 +868,7 @@ The v_character_overview view combines data from multiple related tables into a 
 The query is centered around the characters table, since characters represent the core entity in the gameplay domain.  
 The `view` uses `CREATE` `OR` `REPLACE` to allow changes to the query logic without recreating the view manually. However, PostgreSQL does not allow columns to be removed or added when using `OR` `REPLACE`. In such cases, the view must be dropped and created again.
 
-##### Characters to Gangs (optional many-to-many relationship)
+### Characters to Gangs (optional many-to-many relationship)
 
 Gang membership is optional and modeled through the junction table gang_affiliations.
 
@@ -869,7 +879,7 @@ The COALESCE function is applied to the STRING_AGG result:
 If a character has no gang affiliations, STRING_AGG returns NULL.
 `COALESCE` replaces this NULL value with the text 'Spineless', ensuring that characters without a gang are clearly identified instead of showing a NULL value. Since the relationship is many-to-many, a character may be linked to multiple gangs.
 
-##### Aggregation and Grouping
+### Aggregation and Grouping
 
 To ensure that each character appears only once, the PostgreSQL aggregation function STRING_AGG is used:
 
@@ -883,13 +893,17 @@ Hiding internal identifiers helps abstract the database structure and prevents e
 **Result**
 
 When querying the view:
-`SELECT * FROM v_character_overview;`
+```sql
+SELECT * FROM v_character_overview;
+```
 
 ![v_character_overview](images/frontpage/View-v_character_overview.png)
 
 This structure provides a clear and compact overview suitable for application use, administration, and reporting.
 
-#### Gang Overview View
+\newpage
+
+### Gang Overview View
 
 The v_gang_overview view provides a summarized overview of each gang and its members.
 
@@ -903,20 +917,24 @@ LEFT JOIN gang_affiliations ON gang_affiliations.gang_id = gangs.id
 LEFT JOIN characters ON characters.id = gang_affiliations.character_id
 GROUP BY gangs.name;
 ```
-
-
-
+\newpage
 
 **Result**
 
 When querying the view:  
-`SELECT * FROM v_gang_overview;`
+```sql
+SELECT * FROM v_gang_overview;
+```
 
-![v_character_overview](images/frontpage/View-v_gang_overview.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/frontpage/View-v_gang_overview.png}
+\caption{v\_gang\_overview}
+\end{figure}
 
 The view combines data from the `gangs`, `gang_affiliations`, and `characters` tables to present gang information in a simplified format.
 
-#### Character Appearance Overview View
+### Character Appearance Overview View
 
 The v_character_appearance view provides a structured overview of each character’s physical attributes
 
@@ -944,7 +962,9 @@ Each of these attributes is stored as a foreign key in the `characters` table an
 **Result**
 
 When querying the view:
-`SELECT * FROM v_character_appearance;`
+```sql
+SELECT * FROM v_character_appearance;
+```
 
 ![v_character_overview](images/frontpage/View-v_character_appearance.png)
 
@@ -1008,6 +1028,8 @@ The message is not stored in a database table.
 Instead, it is sent as a notice to the client application that performed the insert. 
 This allows for real-time feedback without modifying the data model or adding extra tables for logging.
 
+\newpage
+
 ### Design considerations
 Using a trigger for this purpose has both advantages and disadvantages:
 
@@ -1024,37 +1046,7 @@ Given the limited scope of the project, this approach provides a clear
 demonstration of automated database behavior without introducing
 additional complexity.
 
-### Events
-
-An event is a piece of SQL code that is scheduled to execute at a specific time or interval. 
-Events are commonly used for tasks such as periodic data cleanup, scheduled reporting, or automated maintenance.
-As we are using Postgres in this project, we do not have access to scheduled events.
-So instead we will show an example of how it would be done in MySQL.
-
-### Purpose of event in this project
-Our thought was that we would use a weekly scheduled event to announce the richest person in our game.
-The event would run every week and execute a query to find the character with the highest balance. 
-Then it would raise notice with the name of the richest character and their balance.
-We thought about creating a Notification table to store the results of the event, but we decided to keep it simple and just use RAISE NOTICE for demonstration purposes.
-
-### Event Implementation
-```sql
-
-```
-### decision not made yet. work in progress
-
-
-### Design considerations
-Using an event for this purpose has both advantages and disadvantages:
-
-- **Advantages**:
-  - Automates regular tasks without manual intervention.
-  - Provides timely updates to users or administrators.
-  - Can be used for a wide range of scheduled operations.
-- **Disadvantages**:
-  - May require additional setup and configuration in the database.
-  - Debugging scheduled events can be more complex than triggers.
-  - The output may not be easily accessible if not stored in a table.
+\newpage
 
 ### 2.4.3. Events
 
@@ -1236,6 +1228,8 @@ follows that exact column order:
 - `(2, 3, 2)` = `id = 2`, `amount_rooms = 3`, `amount_bathrooms = 2`
 - `(3, 1, 1)` = `id = 3`, `amount_rooms = 1`, `amount_bathrooms = 1`
 
+\newpage
+
 ### Gang membership data
 
 Gang membership is optional in the model, so only a subset of characters
@@ -1257,48 +1251,22 @@ Finally, all inserts are persisted in one atomic commit.
 COMMIT;
 ```
 
+\newpage
+
 ## 2.6. Security and access control
 
 ### 2.6.1. Explanation of users and privileges
 
-Database access should follow least-privilege principles, so each role
-gets only the permissions required for its tasks. A typical split is:
+The system uses only two roles: `User` and `Admin`.
 
-- `app_user`: runtime role for the Java application (`SELECT`, `INSERT`,
-  `UPDATE`, `DELETE` on business tables).
-- `report_user`: read-only role for analytics and reporting (`SELECT`
-  only, especially on views).
-- `admin_user`: migration and maintenance role (`CREATE`, `ALTER`,
-  `DROP`, and role management).
+- `User`: regular player role with access to normal gameplay features
+  (profile and character usage).
+- `Admin`: administrative role with extended permissions for management
+  and moderation tasks.
 
-Example grants:
-
-```sql
-CREATE ROLE app_user LOGIN PASSWORD 'change_me';
-CREATE ROLE report_user LOGIN PASSWORD 'change_me';
-
-GRANT USAGE ON SCHEMA public TO app_user, report_user;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
-GRANT SELECT ON v_character_overview, v_gang_overview, v_character_appearance TO report_user;
-```
-
-This model prevents accidental schema changes from application accounts
-and limits exposure of sensitive data to only what each user type needs.
-
-## 2.7. Chapter summary
-
-This chapter moved from requirements to implementation in a single
-traceable line:
-
-- business rules were defined,
-- relationships were modeled and normalized,
-- schema execution and integrity constraints were documented,
-- views/triggers/events were explained as stored objects,
-- realistic seed data and privilege strategy completed the operational
-  setup.
-
-Together, these elements make the database understandable, reproducible,
-and ready for both development and deployment.
+Each profile has exactly one role, and a profile cannot have both roles
+at the same time. This keeps access control simple and aligned with the
+project requirements.
 
 [^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
 
@@ -1311,8 +1279,6 @@ and ready for both development and deployment.
 \newpage
 
 ## Appendix A. Links and file references
-
-### External links (references)
 
 - https://www.postgresql.org/docs/
 - https://docs.oracle.com/en/java/javase/17/
