@@ -536,7 +536,7 @@ The final logical schema therefore satisfies **3NF** and provides a
 reliable base for physical implementation.
 
 ---
-
+t
 \newpage
 
 ## 2.3. Physical data model
@@ -1362,16 +1362,16 @@ project requirements.
 
 ### File references used in report
 
-- docker-compose.yml
-- sqls/schema.sql
-- sqls/daily_loyalty_bonus.sql
-- sqls/seed.sql
-- images/frontpage/Document3.png
-- images/frontpage/Graph-Database.png
-- images/frontpage/what-is-a-relational-database.jpg
-- images/conceptual-logical-physical/conceptual-model-2026-02-10.png
-- images/conceptual-logical-physical/logical-model-2026-02-10.png
-- images/conceptual-logical-physical/physical-model-2026-02-10.png
-- images/frontpage/View-v_character_overview.png
-- images/frontpage/View-v_gang_overview.png
-- images/frontpage/View-v_character_appearance.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/docker-compose.yml
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/schema.sql
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/daily_loyalty_bonus.sql
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/seed.sql
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Document3.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Graph-Database.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/what-is-a-relational-database.jpg
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/conceptual-model-2026-02-10.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/logical-model-2026-02-10.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/physical-model-2026-02-10.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_overview.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_gang_overview.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_gang_overview.png
