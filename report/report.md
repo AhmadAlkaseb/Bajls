@@ -536,7 +536,7 @@ The final logical schema therefore satisfies **3NF** and provides a
 reliable base for physical implementation.
 
 ---
-t
+
 \newpage
 
 ## 2.3. Physical data model
@@ -1374,4 +1374,4 @@ project requirements.
 - https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/physical-model-2026-02-10.png
 - https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_overview.png
 - https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_gang_overview.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_gang_overview.png
+- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_appearance.png
