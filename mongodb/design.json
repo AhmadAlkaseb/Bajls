@@ -21,14 +21,12 @@
         "amount_bathrooms": 
       },
       "gangs": [
-        {
-          "gang": {
+          {
             "gang_id": ,
             "name": "",
             "type": "",
             "join_date": ""
           }
-        }
       ]
     }
   ]
