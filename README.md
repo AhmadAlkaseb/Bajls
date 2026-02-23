@@ -46,6 +46,27 @@ docker compose up -d --build
 This starts:
 - `db_2sem` (PostgreSQL on host port `5432`)
 - `pgadmin_2sem` (pgAdmin on `http://localhost:8080`)
+- `mongodb_2sem` (MongoDB on host port `27017`)
+
+### MongoDB quick start (single command)
+If you only need MongoDB, run:
+
+```bash
+docker compose up -d mongodb
+```
+
+MongoDB connection values:
+- Host: `localhost`
+- Port: `27017`
+- Username: `root`
+- Password: `root`
+- Database: `bajls`
+
+Connection string:
+
+```text
+mongodb://root:root@localhost:27017/bajls?authSource=admin
+```
 
 ### 3) Login to pgAdmin
 - URL: `http://localhost:8080`
