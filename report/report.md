@@ -16,6 +16,7 @@ header-includes:
   - '\renewcommand{\footrulewidth}{0pt}'
   - '\renewenvironment{Shaded}{\begin{tcolorbox}[breakable,colback=white,colframe=black,boxrule=0.4pt,arc=1.5pt,left=4pt,right=4pt,top=4pt,bottom=4pt]}{\end{tcolorbox}}'
   - '\setcounter{tocdepth}{3}'
+  - '\hypersetup{colorlinks=true,allcolors=blue,urlcolor=blue,linkcolor=blue,citecolor=blue}'
 ---
 \begin{center}
 \textbf{RPG Game Database Design}
@@ -1355,23 +1356,23 @@ project requirements.
 
 ## Appendix A. Links and file references
 
-- https://www.postgresql.org/docs/
-- https://docs.oracle.com/en/java/javase/17/
-- https://maven.apache.org/guides/
-- https://hibernate.org/orm/documentation/
+- [Postgresql](https://www.postgresql.org/docs/)
+- [Java 17](https://docs.oracle.com/en/java/javase/17/)
+- [Maven](https://maven.apache.org/guides/)
+- [Hibernate](https://hibernate.org/orm/documentation/)
 
 ### File references used in report
 
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/docker-compose.yml
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/schema.sql
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/daily_loyalty_bonus.sql
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/seed.sql
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Document3.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Graph-Database.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/what-is-a-relational-database.jpg
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/conceptual-model-2026-02-10.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/logical-model-2026-02-10.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/physical-model-2026-02-10.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_overview.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_gang_overview.png
-- https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_appearance.png
+- [Docker-compose.yml](https://github.com/AhmadAlkaseb/Bajls/blob/main/docker-compose.yml)
+- [Schema.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/schema.sql)
+- [Daily_loyalty_bonus.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/daily_loyalty_bonus.sql)
+- [Seed.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/seed.sql)
+- [Document3.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Document3.png)
+- [Graph-Database.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Graph-Database.png)
+- [What-is-a-relational-database.jpg](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/what-is-a-relational-database.jpg)
+- [Conceptual-model.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/conceptual-model-2026-02-10.png)
+- [Logical-model.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/logical-model-2026-02-10.png)
+- [Physical-model.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/physical-model-2026-02-10.png)
+- [View-v_character_overview.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_overview.png)
+- [View-v_gang_overview.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_gang_overview.png)
+- [View-v_character_appearance.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_appearance.png)
