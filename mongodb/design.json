@@ -23,6 +23,8 @@
       "gangs": [
           {
             "gang_id": ,
+            "type": "",
+            "join_date": ""
           }
       ]
     }
