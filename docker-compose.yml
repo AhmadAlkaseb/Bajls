@@ -45,6 +45,21 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@cphbusiness.dk
       PGADMIN_DEFAULT_PASSWORD: 1234
 
+  mongodb:
+    image: mongo:7
+    container_name: mongodb_2sem
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: bajls
+    volumes:
+      - ./mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+
 networks:
   backend:
     name: backend
