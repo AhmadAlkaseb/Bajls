@@ -1,0 +1,35 @@
+{
+  "profile_id": ,
+  "email": "",
+  "first_name": "",
+  "last_name": "",
+  "username": "",
+  "role_name": "",
+  "characters": [
+    {
+      "character_id": ,
+      "name": "",
+      "balance": ,
+      "eye_color": "",
+      "gender": "",
+      "height": "",
+      "skin_color": "",
+      "weight": "",
+      "house": {
+        "house_id": ,
+        "amount_rooms": ,
+        "amount_bathrooms": 
+      },
+      "gangs": [
+        {
+          "gang": {
+            "gang_id": ,
+            "name": "",
+            "type": "",
+            "join_date": ""
+          }
+        }
+      ]
+    }
+  ]
+}

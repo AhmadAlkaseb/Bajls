@@ -1279,7 +1279,7 @@ A stored function is a programmable database object that encapsulates reusable S
 
 #### Example of Stored Function Usage in the Project
 
-Stored functions have numerous applications in our project for example calculations of PlayerLevel, WantedStars and maxAmmo among many others. The code snippet provided below, is an example of the implementation of a function that returns the wealth status of a character based on their balance.
+The code snippet provided below, is an example of the implementation of a function that returns the wealth status of a character based on their balance.
 
 ```sql
 CREATE OR REPLACE FUNCTION get_wealth_status(p_balance numeric)
