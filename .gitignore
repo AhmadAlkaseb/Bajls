@@ -42,3 +42,5 @@ build/
 data/
 pgadmin-data/
 mongodb-data/
+neo4j-data/
+neo4j-logs/
