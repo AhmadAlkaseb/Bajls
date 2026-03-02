@@ -4,6 +4,8 @@ header-includes:
   - '\usepackage{tcolorbox}'
   - '\usepackage{fvextra}'
   - '\usepackage{float}'
+  - '\usepackage{longtable}'
+  - '\usepackage{array}'
   - '\tcbuselibrary{breakable}'
   - '\AtBeginDocument{\fvset{breaklines=true,breakanywhere=true}}'
   - '\pagestyle{fancy}'
@@ -1748,26 +1750,6 @@ public record ProfileDTO(
 DTOs decouple API payloads from JPA entities and avoid serialization
 problems with lazy-loaded relationships.
 
-#### Route layer
-
-All endpoint registration is centralized in `Routes` under
-`src/main/java/app/Route`. Each entity has dedicated endpoints
-(`/collection` and `/collection/{id}`), and route-level guards enforce
-auth requirements.
-
-Code example:
-
-```java
-path("profiles", () -> {
-    before(authService::requireAuthenticated);
-    before(authService::requireAdmin);
-    get(profileController::getAll);
-});
-```
-
-This gives a clear structure where security checks are applied close to
-the endpoint definitions.
-
 #### Main startup integration
 
 `Main` wires persistence and HTTP startup:
@@ -2091,6 +2073,87 @@ Important modeling difference:
 
 This keeps the graph model close to its core strength: relationships are
 first-class data.
+
+## 4.5. API route overview
+
+The HTTP route contract is centralized in `Routes`
+(`src/main/java/app/route/Routes.java`) and shared across the
+application style documented in this report. The route structure is
+intentionally consistent: each domain resource exposes a collection
+endpoint (`GET /api/<resource>`) and a single-resource endpoint
+(`GET /api/<resource>/{id}`), while access control is applied at route
+level with explicit guards.
+
+This gives a clear operational contract for frontend integration, manual
+API testing, and role-based security verification.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{|p{0.10\textwidth}|p{0.28\textwidth}|p{0.24\textwidth}|p{0.30\textwidth}|}
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Access} & \textbf{Purpose} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Access} & \textbf{Purpose} \\
+\hline
+\endhead
+GET & /api/health & Public & Service health check ("ok"). \\
+\hline
+POST & /api/auth/login & Public & Authenticate user and issue session/token context. \\
+\hline
+POST & /api/auth/logout & Authenticated (USER or ADMIN) & End active session for the current principal. \\
+\hline
+GET & /api/auth/me & Authenticated (USER or ADMIN) & Return identity/role for current authenticated user. \\
+\hline
+GET & /api/roles & ADMIN & List all roles. \\
+\hline
+GET & /api/roles/\{id\} & ADMIN & Get one role by id. \\
+\hline
+GET & /api/profiles & ADMIN & List all profiles. \\
+\hline
+GET & /api/profiles/\{id\} & ADMIN & Get one profile by id. \\
+\hline
+GET & /api/characters & Authenticated (USER or ADMIN) & List all characters. \\
+\hline
+GET & /api/characters/\{id\} & Authenticated (USER or ADMIN) & Get one character by id. \\
+\hline
+GET & /api/genders & Authenticated (USER or ADMIN) & List all genders. \\
+\hline
+GET & /api/genders/\{id\} & Authenticated (USER or ADMIN) & Get one gender by id. \\
+\hline
+GET & /api/skin-colors & Authenticated (USER or ADMIN) & List all skin colors. \\
+\hline
+GET & /api/skin-colors/\{id\} & Authenticated (USER or ADMIN) & Get one skin color by id. \\
+\hline
+GET & /api/eye-colors & Authenticated (USER or ADMIN) & List all eye colors. \\
+\hline
+GET & /api/eye-colors/\{id\} & Authenticated (USER or ADMIN) & Get one eye color by id. \\
+\hline
+GET & /api/heights & Authenticated (USER or ADMIN) & List all heights. \\
+\hline
+GET & /api/heights/\{id\} & Authenticated (USER or ADMIN) & Get one height by id. \\
+\hline
+GET & /api/weights & Authenticated (USER or ADMIN) & List all weights. \\
+\hline
+GET & /api/weights/\{id\} & Authenticated (USER or ADMIN) & Get one weight by id. \\
+\hline
+GET & /api/houses & Authenticated (USER or ADMIN) & List all houses. \\
+\hline
+GET & /api/houses/\{id\} & Authenticated (USER or ADMIN) & Get one house by id. \\
+\hline
+GET & /api/gangs & Authenticated (USER or ADMIN) & List all gangs. \\
+\hline
+GET & /api/gangs/\{id\} & Authenticated (USER or ADMIN) & Get one gang by id. \\
+\hline
+GET & /api/gang-affiliations & Authenticated (USER or ADMIN) & List all gang affiliation rows. \\
+\hline
+GET & /api/gang-affiliations/\{id\} & Authenticated (USER or ADMIN) & Get one gang affiliation by id. \\
+\hline
+\end{longtable}
+\endgroup
 
 [^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
 
