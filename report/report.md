@@ -1344,6 +1344,183 @@ Each profile has exactly one role, and a profile cannot have both roles
 at the same time. This keeps access control simple and aligned with the
 project requirements.
 
+### 2.6.2. MongoDB design explanation
+
+To complement the relational model, we also designed a MongoDB document
+model for the same RPG domain. The purpose is to support read patterns
+where the application needs a full player view in one request, for
+example when opening a profile page and showing identity, role,
+characters, house data, and gang memberships together.
+
+The design in `design.json` is centered around one main document shape:
+the **profile**. This document stores profile-level data at
+the top level and embeds character-related data in nested arrays. 
+In addition, the file includes a second compact gang
+document used as a reference shape.
+
+The JSON structures below are **schema templates**, not populated
+documents. Therefore, fields are intentionally left empty after `:` to
+illustrate the expected structure and data types, not real values.
+
+```json
+{
+  "profile_id": ,
+  "email": "",
+  "first_name": "",
+  "last_name": "",
+  "username": "",
+  "role_name": "",
+  "characters": [
+    {
+      "character_id": ,
+      "name": "",
+      "balance": ,
+      "eye_color": "",
+      "gender": "",
+      "height": "",
+      "skin_color": "",
+      "weight": "",
+      "house": {
+        "house_id": ,
+        "amount_rooms": ,
+        "amount_bathrooms":
+      },
+      "gangs": [
+        {
+          "gang_id": ,
+          "type": "",
+          "join_date": ""
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Main profile document structure
+
+The profile document contains:
+
+- `profile_id`
+- `email`, `first_name`, `last_name`, `username`
+- `role_name`
+- `characters` (array)
+
+This means one MongoDB document represents one player profile plus all
+playable characters owned by that profile.
+
+The top-level identity fields (`email`, `username`, etc.) are stored
+directly in the profile document because they are always needed when
+working with profile data. We keep them close to character data to avoid
+multiple cross-collection lookups in common read scenarios.
+
+`role_name` is also kept at top level. In the relational database, role
+is normalized through a foreign key to a `roles` table. In MongoDB, we
+store the role as a direct value because role names are stable, very
+small, and frequently displayed. This is a deliberate denormalization
+choice to optimize reads.
+
+#### Character array design
+
+Inside each profile document, `characters` is an array of character
+objects. Each character includes:
+
+- `character_id`
+- `name`
+- `balance`
+- `eye_color`, `gender`, `height`, `skin_color`, `weight`
+- `house` (embedded object)
+- `gangs` (embedded array)
+
+This design follows an aggregate boundary: profile -> characters ->
+house/gangs. If the application frequently loads all characters for one
+profile, embedding gives a natural and efficient structure.
+
+Appearance attributes are stored as readable values (`eye_color`,
+`gender`, etc.) rather than foreign-key IDs. In MongoDB this simplifies
+documents and avoids resolving small lookup tables at runtime.
+
+#### Embedded house subdocument
+
+Each character has a `house` object:
+
+- `house_id`
+- `amount_rooms`
+- `amount_bathrooms`
+
+Because house and character have a strict one-to-one relationship in the
+domain, embedding the house inside the character is a strong fit. It
+keeps ownership explicit and supports atomic updates when house-related
+and character-related fields must change together.
+
+#### Embedded gangs array and membership metadata
+
+Gang membership is represented as an array in each character:
+
+- `gang_id`
+- `type`
+- `join_date`
+
+This structure models the many-to-many nature of gang memberships from
+the point of view of one character. A key idea here is that
+`join_date` belongs to the membership relation itself, not only to gang
+or character. Therefore it is stored in each membership element in the
+`gangs` array.
+
+The design file also includes a standalone gang document shape:
+
+- `gang_id`
+- `name`
+- `type`
+
+This second shape is useful for a dedicated `gangs` collection when we
+need gang use cases, such as administration of gang metadata,
+listing all gangs, or validating that a membership references a known
+gang.
+
+```json
+{
+  "gang_id": ,
+  "name": "",
+  "type": ""
+}
+```
+
+#### Why this model works well in MongoDB
+
+The document structure is optimized for **profile**:
+retrieving a profile and all related gameplay context in one query. In
+relational systems this often requires multiple joins; in MongoDB the
+same result can be returned directly from one document.
+
+Main advantages of this approach:
+
+- Fewer round trips for profile pages and account dashboards.
+- Natural JSON shape that aligns with API responses.
+- Easy retrieval of all character details without join logic.
+- Membership metadata (`join_date`) stored exactly where it is used.
+
+Trade-offs and considerations:
+
+- Data duplication can occur (for example repeated gang `type` values in
+  many character memberships).
+- Updates to shared concepts may require multi-document updates if values
+  are copied widely.
+- Very large character arrays could grow document size, so practical
+  limits and pagination strategy must be considered.
+
+For this project’s scope, the design is a pragmatic balance: it
+prioritizes fast and simple reads for the most common gameplay view
+(profile with characters), while still allowing a separate gang catalog
+for management use cases.
+
+In summary, the MongoDB model intentionally differs from the normalized
+PostgreSQL schema. PostgreSQL prioritizes strict normalization and
+constraint-driven integrity, while MongoDB here prioritizes aggregate
+reads and document locality. Together, they show how the same domain can
+be modeled with different strengths depending on database paradigm and
+query priorities.
+
 [^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
 
 [^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/

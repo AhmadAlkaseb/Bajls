@@ -60,6 +60,21 @@ services:
     ports:
       - "27017:27017"
 
+  neo4j:
+    image: neo4j:5
+    container_name: neo4j_2sem
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      NEO4J_AUTH: neo4j/password
+    volumes:
+      - ./neo4j-data:/data
+      - ./neo4j-logs:/logs
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
 networks:
   backend:
     name: backend
