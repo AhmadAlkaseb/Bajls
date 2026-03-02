@@ -1521,6 +1521,247 @@ reads and document locality. Together, they show how the same domain can
 be modeled with different strengths depending on database paradigm and
 query priorities.
 
+### Neo4j design: nodes and relationships
+
+For the graph model, we represent the same domain with **nodes** and
+**relationships** instead of tables and foreign keys. The model is shown
+in the figure below.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/neo4j/design.png}
+\caption{Neo4j graph model (nodes and relationships)}
+\end{figure}
+
+The main node types are:
+
+- `Profile`
+- `Role`
+- `Character`
+- `House`
+- `Gang`
+- `Gender`, `SkinColor`, `EyeColor`, `Height`, `Weight`
+
+The main relationship types are:
+
+- `(:Profile)-[:HAS_ROLE]->(:Role)`
+- `(:Profile)-[:OWNS_CHARACTER]->(:Character)`
+- `(:Character)-[:LIVES_IN]->(:House)`
+- `(:Character)-[:HAS_GENDER]->(:Gender)`
+- `(:Character)-[:HAS_SKIN_COLOR]->(:SkinColor)`
+- `(:Character)-[:HAS_EYE_COLOR]->(:EyeColor)`
+- `(:Character)-[:HAS_HEIGHT]->(:Height)`
+- `(:Character)-[:HAS_WEIGHT]->(:Weight)`
+- `(:Character)-[:MEMBER_OF {joinDate: ...}]->(:Gang)`
+
+#### No junction table in Neo4j
+
+In the relational database, many-to-many membership between characters
+and gangs is implemented through a junction table (`gang_affiliations`).
+In Neo4j we do **not** use a junction table. Instead, we connect
+`Character` directly to `Gang` with the `MEMBER_OF` relationship and
+store membership-specific data on the relationship itself.
+
+This is why `joinDate` is modeled as a property on
+`[:MEMBER_OF]`, not as a separate node. The relationship itself carries
+the context of the membership.
+
+#### Why not all attributes are shown in detail
+
+The Neo4j diagram is intentionally kept compact. We do not list every
+single node property in the figure because the attribute set is the same
+as in the relational model at a one-to-one semantic level. The focus of
+the graph diagram is therefore on **relationship structure** and
+traversal logic, especially the membership relation where data lives on
+the edge (`MEMBER_OF.joinDate`).
+
+With this design, Neo4j expresses domain connections directly and makes
+relationship-centric queries natural, while still preserving the same
+business meaning as the relational model.
+
+### 2.6.4. Application implementation (Javalin, Auth, DAO/DTO, Routes, SQL security)
+
+This section documents the implemented backend structure in the Java
+application. The purpose is to show how HTTP configuration,
+authentication/authorization, data-access patterns, and database
+privileges are connected in one coherent setup.
+
+#### ApplicationConfig (Javalin bootstrap)
+
+`ApplicationConfig` defines the API baseline for all endpoints:
+
+- default content type: JSON
+- context path: `/api`
+- CORS enabled (development-friendly)
+
+Code example:
+
+```java
+app = Javalin.create(config -> {
+    config.http.defaultContentType = "application/json";
+    config.routing.contextPath = "/api";
+    config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
+});
+```
+
+This ensures the whole API runs with a consistent base path and response
+format.
+
+#### Auth (login/logout + role-based authorization)
+
+Authentication is implemented with token-based sessions in memory:
+
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+Authorization is enforced by role:
+
+- `ADMIN` for privileged routes (`profiles`, `roles`)
+- `USER` or `ADMIN` for normal gameplay/reference routes
+
+Code example (parameterized authentication query):
+
+```java
+return em.createQuery(
+        "SELECT new app.auth.AuthPrincipal(p.id, p.username, p.role.name) " +
+        "FROM Profile p " +
+        "WHERE p.username = :username AND p.password = :password",
+        AuthPrincipal.class
+    )
+    .setParameter("username", username)
+    .setParameter("password", password)
+    .getResultStream()
+    .findFirst();
+```
+
+Security hardening in `AuthService` includes:
+
+- session expiration (TTL)
+- login attempt throttling
+- input format validation
+
+Code example (admin guard):
+
+```java
+if (principal.roleName() != RoleName.ADMIN) {
+    throw new ForbiddenResponse("Admin role required");
+}
+```
+
+#### init.sql (database users and privileges)
+
+In addition to application-level roles, database-level privileges are
+defined in `db/init.sql` using least-privilege principles.
+
+Implemented roles:
+
+- `bajls_readonly`
+- `bajls_readwrite`
+- `bajls_app_user` (login, readonly membership)
+- `bajls_app_admin` (login, readwrite membership)
+
+Code example:
+
+```sql
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO bajls_readonly;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bajls_readwrite;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bajls_readwrite;
+```
+
+This creates a clear separation between read-only and write-capable
+database access.
+
+#### DAO layer
+
+The DAO layer is implemented in `src/main/java/app/dao` with:
+
+- `GenericDao<T, ID>` interface
+- `AbstractJpaDao<T>` base class
+- one concrete DAO per entity (`ProfileDao`, `GameCharacterDao`, etc.)
+
+Code example (generic save with transaction handling):
+
+```java
+tx.begin();
+em.persist(entity);
+tx.commit();
+```
+
+Code example (safe `findAll` using Criteria API):
+
+```java
+CriteriaQuery<T> criteria = em.getCriteriaBuilder().createQuery(entityClass);
+criteria.from(entityClass);
+return em.createQuery(criteria).getResultList();
+```
+
+Using Criteria API here avoids string-concatenated dynamic queries and
+improves safety/readability.
+
+#### DTO layer
+
+The DTO layer is implemented in `src/main/java/app/dto` using Java
+records. Each entity has a corresponding DTO, for example:
+
+- `ProfileDTO`
+- `GameCharacterDTO`
+- `GangAffiliationDTO`
+- `RoleDTO`
+
+Code example:
+
+```java
+public record ProfileDTO(
+    int id,
+    String firstName,
+    String lastName,
+    String email,
+    String username,
+    String password,
+    int roleId
+) {}
+```
+
+DTOs decouple API payloads from JPA entities and avoid serialization
+problems with lazy-loaded relationships.
+
+#### Route layer
+
+All endpoint registration is centralized in `Routes` under
+`src/main/java/app/Route`. Each entity has dedicated endpoints
+(`/collection` and `/collection/{id}`), and route-level guards enforce
+auth requirements.
+
+Code example:
+
+```java
+path("profiles", () -> {
+    before(authService::requireAuthenticated);
+    before(authService::requireAdmin);
+    get(ctx -> list(ctx, emf,
+        "SELECT new app.dto.ProfileDTO(p.id, p.firstName, p.lastName, p.email, p.username, p.password, p.role.id) FROM Profile p",
+        ProfileDTO.class));
+});
+```
+
+This gives a clear structure where security checks are applied close to
+the endpoint definitions.
+
+#### Main startup integration
+
+`Main` wires persistence and HTTP startup:
+
+```java
+EntityManagerFactory emf = HibernateConfig.getEntityManagerFactoryConfig(false);
+ApplicationConfig.getInstance()
+    .setRoute(Routes.getRoutes(emf))
+    .startServer(port);
+```
+
+This startup flow ensures that all routes, auth checks, and DB access
+are active when the application launches.
+
 [^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
 
 [^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
