@@ -1579,7 +1579,7 @@ With this design, Neo4j expresses domain connections directly and makes
 relationship-centric queries natural, while still preserving the same
 business meaning as the relational model.
 
-### 2.6.4. Application implementation (Javalin, Auth, DAO/DTO, Routes, SQL security)
+### 2.6.4. Application implementation (Javalin, Auth, Controller, DAO/DTO, Routes, SQL security)
 
 This section documents the implemented backend structure in the Java
 application. The purpose is to show how HTTP configuration,
@@ -1588,7 +1588,8 @@ privileges are connected in one coherent setup.
 
 #### ApplicationConfig (Javalin bootstrap)
 
-`ApplicationConfig` defines the API baseline for all endpoints:
+`ApplicationConfig` defines the API baseline for all endpoints using
+Javalin[^javalin]:
 
 - default content type: JSON
 - context path: `/api`
@@ -1699,6 +1700,24 @@ return em.createQuery(criteria).getResultList();
 Using Criteria API here avoids string-concatenated dynamic queries and
 improves safety/readability.
 
+#### Controller layer
+
+To keep responsibilities explicit, request handling logic is placed in
+`src/main/java/app/controller` and routes delegate to controllers.
+
+Code example:
+
+```java
+public class ReadController<T> {
+    public void getAll(Context ctx) { ... }
+    public void getById(Context ctx) { ... }
+}
+```
+
+This ensures `Routes` remains focused on endpoint mapping and
+authorization, while controller classes handle query execution and
+response behavior.
+
 #### DTO layer
 
 The DTO layer is implemented in `src/main/java/app/dto` using Java
@@ -1709,6 +1728,10 @@ records. Each entity has a corresponding DTO, for example:
 - `GangAffiliationDTO`
 - `RoleDTO`
 
+DTOs are intentionally not required to be 1:1 with the database model.
+For example, `ProfileDTO` does not expose `password`, even though the
+field exists in the `profiles` table/entity.
+
 Code example:
 
 ```java
@@ -1718,7 +1741,6 @@ public record ProfileDTO(
     String lastName,
     String email,
     String username,
-    String password,
     int roleId
 ) {}
 ```
@@ -1739,9 +1761,7 @@ Code example:
 path("profiles", () -> {
     before(authService::requireAuthenticated);
     before(authService::requireAdmin);
-    get(ctx -> list(ctx, emf,
-        "SELECT new app.dto.ProfileDTO(p.id, p.firstName, p.lastName, p.email, p.username, p.password, p.role.id) FROM Profile p",
-        ProfileDTO.class));
+    get(profileController::getAll);
 });
 ```
 
@@ -1762,6 +1782,316 @@ ApplicationConfig.getInstance()
 This startup flow ensures that all routes, auth checks, and DB access
 are active when the application launches.
 
+### 2.6.5. Required delivery artifacts
+
+This subsection provides the required artifacts for security scripts,
+source code access, and installation in a test environment.
+
+#### SQL scripts for creation of users and privileges
+
+The SQL script used to create database users and assign privileges is
+included in:
+
+- `db/init.sql`
+
+Example excerpt:
+
+```sql
+CREATE ROLE bajls_readonly NOLOGIN;
+CREATE ROLE bajls_readwrite NOLOGIN;
+CREATE ROLE bajls_app_user LOGIN PASSWORD 'change_me_user';
+CREATE ROLE bajls_app_admin LOGIN PASSWORD 'change_me_admin';
+
+GRANT bajls_readonly TO bajls_app_user;
+GRANT bajls_readwrite TO bajls_app_admin;
+```
+
+This script implements least-privilege access control at database level.
+
+#### Source code of the CRUD application (public repository)
+
+The full CRUD application source code is available at[^githubrepo]:
+
+- https://github.com/AhmadAlkaseb/Bajls
+
+#### Brief installation procedure (test environment)
+
+The following procedure sets up the system with full operational
+capabilities in a local test environment.
+
+1. Clone repository:
+
+```bash
+git clone https://github.com/AhmadAlkaseb/Bajls.git
+cd Bajls
+```
+
+2. Start database services with Docker:
+
+```bash
+docker compose up -d
+```
+
+3. Verify that PostgreSQL is running and that schema/data scripts are
+available in `sqls/` and DB bootstrap script in `db/init.sql`.
+
+4. Set application environment variables (example values):
+
+```bash
+DB_URL=jdbc:postgresql://localhost:5432/bajls
+DB_USER=postgres
+DB_PASSWORD=postgres
+PORT=7070
+```
+
+5. Build and run the application:
+
+```bash
+mvn clean compile
+mvn exec:java -Dexec.mainClass=app.Main
+```
+
+6. Validate API availability:
+
+```bash
+GET http://localhost:7070/api/health
+```
+
+7. Authenticate and test secured CRUD endpoints:
+
+```bash
+POST http://localhost:7070/api/auth/login
+GET  http://localhost:7070/api/characters
+```
+
+Use the returned bearer token in the `Authorization` header for secured
+routes.
+
+\newpage
+
+# 3. Document database
+
+## 3.1. Intro to document databases
+
+A document database stores data as JSON-like documents instead of rows
+in normalized tables. This model is useful when the application
+frequently reads complete aggregates (for example one profile with all
+characters, houses, and gang memberships) in a single request.
+
+In this project, MongoDB[^mongodb] is used to model player-centric
+aggregates. The
+core idea is to keep closely related data together through embedding,
+while still allowing selected collections to remain separate for
+administrative and lookup use cases.
+
+## 3.2. Database design – graphical form (collections and embeddings)
+
+The MongoDB design source is located in `report/images/mongodb/design.json`.
+
+Graphical structure (collection-level overview):
+
+```text
+profiles (collection)
+└── profile document
+    ├── profile_id
+    ├── email
+    ├── first_name
+    ├── last_name
+    ├── username
+    ├── role_name
+    └── characters [array]
+        └── character document
+            ├── character_id
+            ├── name
+            ├── balance
+            ├── eye_color
+            ├── gender
+            ├── height
+            ├── skin_color
+            ├── weight
+            ├── house {embedded object}
+            │   ├── house_id
+            │   ├── amount_rooms
+            │   └── amount_bathrooms
+            └── gangs [array]
+                └── gang membership
+                    ├── gang_id
+                    ├── type
+                    └── join_date
+
+gangs (collection)
+└── gang document
+    ├── gang_id
+    ├── name
+    └── type
+```
+
+This design gives a profile-centric aggregate in `profiles`, while
+keeping `gangs` available as a separate catalog.
+
+## 3.3. Features: indexes, transactions, PKs, constraints, stored objects
+
+### Indexes
+
+Typical MongoDB indexes for this design:
+
+- unique index on `profiles.username`
+- unique index on `profiles.email`
+- index on `characters.character_id` (if queried directly through array
+  filters)
+- index on `gangs.name`
+
+Example:
+
+```javascript
+db.profiles.createIndex({ username: 1 }, { unique: true });
+db.profiles.createIndex({ email: 1 }, { unique: true });
+db.gangs.createIndex({ name: 1 }, { unique: true });
+```
+
+### Transactions
+
+MongoDB supports multi-document ACID transactions (replica set / sharded
+cluster). In this project they are relevant when one logical operation
+updates both `profiles` and `gangs` collections.
+
+### Primary keys
+
+MongoDB automatically assigns `_id` as primary key for each document.
+Domain IDs (`profile_id`, `character_id`, `gang_id`) are additional
+business identifiers used by the application.
+
+### Constraints and validation
+
+MongoDB does not enforce relational foreign keys. Integrity is achieved
+through:
+
+- schema validation rules (`$jsonSchema`)
+- unique indexes
+- application-level checks in the service/DAO layer
+
+### Stored objects and replacement strategy
+
+MongoDB does not use SQL-style stored procedures/triggers/views in the
+same way as PostgreSQL. Equivalent behavior is implemented through:
+
+- aggregation pipelines (view-like read models)
+- application services (business logic orchestration)
+- scheduled jobs in application/infrastructure layer for timed behavior
+
+## 3.4. CRUD application for the document database
+
+The HTTP/API structure follows the same style as the relational
+application (Javalin routes, auth guards, DTO-based payloads). The main
+difference is the data layer implementation:
+
+- RDBMS version: JPA entities and DAOs
+- MongoDB version: collection/document operations with embedded updates
+
+Because the contract can remain the same, most differences are isolated
+to persistence adapters and query/update logic.
+
+Example difference in write behavior:
+
+- RDBMS: insert into `characters`, then link to `houses` and
+  `gang_affiliations`.
+- MongoDB: update one profile aggregate document with embedded character
+  and nested house/gang membership structures.
+
+\newpage
+
+# 4. Graph database
+
+## 4.1. Intro to graph databases
+
+A graph database models data as nodes and relationships. It is strong
+for domains where connections are first-class and traversal queries are
+central (for example social links, memberships, shortest paths, and
+network analysis).
+
+In this project, Neo4j[^neo4j] represents the same RPG domain using
+labeled
+nodes (`Profile`, `Character`, `Gang`, etc.) and typed relationships
+(`OWNS_CHARACTER`, `MEMBER_OF`, etc.).
+
+## 4.2. Database design - graphical form (model, not data screenshot)
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/neo4j/design.png}
+\caption{Neo4j database model (nodes and relationships)}
+\end{figure}
+
+The model keeps relationship semantics explicit. In particular,
+membership between character and gang is represented by
+`[:MEMBER_OF {joinDate}]`, where `joinDate` is stored on the
+relationship itself.
+
+## 4.3. Features: indexes, transactions, PKs, constraints, stored objects
+
+### Indexes and constraints
+
+Neo4j uses schema indexes and constraints to enforce integrity and speed
+up lookups.
+
+Examples:
+
+```cypher
+CREATE CONSTRAINT profile_id_unique IF NOT EXISTS
+FOR (p:Profile) REQUIRE p.id IS UNIQUE;
+
+CREATE CONSTRAINT gang_id_unique IF NOT EXISTS
+FOR (g:Gang) REQUIRE g.id IS UNIQUE;
+
+CREATE INDEX character_name_idx IF NOT EXISTS
+FOR (c:Character) ON (c.name);
+```
+
+### Transactions
+
+Neo4j operations execute transactionally. Multi-step graph updates (for
+example creating a character node and connecting it to profile, house,
+and attributes) can be committed atomically.
+
+### Primary keys
+
+Neo4j has an internal node id, but domain-level IDs should be managed as
+properties (for example `Profile.id`) with uniqueness constraints. This
+is the practical equivalent of primary key strategy in graph models.
+
+### Constraints
+
+Relational foreign keys are replaced by controlled relationship
+creation/traversal patterns and constraints on node identity.
+
+### Stored objects and replacement strategy
+
+Neo4j does not use SQL stored procedures/functions/views in the same
+format as PostgreSQL. Equivalent mechanisms include:
+
+- Cypher[^cypher] queries and reusable query templates
+- graph projections and named queries at application layer
+- APOC procedures (when enabled) for advanced utility workflows
+
+## 4.4. CRUD application for the graph database
+
+The CRUD API can keep the same endpoint contract as the RDBMS solution.
+The key change is the persistence implementation:
+
+- RDBMS: table-based DAO/JPA operations
+- Neo4j: Cypher-based node/relationship operations
+
+Important modeling difference:
+
+- In SQL, many-to-many is handled by a junction table
+  (`gang_affiliations`).
+- In Neo4j, we do not create a junction table/node for this relation.
+  We connect `Character` and `Gang` directly with `MEMBER_OF` and store
+  membership metadata (for example `joinDate`) on the relationship.
+
+This keeps the graph model close to its core strength: relationships are
+first-class data.
+
 [^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
 
 [^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
@@ -1769,6 +2099,16 @@ are active when the application launches.
 [^maven]: Apache Maven Documentation: https://maven.apache.org/guides/
 
 [^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/
+
+[^javalin]: Javalin Documentation: https://javalin.io/documentation
+
+[^mongodb]: MongoDB Documentation: https://www.mongodb.com/docs/
+
+[^neo4j]: Neo4j Documentation: https://neo4j.com/docs/
+
+[^cypher]: Cypher Query Language Manual: https://neo4j.com/docs/cypher-manual/current/
+
+[^githubrepo]: Project source repository: https://github.com/AhmadAlkaseb/Bajls
 
 \newpage
 
@@ -1778,13 +2118,32 @@ are active when the application launches.
 - [Java 17](https://docs.oracle.com/en/java/javase/17/)
 - [Maven](https://maven.apache.org/guides/)
 - [Hibernate](https://hibernate.org/orm/documentation/)
+- [Javalin](https://javalin.io/documentation)
+- [MongoDB](https://www.mongodb.com/docs/)
+- [Neo4j](https://neo4j.com/docs/)
+- [Cypher Manual](https://neo4j.com/docs/cypher-manual/current/)
+- [Project Repository](https://github.com/AhmadAlkaseb/Bajls)
 
 ### File references used in report
 
 - [Docker-compose.yml](https://github.com/AhmadAlkaseb/Bajls/blob/main/docker-compose.yml)
+- [Main.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/Main.java)
+- [Db/init.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/db/init.sql)
 - [Schema.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/schema.sql)
 - [Daily_loyalty_bonus.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/daily_loyalty_bonus.sql)
 - [Seed.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/seed.sql)
+- [ApplicationConfig.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/ApplicationConfig.java)
+- [Routes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/Route/Routes.java)
+- [ReadController.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/controller/ReadController.java)
+- [AuthService.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/auth/AuthService.java)
+- [AuthPrincipal.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/auth/AuthPrincipal.java)
+- [LoginRequestDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/LoginRequestDTO.java)
+- [LoginResponseDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/LoginResponseDTO.java)
+- [ProfileDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/ProfileDTO.java)
+- [AbstractJpaDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/AbstractJpaDao.java)
+- [GenericDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/GenericDao.java)
+- [MongoDB-design.json](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/mongodb/design.json)
+- [Neo4j-design.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/neo4j/design.png)
 - [Document3.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Document3.png)
 - [Graph-Database.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Graph-Database.png)
 - [What-is-a-relational-database.jpg](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/what-is-a-relational-database.jpg)

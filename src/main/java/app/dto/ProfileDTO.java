@@ -6,7 +6,6 @@ public record ProfileDTO(
         String lastName,
         String email,
         String username,
-        String password,
         int roleId
 ) {
 }
