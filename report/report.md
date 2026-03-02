@@ -937,7 +937,7 @@ The view combines data from the `gangs`, `gang_affiliations`, and `characters` t
 
 ### Character Appearance Overview View
 
-The v_character_appearance view provides a structured overview of each character’s physical attributes
+The v_character_appearance view provides a structured overview of each character's physical attributes
 
 ```sql
 CREATE OR REPLACE VIEW v_character_appearance AS
@@ -1000,7 +1000,7 @@ function and exposes the inserted row through the special record
 variable NEW.
 
 The trigger function uses RAISE NOTICE to send a notice containing
-the newly created character’s name. Because the trigger
+the newly created character's name. Because the trigger
 runs after the insert operation, referential integrity is guaranteed at
 the time the message is produced.
 
@@ -1509,7 +1509,7 @@ Trade-offs and considerations:
 - Very large character arrays could grow document size, so practical
   limits and pagination strategy must be considered.
 
-For this project’s scope, the design is a pragmatic balance: it
+For this project's scope, the design is a pragmatic balance: it
 prioritizes fast and simple reads for the most common gameplay view
 (profile with characters), while still allowing a separate gang catalog
 for management use cases.
@@ -1884,7 +1884,7 @@ core idea is to keep closely related data together through embedding,
 while still allowing selected collections to remain separate for
 administrative and lookup use cases.
 
-## 3.2. Database design – graphical form (collections and embeddings)
+## 3.2. Database design - graphical form (collections and embeddings)
 
 The MongoDB design source is located in `report/images/mongodb/design.json`.
 
@@ -1892,38 +1892,38 @@ Graphical structure (collection-level overview):
 
 ```text
 profiles (collection)
-└── profile document
-    ├── profile_id
-    ├── email
-    ├── first_name
-    ├── last_name
-    ├── username
-    ├── role_name
-    └── characters [array]
-        └── character document
-            ├── character_id
-            ├── name
-            ├── balance
-            ├── eye_color
-            ├── gender
-            ├── height
-            ├── skin_color
-            ├── weight
-            ├── house {embedded object}
-            │   ├── house_id
-            │   ├── amount_rooms
-            │   └── amount_bathrooms
-            └── gangs [array]
-                └── gang membership
-                    ├── gang_id
-                    ├── type
-                    └── join_date
+`-- profile document
+    |-- profile_id
+    |-- email
+    |-- first_name
+    |-- last_name
+    |-- username
+    |-- role_name
+    `-- characters [array]
+        `-- character document
+            |-- character_id
+            |-- name
+            |-- balance
+            |-- eye_color
+            |-- gender
+            |-- height
+            |-- skin_color
+            |-- weight
+            |-- house {embedded object}
+            |   |-- house_id
+            |   |-- amount_rooms
+            |   `-- amount_bathrooms
+            `-- gangs [array]
+                `-- gang membership
+                    |-- gang_id
+                    |-- type
+                    `-- join_date
 
 gangs (collection)
-└── gang document
-    ├── gang_id
-    ├── name
-    └── type
+`-- gang document
+    |-- gang_id
+    |-- name
+    `-- type
 ```
 
 This design gives a profile-centric aggregate in `profiles`, while
