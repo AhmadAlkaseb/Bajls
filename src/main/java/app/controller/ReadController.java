@@ -1,32 +1,20 @@
 package app.controller;
 
+import app.dao.ReadDao;
 import io.javalin.http.Context;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 
 import java.util.Optional;
 
 public class ReadController<T> {
 
-    private final EntityManagerFactory emf;
-    private final String listJpql;
-    private final String byIdJpql;
-    private final Class<T> dtoClass;
+    private final ReadDao<T> readDao;
 
-    public ReadController(EntityManagerFactory emf, String listJpql, String byIdJpql, Class<T> dtoClass) {
-        this.emf = emf;
-        this.listJpql = listJpql;
-        this.byIdJpql = byIdJpql;
-        this.dtoClass = dtoClass;
+    public ReadController(ReadDao<T> readDao) {
+        this.readDao = readDao;
     }
 
     public void getAll(Context ctx) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            ctx.json(em.createQuery(listJpql, dtoClass).getResultList());
-        } finally {
-            em.close();
-        }
+        ctx.json(readDao.findAll());
     }
 
     public void getById(Context ctx) {
@@ -35,20 +23,11 @@ public class ReadController<T> {
             return;
         }
 
-        EntityManager em = emf.createEntityManager();
-        try {
-            Optional<T> result = em.createQuery(byIdJpql, dtoClass)
-                    .setParameter("id", id)
-                    .getResultStream()
-                    .findFirst();
-
-            if (result.isPresent()) {
-                ctx.json(result.get());
-            } else {
-                ctx.status(404).json("Not found");
-            }
-        } finally {
-            em.close();
+        Optional<T> result = readDao.findById(id);
+        if (result.isPresent()) {
+            ctx.json(result.get());
+        } else {
+            ctx.status(404).json("Not found");
         }
     }
 

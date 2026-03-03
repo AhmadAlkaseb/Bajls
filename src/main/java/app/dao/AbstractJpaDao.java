@@ -98,4 +98,8 @@ public abstract class AbstractJpaDao<T> implements GenericDao<T, Integer> {
             tx.rollback();
         }
     }
+
+    protected EntityManagerFactory getEntityManagerFactory() {
+        return entityManagerFactory;
+    }
 }
