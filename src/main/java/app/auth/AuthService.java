@@ -1,12 +1,12 @@
 package app.auth;
 
+import app.dao.ProfileDao;
 import app.dto.LoginRequestDTO;
 import app.dto.LoginResponseDTO;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import persistence.enums.RoleName;
 
@@ -26,12 +26,12 @@ public class AuthService {
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[A-Za-z0-9_.-]{3,20}$");
 
-    private final EntityManagerFactory entityManagerFactory;
+    private final ProfileDao profileDao;
     private final ConcurrentMap<String, SessionState> sessions = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, LoginAttemptState> loginAttempts = new ConcurrentHashMap<>();
 
     public AuthService(EntityManagerFactory entityManagerFactory) {
-        this.entityManagerFactory = entityManagerFactory;
+        this.profileDao = new ProfileDao(entityManagerFactory);
     }
 
     public void login(Context ctx) {
@@ -106,21 +106,7 @@ public class AuthService {
     }
 
     private Optional<AuthPrincipal> authenticate(String username, String password) {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        try {
-            return em.createQuery(
-                            "SELECT new app.auth.AuthPrincipal(p.id, p.username, p.role.name) " +
-                                    "FROM Profile p " +
-                                    "WHERE p.username = :username AND p.password = :password",
-                            AuthPrincipal.class
-                    )
-                    .setParameter("username", username)
-                    .setParameter("password", password)
-                    .getResultStream()
-                    .findFirst();
-        } finally {
-            em.close();
-        }
+        return profileDao.authenticate(username, password);
     }
 
     private Optional<AuthPrincipal> resolvePrincipal(Context ctx) {

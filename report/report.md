@@ -1588,6 +1588,11 @@ application. The purpose is to show how HTTP configuration,
 authentication/authorization, data-access patterns, and database
 privileges are connected in one coherent setup.
 
+Current request flow in the relational implementation:
+
+- `Route -> Controller -> DAO -> DTO -> JSON response`
+- `Auth route -> AuthService -> ProfileDao -> AuthPrincipal/LoginResponseDTO`
+
 #### ApplicationConfig (Javalin bootstrap)
 
 `ApplicationConfig` defines the API baseline for all endpoints using
@@ -1623,19 +1628,12 @@ Authorization is enforced by role:
 - `ADMIN` for privileged routes (`profiles`, `roles`)
 - `USER` or `ADMIN` for normal gameplay/reference routes
 
-Code example (parameterized authentication query):
+Code example (authentication delegated to DAO):
 
 ```java
-return em.createQuery(
-        "SELECT new app.auth.AuthPrincipal(p.id, p.username, p.role.name) " +
-        "FROM Profile p " +
-        "WHERE p.username = :username AND p.password = :password",
-        AuthPrincipal.class
-    )
-    .setParameter("username", username)
-    .setParameter("password", password)
-    .getResultStream()
-    .findFirst();
+private Optional<AuthPrincipal> authenticate(String username, String password) {
+    return profileDao.authenticate(username, password);
+}
 ```
 
 Security hardening in `AuthService` includes:
@@ -1681,7 +1679,10 @@ The DAO layer is implemented in `src/main/java/app/dao` with:
 
 - `GenericDao<T, ID>` interface
 - `AbstractJpaDao<T>` base class
-- one concrete DAO per entity (`ProfileDao`, `GameCharacterDao`, etc.)
+- entity DAOs (`ProfileDao`, `GameCharacterDao`, etc.)
+- read DAO contract (`ReadDao<T>`) and reusable implementation (`JpaReadDao<T>`)
+- resource-specific read DAOs in `src/main/java/app/dao/read`
+  (`RoleReadDao`, `ProfileReadDao`, `GameCharacterReadDao`, etc.)
 
 Code example (generic save with transaction handling):
 
@@ -1702,6 +1703,15 @@ return em.createQuery(criteria).getResultList();
 Using Criteria API here avoids string-concatenated dynamic queries and
 improves safety/readability.
 
+Code example (read DAO contract):
+
+```java
+public interface ReadDao<T> {
+    List<T> findAll();
+    Optional<T> findById(Integer id);
+}
+```
+
 #### Controller layer
 
 To keep responsibilities explicit, request handling logic is placed in
@@ -1716,9 +1726,17 @@ public class ReadController<T> {
 }
 ```
 
-This ensures `Routes` remains focused on endpoint mapping and
-authorization, while controller classes handle query execution and
-response behavior.
+This ensures route classes remain focused on endpoint mapping and
+authorization, while controllers stay focused on HTTP concerns
+(input/response handling). Query execution is handled in DAO classes.
+
+Code example (controller delegates to DAO):
+
+```java
+public void getAll(Context ctx) {
+    ctx.json(readDao.findAll());
+}
+```
 
 #### DTO layer
 
@@ -2076,9 +2094,13 @@ first-class data.
 
 ## 4.5. API route overview
 
-The HTTP route contract is centralized in `Routes`
-(`src/main/java/app/route/Routes.java`) and shared across the
-application style documented in this report. The route structure is
+The HTTP route contract is centralized through modular route classes:
+
+- `Routes` (top-level composition)
+- `AuthRoutes` (authentication endpoints)
+- `ReadRoutes` (secured read endpoints)
+
+The route structure is
 intentionally consistent: each domain resource exposes a collection
 endpoint (`GET /api/<resource>`) and a single-resource endpoint
 (`GET /api/<resource>/{id}`), while access control is applied at route
@@ -2086,6 +2108,22 @@ level with explicit guards.
 
 This gives a clear operational contract for frontend integration, manual
 API testing, and role-based security verification.
+
+Route schema (current structure):
+
+```text
+Routes
+|-- GET /api/health
+|-- /api/auth         -> AuthRoutes
+|   |-- POST /login
+|   |-- POST /logout
+|   `-- GET  /me
+`-- secured resources -> ReadRoutes
+    |-- /roles, /profiles                 (ADMIN)
+    `-- /characters, /genders, /skin-colors, /eye-colors,
+        /heights, /weights, /houses, /gangs, /gang-affiliations
+        (USER or ADMIN)
+```
 
 \begingroup
 \small
@@ -2196,7 +2234,9 @@ GET & /api/gang-affiliations/\{id\} & Authenticated (USER or ADMIN) & Get one ga
 - [Daily_loyalty_bonus.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/daily_loyalty_bonus.sql)
 - [Seed.sql](https://github.com/AhmadAlkaseb/Bajls/blob/main/sqls/seed.sql)
 - [ApplicationConfig.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/ApplicationConfig.java)
-- [Routes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/Route/Routes.java)
+- [Routes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/Routes.java)
+- [AuthRoutes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/AuthRoutes.java)
+- [ReadRoutes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/ReadRoutes.java)
 - [ReadController.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/controller/ReadController.java)
 - [AuthService.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/auth/AuthService.java)
 - [AuthPrincipal.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/auth/AuthPrincipal.java)
@@ -2205,6 +2245,11 @@ GET & /api/gang-affiliations/\{id\} & Authenticated (USER or ADMIN) & Get one ga
 - [ProfileDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/ProfileDTO.java)
 - [AbstractJpaDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/AbstractJpaDao.java)
 - [GenericDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/GenericDao.java)
+- [ReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/ReadDao.java)
+- [JpaReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/JpaReadDao.java)
+- [ProfileDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/ProfileDao.java)
+- [RoleReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/read/RoleReadDao.java)
+- [GameCharacterReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/read/GameCharacterReadDao.java)
 - [MongoDB-design.json](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/mongodb/design.json)
 - [Neo4j-design.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/neo4j/design.png)
 - [Document3.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Document3.png)
