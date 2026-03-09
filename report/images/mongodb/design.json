@@ -1,38 +1,83 @@
 {
-  "profile_id": ,
-  "email": "",
-  "first_name": "",
-  "last_name": "",
-  "username": "",
-  "role_name": "",
-  "characters": [
+  "profiles": [
     {
-      "character_id": ,
-      "name": "",
-      "balance": ,
-      "eye_color": "",
-      "gender": "",
-      "height": "",
-      "skin_color": "",
-      "weight": "",
-      "house": {
-        "house_id": ,
-        "amount_rooms": ,
-        "amount_bathrooms": 
-      },
-      "gangs": [
-          {
-            "gang_id": ,
-            "type": "",
-            "join_date": ""
-          }
+      "_id": "",
+      "email": "",
+      "first_name": "",
+      "last_name": "",
+      "username": "",
+      "password": "",
+      "role": "",
+      "characters": [
+        {
+          "_id": "",
+          "name": "",
+          "balance": 0,
+          "gender": "",
+          "skincolor": "",
+          "eyecolor": "",
+          "height": "",
+          "weight": "",
+          "house": {
+            "_id": "",
+            "amount_rooms": 0,
+            "amount_bathrooms": 0
+          },
+          "garage": {
+            "_id": "",
+            "capacity": 0,
+            "vehicles": [
+              {
+                "_id": "",
+                "model": "",
+                "type": "",
+                "plate_number": ""
+              }
+            ]
+          },
+          "character_drugs": [
+            {
+              "drug_id": "",
+              "quantity": 0
+            }
+          ],
+          "character_quests": [
+            {
+              "quest_id": "",
+              "status": "",
+              "accepted_at": ""
+            }
+          ],
+          "gang_memberships": [
+            {
+              "gang_id": "",
+              "join_date": ""
+            }
+          ]
+        }
       ]
     }
+  ],
+  "drugs": [
+    {
+      "_id": "",
+      "name": "",
+      "type": ""
+    }
+  ],
+  "quests": [
+    {
+      "_id": "",
+      "title": "",
+      "description": "",
+      "reward": 0
+    }
+  ],
+  "gangs": [
+    {
+      "_id": "",
+      "name": "",
+      "type": ""
+    }
   ]
-}
-
-{
-  "gang_id": ,
-  "name": "",
-  "type": ""
 }

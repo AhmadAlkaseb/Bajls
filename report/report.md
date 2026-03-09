@@ -38,10 +38,10 @@ Sadek Alsukafi
 | **Course**                                  | Database            |
 | ------------------------------------------- | ------------------- |
 | **Project**                                 | RPG Game by Bajls   |
-| **Date of delivery**                        | 8/3/2026 |
+| **Date of delivery**                        | 9/3/2026 |
 | **List of figures**                         | 9 |
-| **List of appendices**                      | 17 |
-| **Number of characters (including spaces)** | 53616 |
+| **List of appendices**                      | 1 |
+| **Number of characters (including spaces)** | 80304 |
 
 \vspace{0.5cm}
 \begin{center}
@@ -80,11 +80,11 @@ more unique characters with specific physical traits and attributes.
 These traits define how the character looks and can later support social
 interactions and additional gameplay mechanics.
 
-The world is structured around exploration, housing, and social systems
-such as gangs. Every character is stored in a structured database that
-maintains logical relationships between profiles, characters, roles, and
-properties. The system enforces clear rules for ownership, identity, and
-mandatory attributes.
+The world is structured around exploration, housing, garages, vehicles,
+quests, drugs, and social systems such as gangs. Every character is
+stored in a structured database that maintains logical relationships
+between profiles, characters, and owned properties. The system enforces
+clear rules for ownership, identity, and mandatory attributes.
 
 The player experience includes:
 
@@ -167,8 +167,8 @@ management and reproducible builds across environments.
 
 For persistence, the project uses **Hibernate (JPA)**[^hibernate]. This allows the
 team to model business entities (`Profile`, `GameCharacter`, `House`,
-`Gang`, `Role`, `Gender`, `Weight`, `Height`, `EyeColor`, `SkinColor`)
-directly in code and keep the SQL schema aligned
+`Garage`, `Vehicle`, `Drug`, `Quest`, `Gang`, and the relationship
+entities) directly in code and keep the SQL schema aligned
 through mapping metadata. Hibernate is configured for PostgreSQL and
 supports both local development and deployment profiles through
 environment variables.
@@ -233,34 +233,23 @@ rules to concrete table definitions and mapping annotations.
 
 \newpage
 
-### Profile and Role Requirements
+### Profile Requirements
 
 #### Person and Profile
 
 - A person can have exactly one profile in the system.
 - The profile represents the player's digital identity.
-- A profile must be uniquely identifiable (for example by `profile_id`
-  or `username`).
-- A person is not allowed to create multiple profiles.
+- A profile must be uniquely identifiable by `email` and `username`.
+- A profile stores exactly one role value: `USER` or `ADMIN`.
 
-This ensures that each real-world player is connected to one controlled
-game identity.
-
-#### Role System
-
-- A profile must have exactly one role.
-- The role can be either `User` or `Admin`.
-- A profile cannot have multiple roles at the same time.
-- `Admin` accounts have extended permissions compared to `User`
-  accounts, such as management and moderation functionality.
-
-This establishes role-based access control in the game.
+This keeps account identity simple and gives the application one clear
+place to enforce login and authorization rules.
 
 ### Character Requirements
 
 #### Profile to Character Relationship
 
-- A profile can have one or more characters.
+- A profile can own one or more characters.
 - A character must belong to exactly one profile.
 - A character cannot exist without being linked to a profile.
 
@@ -269,40 +258,43 @@ This creates a one-to-many relationship between `Profile` and
 
 #### Character Attributes
 
-Each character must have exactly one of each required attribute:
+Each character must have exactly one value for the required appearance
+and classification fields:
 
-- One gender
-- One weight
-- One height
-- One eye color
-- One skin color
+- one gender
+- one skin color
+- one eye color
+- one height value
+- one weight value
 
-All attributes are mandatory and cannot be empty. A character cannot
-have multiple values for any of these attributes. The system must
-validate that all required attributes are present before a character can
-be created.
+In the new model these values are stored directly on `characters`
+instead of separate lookup tables. The values are still controlled
+through application enums and SQL `CHECK` constraints.
 
 \newpage
 
-#### Housing Requirement
+#### Housing and Garage Requirement
 
 - A character must have exactly one house.
-- A character cannot exist without an assigned house.
+- A character must have exactly one garage.
 - A house belongs to exactly one character.
-- A house cannot be shared by multiple characters.
+- A garage belongs to exactly one character.
+- A garage can contain zero or more vehicles.
 
-This creates a mandatory one-to-one relationship between `Character` and
-`House`. The system must prevent characters without houses and houses
-without assigned characters.
+This creates two mandatory one-to-one relationships from `Character` to
+`House` and `Garage`, and a one-to-many relationship from `Garage` to
+`Vehicle`.
 
-#### Gang Membership Requirement
+#### Quest, Drug, and Gang Requirement
 
 - Gang membership is optional.
 - A character can belong to zero or more gangs.
-- A gang can have zero or more characters.
+- A character can have zero or more quests.
+- A character can hold zero or more drugs.
 
-This establishes an optional many-to-many relationship between
-`Character` and `Gang`.
+These are modeled as many-to-many relationships in the domain, with
+membership-specific data stored in junction tables in the relational
+implementation.
 
 #### Data Integrity Rules
 
@@ -311,28 +303,28 @@ The system must enforce the following constraints:
 - Every person has at most one profile.
 - Every profile has exactly one role.
 - Every character belongs to exactly one profile.
-- Every character has all required physical attributes.
-- Every character has exactly one house.
-- A character may belong to zero or more gangs.
-
-The system must prevent invalid states such as orphan characters,
-missing houses, missing roles, or duplicate role assignments.
+- Every character has all required appearance values.
+- Every character has exactly one house and one garage.
+- A garage can contain multiple vehicles.
+- Duplicate quest assignments, drug links, and gang memberships must be
+  prevented for the same character pair.
 
 #### Relationship Summary
 
-- `Profile` to `Role`: Many-to-One
 - `Profile` to `Character`: One-to-Many
 - `Character` to `House`: One-to-One (Mandatory)
+- `Character` to `Garage`: One-to-One (Mandatory)
+- `Garage` to `Vehicle`: One-to-Many
+- `Character` to `Drug`: Optional Many-to-Many
+- `Character` to `Quest`: Optional Many-to-Many
 - `Character` to `Gang`: Optional Many-to-Many
-- `Character` to Attributes: Many-to-One
 
 #### Conclusion
 
-These requirements define the structural foundation of the RPG system.
-They ensure clear identity management, controlled permissions, complete
-character definitions, and mandatory housing ownership. This
-specification forms the basis for conceptual, logical, and physical
-database modeling.
+These requirements define the new structural foundation of the RPG
+system. Identity stays centered on profiles, gameplay stays centered on
+characters, and assets and activities are represented explicitly through
+houses, garages, vehicles, quests, drugs, and gangs.
 
 ---
 
@@ -358,41 +350,40 @@ character entities.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\textwidth]{images/conceptual-logical-physical/conceptual-model-2026-02-10.png}
-\caption{Conceptual data model (Date: 10.2.2026)}
+\includegraphics[width=\textwidth]{images/conceptual-logical-physical/conceptual-uml-03092026.png}
+\caption{Conceptual data model. Authoritative source: `conceptual-uml-03092026.puml`}
 \end{figure}
 
 The model includes the following core entities:
 
 - **Profiles**: the persistent player identity used for login and
   account-level ownership.
-- **Roles**: access-level definitions (`User` and `Admin`) connected
-  to profile permissions.
 - **Characters**: playable identities controlled by profiles inside
   the game world.
 - **Houses**: character-owned properties used to represent private
   assets and ownership constraints.
+- **Garages**: character-owned storage locations for vehicles.
+- **Vehicles**: assets stored inside a garage.
+- **Drugs**: tradable or collectible items related to a character.
+- **Quests**: tasks that can be assigned to one or more characters.
 - **Gangs**: social groups that support optional membership and
   multi-character affiliation.
-- **Genders, Weights, Heights, Eyecolors, Skincolors**: controlled
-  attribute domains used to define mandatory character appearance
-  traits.
 
 #### Key Relationships in the Diagram
 
-- `Profiles` to `Roles`: many-to-one.
-  Each profile has exactly one role, while one role can be assigned to
-  many profiles.
 - `Profiles` to `Characters`: one-to-many.
   A profile can own multiple characters, and each character belongs to
   one profile.
 - `Characters` to `Houses`: one-to-one (mandatory).
   Each character must be linked to one house, and each house belongs
   to one character.
-- `Characters` to appearance tables (`Genders`, `Weights`, `Heights`,
-  `Eyecolors`, `Skincolors`): many-to-one for each attribute.
-  Each character has exactly one value per attribute, and many
-  characters can share the same attribute value.
+- `Characters` to `Garages`: one-to-one (mandatory).
+  Each character has exactly one garage, and each garage belongs to one
+  character.
+- `Garages` to `Vehicles`: one-to-many.
+  A garage can store zero or more vehicles.
+- `Characters` to `Drugs`: optional many-to-many.
+- `Characters` to `Quests`: optional many-to-many.
 - `Characters` to `Gangs`: optional many-to-many.
   A character may join zero or more gangs, and each gang may contain
   multiple characters.
@@ -414,21 +405,18 @@ Applied to our model:
   profile) and optional on profile side (a profile can exist with zero
   characters).
 - `Character` -> `House`: cardinality is one-to-one, modality is
-  mandatory on character side in our JPA mapping because
-  `characters.house_id` is `NOT NULL` and `UNIQUE`. On house side, a
-  house can exist without being referenced by a character unless extra
-  business rules are added.
-- `Character` <-> `Gang`: cardinality is many-to-many via
-  `gang_affiliations`, modality is optional on both sides (0..N).
-- `Character` -> attribute reference tables (`Gender`, `Weight`,
-  `Height`, `EyeColor`, `SkinColor`): cardinality is many-to-one,
-  modality is mandatory on character side because each FK is required.
+  mandatory on character side.
+- `Character` -> `Garage`: cardinality is one-to-one, modality is
+  mandatory on character side.
+- `Garage` -> `Vehicle`: cardinality is one-to-many, modality is
+  optional on the vehicle side because a garage may be empty.
+- `Character` <-> `Drug`, `Quest`, `Gang`: cardinality is many-to-many,
+  modality is optional on both sides.
 
 The conceptual model also defines participation rules. Participation is
 mandatory for `Character` to `Profile`, `Character` to `House`, and
-`Character` to each appearance category because these are required for
-valid gameplay state. Participation is optional for gang membership
-because not all players must engage in group-based social mechanics.
+`Character` to `Garage`, because these are required for valid gameplay
+state. Participation is optional for gangs, quests, drugs, and vehicles.
 
 From a domain perspective, this model prevents ambiguous ownership. A
 profile owns characters, characters own houses, and social membership is
@@ -454,35 +442,42 @@ enforceable structural constraints with attributes.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\textwidth]{images/conceptual-logical-physical/logical-model-2026-02-10.png}
-\caption{Logical data model (Date: 10.2.2026)}
+\includegraphics[width=\textwidth]{images/conceptual-logical-physical/logical-uml-09032026.png}
+\caption{Logical data model. Authoritative source: `logical-uml-09032026.puml`}
 \end{figure}
 
 #### Main Tables
 
-- **Profiles** (first_name, last_name, email, username, password)
-- **Roles** (name)
-- **Characters** (name, balance)
+- **Profiles** (first_name, last_name, email, username, password, role)
+- **Characters** (name, balance, gender, skincolor, eyecolor, height,
+  weight)
 - **Houses** (amount_rooms, amount_bathrooms)
+- **Garages** (capacity)
+- **Vehicles** (model, type, plate_number)
+- **Drugs** (name, type)
+- **Character_Drug** (quantity)
+- **Quests** (title, description, reward)
+- **Character_Quest** (status, accepted_at)
 - **Gangs** (name, type)
 - **Gang_Affiliations** (join_date)
-- **Genders, Weights, Heights, Eyecolors, Skincolors** (name)
 
-The table layout separates frequently changing data from stable
-reference data. `characters` contains active gameplay data, while
-reference tables store fixed classification values. This reduces
-redundancy and makes updates easier. For example, changing a reference
-label does not require updating every character row.
+The logical layout keeps the model close to the gameplay language.
+`role`, `gender`, `skincolor`, and `eyecolor` are attributes on the
+owning entities, while relationship-heavy concepts such as gangs,
+quests, and drugs are normalized through link tables.
 
 #### Logical Relationship Rules
 
-- One `Profile` belongs to one `Role`; one `Role` can be used by many
-  profiles.
 - One `Profile` can own many `Characters`.
-- Each `Character` must reference exactly one value in each attribute
-  category.
+- Each `Character` must contain exactly one value for each required
+  appearance attribute.
 - `Character` and `House` are modeled as a mandatory one-to-one
   relationship.
+- `Character` and `Garage` are modeled as a mandatory one-to-one
+  relationship.
+- `Garage` and `Vehicle` are modeled as one-to-many.
+- `Character` and `Drug` are modeled through `Character_Drug`.
+- `Character` and `Quest` are modeled through `Character_Quest`.
 - `Character` and `Gang` are modeled through the junction table
   `Gang_Affiliations` (many-to-many).
 
@@ -493,9 +488,9 @@ strategy and uniqueness boundaries:
   login identity per player.
 
 This structure keeps the data model clear and easier to maintain.
-Relationships are defined in a simple way, so common queries are easier
-to build and understand before implementing the final PostgreSQL
-optimization.
+Gameplay-facing attributes stay easy to read, while multi-valued
+relationships are still normalized where duplication would otherwise
+become a problem.
 
 ### 2.2.2. Normalization process
 
@@ -508,25 +503,25 @@ would otherwise appear in gameplay data.
 
 1NF requires atomic attributes and no repeating groups in a single
 column. In this schema, all tables satisfy 1NF because each column holds
-one value per row. For example, a character does not store multiple eye
-colors or multiple gang IDs in one field. Multi-valued relationships are
-modeled through separate tables (especially `gang_affiliations`).
+one value per row. Multi-valued relationships such as character-gang,
+character-drug, and character-quest are modeled through separate tables.
 
 #### Second Normal Form (2NF)
 
-2NF requires that non-key attributes depend on the full primary key, not
-part of it. This is especially relevant in tables with composite keys.
-`gang_affiliations` satisfies 2NF because `join_date` depends on the
-specific combination of `character_id` and `gang_id` rather than only
-one of them. No partial dependency is present.
+2NF requires that non-key attributes depend on the full key, not only
+part of it. This is especially relevant in relationship tables.
+`character_drug`, `character_quest`, and `gang_affiliations` satisfy 2NF
+because their descriptive attributes depend on the relationship pair,
+not on one side only.
 
 #### Third Normal Form (3NF)
 
 3NF removes transitive dependencies where non-key attributes depend on
-other non-key attributes. The schema satisfies this by separating roles,
-appearance categories, and gangs into dedicated tables referenced by
-foreign keys. For example, role names are not duplicated in `profiles`,
-and appearance labels are not duplicated in `characters`.
+other non-key attributes. In the new model, `role`, `gender`,
+`skincolor`, and `eyecolor` are treated as direct domain attributes of
+their owning rows, so they are not transitive dependencies. Relationship
+metadata such as `join_date`, `status`, and `quantity` lives only in the
+appropriate junction tables.
 
 The resulting 3NF design improves consistency and maintainability:
 
@@ -550,17 +545,16 @@ The physical database can be created directly from
 `sqls/schema.sql`. This makes onboarding simple: one script builds the
 tables, keys, and constraints used by the project.
 
-#### Schema export
+#### Schema definition
 
 To make the database reproducible without access to the project host, a
-full schema export is included as `sqls/schema.sql`. The file is
-generated with `pg_dump` and contains the DDL (Data Definition Language)
-needed to recreate the database structure: tables, constraints, foreign
-keys, indexes, and sequences.
+full schema script is included as `sqls/schema.sql`. The file contains
+hand-maintained DDL (Data Definition Language) for the final physical
+model used in the project.
 
-The schema file acts as a portable snapshot of the physical data model.
-Anyone cloning the repository can create an identical empty database by
-running:
+The schema file acts as a portable definition of the physical data
+model. Anyone cloning the repository can create an identical empty
+database by running:
 
 ```bash
 psql -U postgres -d bajls -f sqls/schema.sql
@@ -594,12 +588,12 @@ psql -U postgres -d bajls_db -f sqls/schema.sql
 
 The script creates the database structure in a logical order:
 
-- Reference tables first (for controlled values), such as `roles`,
-  `genders`, `weights`, `heights`, `eyecolors`, and `skincolors`.
-- Core business tables next, such as `profiles`, `characters`, `houses`,
-  and `gangs`.
-- Relationship table last: `gang_affiliations`, which links characters
-  and gangs in a many-to-many pattern.
+- Core identity tables first, such as `profiles`, `houses`, and
+  `garages`.
+- Main gameplay tables next, such as `characters`, `vehicles`, `drugs`,
+  `quests`, and `gangs`.
+- Relationship tables last: `character_drug`, `character_quest`, and
+  `gang_affiliations`.
 
 This order matters because foreign keys can only point to tables that
 already exist.
@@ -610,16 +604,17 @@ Example from the same pattern used in `sqls/schema.sql`:
 
 ```sql
 CREATE TABLE characters (
-    id SERIAL PRIMARY KEY,
-    profile_id INTEGER NOT NULL REFERENCES profiles(id),
-    house_id INTEGER NOT NULL UNIQUE REFERENCES houses(id)
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    profile_id bigint NOT NULL REFERENCES profiles(id),
+    house_id bigint NOT NULL UNIQUE REFERENCES houses(id),
+    garage_id bigint NOT NULL UNIQUE REFERENCES garages(id)
 );
 ```
 
 This simple definition enforces important rules at database level:
 
 - `PRIMARY KEY` gives each character a stable identity.
-- `NOT NULL` makes profile and house assignment mandatory.
+- `NOT NULL` makes profile, house, and garage assignment mandatory.
 - `REFERENCES` prevents invalid IDs that do not exist in parent tables.
 - `UNIQUE` on `house_id` enforces one house per character (one-to-one).
 
@@ -627,15 +622,17 @@ Many-to-many membership is handled with a junction table:
 
 ```sql
 CREATE TABLE gang_affiliations (
-    character_id INTEGER REFERENCES characters(id),
-    gang_id INTEGER REFERENCES gangs(id),
-    join_date DATE,
-    PRIMARY KEY (character_id, gang_id)
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    character_id bigint NOT NULL REFERENCES characters(id),
+    gang_id bigint NOT NULL REFERENCES gangs(id),
+    join_date date NOT NULL,
+    CONSTRAINT uk_gang_affiliations_character_gang UNIQUE (character_id, gang_id)
 );
 ```
 
-The composite primary key prevents duplicate memberships for the same
-character-gang pair.
+The unique constraint prevents duplicate memberships for the same
+character-gang pair while still allowing the table to use a simple
+surrogate primary key.
 
 #### Quick verification after running the script
 
@@ -673,22 +670,26 @@ table structure and foreign-key network used by the project.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\textwidth]{images/conceptual-logical-physical/physical-model-2026-02-10.png}
-\caption{Physical data model in PostgreSQL (Date: 10.2.2026)}
+\includegraphics[width=\textwidth]{images/conceptual-logical-physical/physical-uml-03092026.png}
+\caption{Physical data model. Authoritative source: `physical-uml-03092026.puml`}
 \end{figure}
 
 #### Implementation Details
 
-- Primary keys are implemented as integer identifiers (`id`).
+- Primary keys are implemented as `bigint` identity columns.
 - Foreign keys are created between dependent tables to enforce
   referential integrity.
 - The `characters.house_id` column is unique, enforcing one house per
   character.
+- The `characters.garage_id` column is unique, enforcing one garage per
+  character.
 - The `gang_affiliations` table stores many-to-many links between
   characters and gangs, including `join_date`.
-- Reference tables (`genders`, `weights`, `heights`, `eyecolors`,
-  `skincolors`, `roles`) reduce redundancy and centralize valid
-  values.
+- `character_drug` and `character_quest` store many-to-many links with
+  relationship-specific attributes.
+- Controlled values such as `role`, `gender`, `skincolor`, `eyecolor`,
+  `vehicle.type`, `drug.type`, `gang.type`, and `character_quest.status`
+  are enforced with SQL `CHECK` constraints and mirrored as Java enums.
 
 The PostgreSQL schema is designed to enforce business rules at database
 level, not only in application code. Mandatory fields are protected with
@@ -707,7 +708,7 @@ Operationally, the physical design also supports maintainability:
 
 - Clear naming conventions for tables and columns.
 - Dedicated junction table for many-to-many associations.
-- Stable reference tables for controlled enumerations.
+- SQL `CHECK` constraints and enums for controlled value domains.
 - Predictable join paths for reporting and administration tools.
 
 #### Cardinality and Modality in the Physical Model
@@ -715,17 +716,21 @@ Operationally, the physical design also supports maintainability:
 At the physical level, cardinality and modality are enforced through
 foreign keys, uniqueness, and nullability:
 
-- `profiles.role_id` is `NOT NULL` and references `roles.id`, so each
-  profile must have exactly one role (mandatory many-to-one).
+- `profiles.role` is `NOT NULL`, so each profile must have exactly one
+  role value.
 - `characters.profile_id` is `NOT NULL`, so each character must belong
   to one profile, while a profile can still have zero or many
   characters.
 - `characters.house_id` is both `NOT NULL` and `UNIQUE`, enforcing one
   mandatory house per character and preventing multiple characters from
   referencing the same house.
-- Attribute foreign keys in `characters` (`gender_id`, `weight_id`,
-  `height_id`, `eyecolor_id`, `skincolor_id`) are mandatory, which
-  enforces complete character definitions.
+- `characters.garage_id` is both `NOT NULL` and `UNIQUE`, enforcing one
+  mandatory garage per character.
+- Required character attributes such as `gender`, `skincolor`,
+  `eyecolor`, `height`, and `weight` are stored directly on the
+  `characters` row and protected with `NOT NULL`. The controlled domains
+  for `gender`, `skincolor`, and `eyecolor` are further restricted with
+  SQL `CHECK` constraints.
 - `gang_affiliations` implements optional many-to-many membership:
   both sides can have zero or many links, while each link row must
   reference exactly one character and one gang.
@@ -734,41 +739,99 @@ foreign keys, uniqueness, and nullability:
 
 ### 2.3.1. Data types
 
-- `INTEGER` for primary and foreign keys
-- `VARCHAR(20)` for names and short text values
-- `REAL` for character balance
-- `DATE` for `join_date` in `gang_affiliations`
-- `NOT NULL` on mandatory columns
+The physical schema uses PostgreSQL types that match the actual table
+definitions in `sqls/schema.sql`:
 
-These choices balance simplicity and correctness. Integer keys are fast
-for joins, short varchar fields are sufficient for constrained labels,
-and date storage supports timeline analysis of gang membership. If
-future requirements demand larger values or stricter validation, the
-model can be extended with wider text constraints, check constraints,
-and additional indexes without breaking the current structure.
+- `bigint GENERATED BY DEFAULT AS IDENTITY` for all surrogate primary
+  keys
+- `bigint` for foreign keys such as `characters.profile_id` and
+  `vehicles.garage_id`
+- `varchar(50)` for most names and controlled text values, for example
+  `profiles.first_name`, `characters.name`, and `gangs.name`
+- `varchar(255)` for longer login-related text such as `email` and
+  `password`
+- `varchar(100)` for `quests.title`
+- `text` for `quests.description`
+- `numeric(12,2)` for monetary values such as `characters.balance` and
+  `quests.reward`
+- `integer` for count-like values such as room counts, garage capacity,
+  and drug quantity
+- `date` for `gang_affiliations.join_date`
+- `timestamp` for `character_quest.accepted_at`
+
+These choices balance simplicity and correctness. `bigint` identity keys
+provide stable row identity, `varchar` columns keep bounded text easy to
+validate, and `numeric(12,2)` is safer than floating-point types for
+game economy values. Temporal fields are split into `date` and
+`timestamp` depending on whether only a day or an exact acceptance time
+is required.
 
 ### 2.3.2. Primary and foreign keys
 
-Primary keys use auto-generated integer IDs (`GenerationType.IDENTITY`)
+Primary keys use auto-generated `bigint` IDs (`GenerationType.IDENTITY`)
 in all main tables. This gives each row a simple and stable identifier.
 
 Foreign keys encode the core relationships:
 
 - `characters.profile_id` -> `profiles.id`
-- `characters.gender_id` -> `genders.id`
-- `characters.skincolor_id` -> `skincolors.id`
-- `characters.eyecolor_id` -> `eyecolors.id`
-- `characters.height_id` -> `heights.id`
-- `characters.weight_id` -> `weights.id`
-- `profiles.role_id` -> `roles.id`
-- `characters.house_id` -> `houses.id` (unique)
+- `characters.house_id` -> `houses.id`
+- `characters.garage_id` -> `garages.id`
+- `vehicles.garage_id` -> `garages.id`
+- `character_drug.character_id` -> `characters.id`
+- `character_drug.drug_id` -> `drugs.id`
+- `character_quest.character_id` -> `characters.id`
+- `character_quest.quest_id` -> `quests.id`
 - `gang_affiliations.character_id` -> `characters.id`
 - `gang_affiliations.gang_id` -> `gangs.id`
+- `characters.house_id` -> `houses.id` (unique)
+- `characters.garage_id` -> `garages.id` (unique)
 
 The many-to-many relation between characters and gangs is implemented
-with `gang_affiliations`, where the composite key
+with `gang_affiliations`, where the unique constraint on
 (`character_id`, `gang_id`) prevents duplicate memberships for the same
 pair.
+
+#### Why use `id` in junction tables?
+
+In a purely relational design, a junction table can use the two foreign
+keys as its primary key. That is a clean and classic solution.
+
+In this project, we instead use a simple `id` primary key together with
+a `UNIQUE` constraint on the foreign-key pair. This was chosen because
+it makes the tables easier to work with in Java/Hibernate, while still
+preventing duplicate relationships.
+
+Example:
+
+In `gang_affiliations`, a row can look like this:
+
+```text
+id = 12
+character_id = 3
+gang_id = 7
+join_date = 2025-03-22
+```
+
+Here, `id` is the technical primary key, while
+`UNIQUE(character_id, gang_id)` ensures that character `3` cannot be
+added to gang `7` more than once.
+
+Pros:
+
+- **Using a separate `id`** makes CRUD operations and ORM mapping
+  simpler.
+- **Using `UNIQUE(character_id, gang_id)`** still protects the real
+  business rule and prevents duplicate links.
+
+Cons:
+
+- The table gets one extra technical key that is not part of the real
+  business relationship.
+- A pure relational design would be slightly cleaner with only the two
+  foreign keys as the primary key.
+
+For this project, the trade-off is acceptable because the code becomes
+easier to read and maintain.
 
 \newpage
 
@@ -778,15 +841,29 @@ The schema enforces integrity through a combination of column
 constraints and relationship constraints:
 
 - `NOT NULL` is used on mandatory attributes (for example profile
-  names, credentials, role references, character references, and
+  names, credentials, role values, character references, and
   `join_date`).
 - `UNIQUE` constraints prevent duplicates on identity-like values:
-  `profiles.email`, `profiles.username`, `gangs.name`, and
-  `characters.house_id`.
+  `profiles.email`, `profiles.username`, `gangs.name`,
+  `characters.house_id`, `characters.garage_id`, and each
+  junction-table character-pair combination.
 - Foreign-key constraints ensure references remain valid across table
-  boundaries. Examples include `fk_profiles_role`,
-  `fk_characters_profile`, `fk_characters_house`, `fk_gang_aff_char`,
-  and `fk_gang_aff_gang`.
+  boundaries. Examples include `fk_characters_profile`,
+  `fk_characters_house`, `fk_characters_garage`,
+  `fk_character_drug_character`, `fk_character_quest_quest`,
+  `fk_gang_aff_char`, and `fk_gang_aff_gang`.
+
+Controlled value domains are protected directly in SQL with `CHECK`
+constraints instead of separate lookup tables. Examples are:
+
+- `chk_profiles_role` for `USER` / `ADMIN`
+- `chk_characters_gender`
+- `chk_characters_skincolor`
+- `chk_characters_eyecolor`
+- `chk_vehicles_type`
+- `chk_drugs_type`
+- `chk_character_quest_status`
+- `chk_gangs_type`
 
 In JPA/Hibernate, required references are marked as mandatory. This
 matches the database rules and helps prevent missing links, unclear
@@ -797,14 +874,25 @@ ownership, and duplicate relationships.
 
 ## 2.4. Stored objects - views, triggers, events
 
-Views are virtual tables defined by an SQL query. Instead of storing data physically, a view presents data from one or more underlying tables based on a predefined query. This allows users and applications to access filtered, structured, or combined data without directly interacting with the base tables.
+Views are virtual tables defined by SQL queries. Instead of storing data
+physically, a view presents data from one or more underlying tables
+through a predefined query. This allows users and applications to access
+filtered, structured, or combined data without interacting directly with
+the base tables.
 
-A view behaves like a regular table in queries. Users can perform `SELECT` operations on a view, while the database executes the underlying query dynamically and returns the result set. Because the data is not stored separately, a view always reflects the current state of the underlying tables.
+A view behaves like a regular table in queries. Users can perform
+`SELECT` operations on a view, while the database executes the
+underlying query dynamically and returns the result set. Because the
+data is not stored separately, a view always reflects the current state
+of the underlying tables.
 
-Views are useful in systems where data should be presented in a controlled or simplified way. In this RPG project, views could be used to expose selected character information, player summaries, or administrative overviews without giving direct access to the full database structure.
+Views are useful when data should be presented in a controlled or
+simplified form. In this RPG project, they are used to expose selected
+character information, player summaries, and administrative overviews
+without requiring direct access to the full database structure.
 
-In short: this section covers read-oriented objects (`views`),
-write-time validation (`triggers`), and time-based automation (`events`
+This section covers read-oriented objects (`views`), write-time
+validation (`triggers`), and time-based automation (`events` implemented
 through `pg_cron`).
 
 ### 2.4.1. Views
@@ -834,7 +922,8 @@ Not all views are updatable, particularly those involving joins, grouping, or co
 
 #### How Views Will Be Used in the RPG Project
 
-In the RPG system, many features require data from multiple related tables such as profiles, characters and gangs.
+In the RPG system, many features require data from multiple related
+tables such as profiles, characters, and gangs.
 
 **Simplify complex queries:**  
 Instead of writing long SQL statements with multiple joins, the application can query a single view.
@@ -846,52 +935,51 @@ Views create a logical layer between the application and the physical database. 
 Views can hide sensitive information such as passwords or internal identifiers and expose only the data needed by the application or administrative tools.
 
 **Support administration and reporting:**
-Views can present summarized information about players, characters, houses, and gang memberships in a clear and structured format.
+Views can present summarized information about players, characters,
+houses, and gang memberships in a clear and structured format.
 This approach improves maintainability and ensures controlled access to the game data.
 
 #### Character Overview View
 
-The following example creates a view that provides an overview of each character, including the associated profile and any gang affiliations.
+The current version of `v_character_overview` combines account,
+character, housing, garage, and gang information into one read-friendly
+result:
 
 ```sql
 CREATE OR REPLACE VIEW v_character_overview AS
 SELECT
-    profiles.username AS username,
-    characters.name AS name,
-    characters.balance AS balance,
-    COALESCE(STRING_AGG(gangs.name, ', '), 'Spineless') AS affiliations
-FROM characters
-JOIN profiles ON profiles.id = characters.profile_id
-LEFT JOIN gang_affiliations ON gang_affiliations.character_id = characters.id
-LEFT JOIN gangs ON gangs.id = gang_affiliations.gang_id
-GROUP BY profiles.username, characters.name, characters.balance;
+    p.username,
+    c.name AS character_name,
+    c.balance,
+    h.amount_rooms,
+    h.amount_bathrooms,
+    g.capacity AS garage_capacity,
+    COALESCE(STRING_AGG(DISTINCT ga2.name, ', '), 'No gang') AS affiliations
+FROM characters c
+JOIN profiles p ON p.id = c.profile_id
+JOIN houses h ON h.id = c.house_id
+JOIN garages g ON g.id = c.garage_id
+LEFT JOIN gang_affiliations gaf ON gaf.character_id = c.id
+LEFT JOIN gangs ga2 ON ga2.id = gaf.gang_id
+GROUP BY p.username, c.name, c.balance, h.amount_rooms, h.amount_bathrooms, g.capacity;
 ```
 
-The v_character_overview view combines data from multiple related tables into a single logical structure. The purpose of this view is to present information together with the owning profile and any gang affiliations in a simplified format.
-The query is centered around the characters table, since characters represent the core entity in the gameplay domain.  
-The `view` uses `CREATE` `OR` `REPLACE` to allow changes to the query logic without recreating the view manually. However, PostgreSQL does not allow columns to be removed or added when using `OR` `REPLACE`. In such cases, the view must be dropped and created again.
+This view is useful because it collects the most common "profile page"
+data into one query result: who owns the character, where the character
+lives, how large the garage is, and which gangs the character belongs
+to.
 
 ### Characters to Gangs (optional many-to-many relationship)
 
-Gang membership is optional and modeled through the junction table gang_affiliations.
-
-A `LEFT` `JOIN` is used because a character may belong to zero or more gangs. This ensures that characters without gang membership are still included in the result.  
-The COALESCE function is applied to the STRING_AGG result:
-`COALESCE`(STRING_AGG(gangs.name, ', '), 'Spineless')
-
-If a character has no gang affiliations, STRING_AGG returns NULL.
-`COALESCE` replaces this NULL value with the text 'Spineless', ensuring that characters without a gang are clearly identified instead of showing a NULL value. Since the relationship is many-to-many, a character may be linked to multiple gangs.
+Gang membership is still optional and is still modeled through the
+junction table `gang_affiliations`. A `LEFT JOIN` is therefore used so
+that characters without gang membership still appear in the result.
 
 ### Aggregation and Grouping
 
-To ensure that each character appears only once, the PostgreSQL aggregation function STRING_AGG is used:
-
-`STRING_AGG`(gangs.name, ', ') AS affiliations
-
-This function combines multiple gang names into a single comma-separated string.
-The grouping ensures that all rows belonging to the same character are combined into one result row.
-The view does not expose characters.id. Instead, uniqueness is determined by the combination of username, character name, and balance.
-Hiding internal identifiers helps abstract the database structure and prevents exposing internal technical details, which can improve both security and data encapsulation. This ensures that each character appears only once, even if multiple gang memberships exist. All non-aggregated columns in the SELECT clause must be included in the GROUP BY clause to ensure deterministic results.
+`STRING_AGG` is used to combine multiple gang names into one readable
+column. Because a character can have many gang memberships, grouping is
+required to collapse those rows into one output row per character.
 
 **Result**
 
@@ -902,13 +990,15 @@ SELECT * FROM v_character_overview;
 
 ![v_character_overview](images/frontpage/View-v_character_overview.png)
 
-This structure provides a clear and compact overview suitable for application use, administration, and reporting.
+This structure provides a clear and compact overview suitable for
+application use, administration, and reporting.
 
 \newpage
 
 ### Gang Overview View
 
-The v_gang_overview view provides a summarized overview of each gang and its members.
+The `v_gang_overview` view provides a summarized overview of each gang,
+its type, and its members.
 
 ```sql
 CREATE OR REPLACE VIEW v_gang_overview AS
@@ -935,31 +1025,30 @@ SELECT * FROM v_gang_overview;
 \caption{v\_gang\_overview}
 \end{figure}
 
-The view combines data from the `gangs`, `gang_affiliations`, and `characters` tables to present gang information in a simplified format.
+The view combines data from the `gangs`, `gang_affiliations`, and
+`characters` tables to present gang information in a simplified format.
 
 ### Character Appearance Overview View
 
-The v_character_appearance view provides a structured overview of each character's physical attributes
+The `v_character_appearance` view provides a structured overview of each
+character's physical attributes.
 
 ```sql
 CREATE OR REPLACE VIEW v_character_appearance AS
 SELECT
     characters.name AS character_name,
     characters.balance AS balance,
-    genders.name AS gender,
-    weights.name AS weight,
-    heights.name AS height,
-    eyecolors.name AS eye_color,
-    skincolors.name AS skin_color
+    characters.gender AS gender,
+    characters.weight AS weight,
+    characters.height AS height,
+    characters.eyecolor AS eyecolor,
+    characters.skincolor AS skincolor
 FROM characters
-JOIN genders ON genders.id = characters.gender_id
-JOIN weights ON weights.id = characters.weight_id
-JOIN heights ON heights.id = characters.height_id
-JOIN eyecolors ON eyecolors.id = characters.eyecolor_id
-JOIN skincolors ON skincolors.id = characters.skincolor_id;
 ```
 
-Each of these attributes is stored as a foreign key in the `characters` table and linked to a corresponding lookup table. By using joins, the view replaces internal identifier values with readable attribute names. This makes the data easier to understand and use in application features, administration, and reporting.
+In the updated schema these appearance values are stored directly in the
+`characters` table. The view is therefore simpler than before and no
+longer depends on lookup joins.
 
 
 **Result**
@@ -971,13 +1060,17 @@ SELECT * FROM v_character_appearance;
 
 ![v_character_overview](images/frontpage/View-v_character_appearance.png)
 
-The view simplifies queries by collecting all appearance-related information in a single logical structure and supports the normalized database design by keeping descriptive values in dedicated reference tables.
+The view simplifies queries by collecting all appearance-related
+information in a single logical structure.
 
 ### 2.4.2. Triggers
 
-A trigger is a piece of sql code that automatically executes in response to certain events on a
-particular table. A trigger can be set to execute either before or after an insert, update, or delete operation.
-Triggers are commonly used to enforce complex business rules, maintain data integrity, or perform automatic updates based on changes in the database.
+A trigger is a piece of SQL code that runs automatically in response to
+certain events on a table. A trigger can be set to execute before or
+after an `INSERT`, `UPDATE`, or `DELETE` operation. Triggers are
+commonly used to enforce complex business rules, maintain data
+integrity, or perform automatic updates based on changes in the
+database.
 
 ### Purpose of trigger in this project
 
@@ -1027,9 +1120,10 @@ CREATE TRIGGER trg_character_notice
     EXECUTE FUNCTION fn_character_notice();
 ```
 
-The message is not stored in a database table. 
-Instead, it is sent as a notice to the client application that performed the insert. 
-This allows for real-time feedback without modifying the data model or adding extra tables for logging.
+The message is not stored in a database table. Instead, it is sent as a
+notice to the client application that performed the insert. This allows
+real-time feedback without modifying the data model or adding extra
+tables for logging.
 
 \newpage
 
@@ -1069,11 +1163,11 @@ Because PostgreSQL has no native event scheduler syntax, we use the
 gives us event-like behavior while staying inside PostgreSQL.
 
 In this project, the scheduled task runs every day at **00:01** and
-updates each character's balance according to gang membership rules:
+updates each character's balance according to current activity:
 
-- Characters with gang affiliation receive a loyalty bonus.
-- Characters without gang affiliation receive a fixed fallback bonus of
-  `100`.
+- all characters receive a base bonus
+- extra bonus is added for gang memberships
+- extra bonus is added for active quest assignments
 
 #### Cron job file walkthrough
 
@@ -1121,10 +1215,10 @@ SELECT cron.schedule(
     FROM (
         SELECT
             c2.id AS character_id,
-            SUM(GREATEST((CURRENT_DATE - ga.join_date), 0))::double precision AS bonus
+            (100 + COUNT(DISTINCT ga.gang_id) * 25 + COUNT(DISTINCT cq.quest_id) * 10)::numeric(12,2) AS bonus
         FROM characters c2
-        LEFT JOIN gang_affiliations ga
-            ON ga.character_id = c2.id
+        LEFT JOIN gang_affiliations ga ON ga.character_id = c2.id
+        LEFT JOIN character_quest cq ON cq.character_id = c2.id
         GROUP BY c2.id
     ) b
     WHERE c.id = b.character_id;
@@ -1135,11 +1229,11 @@ SELECT cron.schedule(
 How this works:
 
 - `'1 0 * * *'` means every day at 00:01.
-- `LEFT JOIN` keeps all characters in scope, even without gang rows.
-- `CURRENT_DATE - ga.join_date` calculates number of days in gang.
-- `SUM(...)` adds bonus days if a character has multiple affiliations.
-- `COALESCE(b.bonus, 100)` applies fallback `100` when no gang bonus is
-  available.
+- `LEFT JOIN` keeps all characters in scope, even without gangs or
+  quests.
+- each gang adds `25` bonus.
+- each quest relation adds `10` bonus.
+- `COALESCE(b.bonus, 100)` still guarantees a fallback bonus.
 
 #### Summary
 
@@ -1155,11 +1249,12 @@ database-side automation.
 
 ### Introduction
 
-The project includes a dedicated seed script, `sqls/seed.sql`, that creates a
-realistic baseline dataset for demos, testing, and validation. Instead
-of random values, the script inserts coherent player profiles,
-characters, houses, and gang memberships, so queries return believable
-results and relationship rules can be verified in practice.
+The project includes a dedicated seed script, `sqls/seed.sql`, that
+creates a realistic baseline dataset for demos, testing, and validation.
+Instead of random values, the script inserts coherent player profiles,
+characters, houses, garages, vehicles, quests, drugs, and gang
+memberships, so queries return believable results and relationship rules
+can be verified in practice.
 
 ### Script Structure
 
@@ -1173,16 +1268,16 @@ data state every time it is executed on the same schema.
 BEGIN;
 TRUNCATE TABLE
     gang_affiliations,
+    character_quest,
+    quests,
+    character_drug,
+    drugs,
+    vehicles,
     characters,
+    garages,
     profiles,
     gangs,
-    houses,
-    roles,
-    genders,
-    weights,
-    heights,
-    eyecolors,
-    skincolors
+    houses
 RESTART IDENTITY CASCADE;
 ```
 
@@ -1190,55 +1285,29 @@ RESTART IDENTITY CASCADE;
 `RESTART IDENTITY` resets auto-increment IDs back to their starting
 values, and `CASCADE` ensures dependent tables are also cleared safely.
 
-After reset, the script inserts stable reference data first, followed by
-gangs and player profiles.
+After reset, the script inserts profiles, houses, garages, characters,
+vehicles, drugs, quests, gangs, and finally the relationship rows.
 
-```sql
-INSERT INTO roles (id, name) VALUES (1, 'USER'), (2, 'ADMIN');
-INSERT INTO genders (id, name) VALUES (1, 'MALE'), (2, 'FEMALE'), (3, 'OTHER');
-INSERT INTO weights (id, name) VALUES (1, 'LIGHT'), (2, 'AVERAGE'), (3, 'HEAVY');
-INSERT INTO heights (id, name) VALUES (1, 'SHORT'), (2, 'AVERAGE'), (3, 'TALL');
-```
+### Character, house, and garage seeding
 
-### Schema-aware character and house seeding
+The new model no longer needs schema-detection logic. The seeding order
+follows the actual foreign keys directly:
 
-To support schema variants, seeding for `characters` and `houses` is
-handled in a `DO` block. It checks where the foreign key is placed and
-inserts in the correct order to avoid referential errors.
-
-```sql
-IF characters_has_house_id AND NOT houses_has_character_id THEN
-    INSERT INTO houses (id, amount_rooms, amount_bathrooms) VALUES
-        (1, 2, 1), (2, 3, 2), (3, 1, 1);
-
-    INSERT INTO characters (
-        id, name, balance, profile_id, gender_id, skincolor_id,
-        eyecolor_id, height_id, weight_id, house_id
-    ) VALUES
-        (1, 'ShadowMia', 2450.50, 1, 2, 1, 2, 2, 2, 1),
-        (2, 'SteelNoah', 1320.00, 2, 1, 2, 1, 3, 3, 2);
-END IF;
-```
-
-The condition means: if `characters` contains `house_id` and `houses`
-does not contain `character_id`, then the foreign key points from
-`characters` to `houses`. In that case, `houses` must be inserted first.
-
-For `INSERT INTO houses (id, amount_rooms, amount_bathrooms)`, each tuple
-follows that exact column order:
-
-- `(1, 2, 1)` = `id = 1`, `amount_rooms = 2`, `amount_bathrooms = 1`
-- `(2, 3, 2)` = `id = 2`, `amount_rooms = 3`, `amount_bathrooms = 2`
-- `(3, 1, 1)` = `id = 3`, `amount_rooms = 1`, `amount_bathrooms = 1`
+1. `profiles`
+2. `houses`
+3. `garages`
+4. `characters`
+5. `vehicles`
+6. relationship tables
 
 \newpage
 
 ### Gang membership data
 
 Gang membership is optional in the model, so only a subset of characters
-receives rows in `gang_affiliations`. This intentionally demonstrates
-both valid states: characters with gang membership and characters
-without gang membership.
+receives rows in `gang_affiliations`. The seed follows the same idea for
+drugs and quests, so the dataset demonstrates both empty and populated
+many-to-many relationships.
 
 ```sql
 INSERT INTO gang_affiliations (character_id, gang_id, join_date) VALUES
@@ -1259,11 +1328,20 @@ COMMIT;
 ### 2.5 Stored Functions & Procedures
 ### Introduction
 
-Stored functions and procedures are database objects that encapsulate SQL code for reuse. Functions return values and can be used in queries, while procedures perform actions and is not required to return a value. Both improve performance, reduce redundancy, and centralize business logic within the database.
+Stored functions and procedures are database objects that encapsulate SQL
+code for reuse. Functions return values and can be used in queries,
+while procedures perform actions and are not required to return a value.
+Both reduce redundancy and centralize business logic within the
+database.
 
 ### Stored Functions
 
-A stored function is a programmable database object that encapsulates reusable SQL logic and always returns a single value. It is created using the `CREATE FUNCTION` statement and followed up using the `END$$`. The function is stored within the database for repeated use. If one was to use a specific calculation for several queries, then a function would have a perfect usecase in that scenario. All functions are located in the ``/sql/functions`` directory
+A stored function is a programmable database object that encapsulates
+reusable SQL logic and always returns a single value. It is created with
+the `CREATE FUNCTION` statement and stored in the database for repeated
+use. Functions are well suited to calculations that need to be reused
+across multiple queries. All functions used in this project are located
+in `sqls/functions`.
 
 #### What defines a stored function:
 
@@ -1281,7 +1359,17 @@ A stored function is a programmable database object that encapsulates reusable S
 
 #### Example of Stored Function Usage in the Project
 
-The code snippet provided below, is an example of the implementation of a function that returns the wealth status of a character based on their balance.
+The project currently includes one concrete stored function in
+`sqls/functions/get_wealth.sql`: `get_wealth_status(p_balance numeric)`.
+It returns a text category for a character's balance and is imported as
+part of database setup with:
+
+```bash
+psql -d bajls_db -f sqls/functions/get_wealth.sql
+```
+
+The following snippet shows the actual implementation used in the
+project:
 
 ```sql
 CREATE OR REPLACE FUNCTION get_wealth_status(p_balance numeric)
@@ -1300,46 +1388,61 @@ END;
 $$;
 ```
 1. Input:
-    * The function expects a numeric input called p_balance (which represents a person's balance, or wealth).
+   The function expects a numeric input called `p_balance`, which
+   represents a character's balance.
 
-2. Process (Conditional Logic):
-    * The function uses a series of conditional statements (IF-ELSIF-ELSE) to determine the wealth status based on the balance.
+2. Process:
+   The function uses `IF / ELSIF / ELSE` logic to classify the balance:
+   `poor` for values below `1000`, `middleclass` for values below
+   `3000`, and `rich` otherwise.
 
-        * Condition 1: If the balance is less than 1000, the function returns the text 'poor'.
-        * Condition 2: If the balance is between 1000 and 2999, the function returns 'middleclass'.
-        * Condition 3: If the balance is 3000 or higher, the function returns 'rich'.
-
-3.  Output:
-    * The output is a text value representing the person's wealth status, based on their balance.
+3. Output:
+   The result is a text value representing the character's wealth
+   status.
 
 ### Stored procedures
 
-Stored procedures are used to group SQL statements and business logic into a single reusable unit that runs inside the database. Unlike a stored function, a procedure does not have to return a value and is typically used to perform actions on the database, such as inserting, updating, or deleting records or running multiple SQL operations in sequence. Aside from the apparent benefit which is reusability, the standaridizations of actions/procedures helps with the enforcement of consistent business rules across systems. all procedures are located in the ``/sql/procedures`` directory.
+Stored procedures group SQL statements and business logic into a single
+reusable unit that runs inside the database. Unlike a stored function, a
+procedure does not have to return a value and is typically used to
+perform actions such as inserting, updating, deleting, or coordinating
+multiple SQL operations in sequence. This helps enforce consistent
+business rules across the system. All procedures used in this project
+are located in `sqls/procedures`.
 
-The example provided below consists of a procedure that handles the required operations for creating a character with a house associated. This procedure takes in multiple input parameters to specify details for both the house and character.
+The following example shows a procedure that handles the required
+operations for creating a character together with both a house and a
+garage.
 
-The full code for this procedure can be found in the ``create_character_with_house.sql`` file located in the ``/sql/procedures`` directory.
+The full code is located in
+`sqls/procedures/create_character_with_house.sql` and can be installed
+with:
 
-Prodecure workflow:
+```bash
+psql -d bajls_db -f sqls/procedures/create_character_with_house.sql
+```
+
+Procedure workflow:
 
 1. Input parameters:
-    * The procedure accepts multiple parameters including name, balance, profile, gender, skin color, eye color, height, weight and house details such as the number of rooms.
-2. Sequence adjustments:
-    * The sequence for the house table (house_id_seq) is reset to the current maximum id in the houses table. This ensures the next ``INSERT`` statement will generate a unique ID for the new house. This was need when working with the data populated using `seedl.sql`
-3. House creation:
-    * A new row is inserted into the ``houses`` table using the number of rooms and bathrooms provided in the input parameter. The ``RETURNING`` clause captures the newly generated id for the house, which is then stored in the ``v_house_id`` variable.
+    * The procedure accepts values for profile, appearance, house, and
+      garage data.
+2. House creation:
+    * A new row is inserted into `houses`.
+3. Garage creation:
+    * A new row is inserted into `garages`.
 4. Character creation:
-    * Once the house is created, the procedure proceeds to create a new ``character`` in the characters table, linking the new character to the ``house_id`` of the house just created. The details for the character are passed in as parameters.
+    * The character is inserted with both `house_id` and `garage_id`.
 
 ## 2.6. Security and access control
 
 ### 2.6.1. Explanation of users and privileges
 
-The system uses only two roles: `User` and `Admin`.
+The system uses only two roles: `USER` and `ADMIN`.
 
-- `User`: regular player role with access to normal gameplay features
+- `USER`: regular player role with access to normal gameplay features
   (profile and character usage).
-- `Admin`: administrative role with extended permissions for management
+- `ADMIN`: administrative role with extended permissions for management
   and moderation tasks.
 
 Each profile has exactly one role, and a profile cannot have both roles
@@ -1371,26 +1474,51 @@ illustrate the expected structure and data types, not real values.
   "first_name": "",
   "last_name": "",
   "username": "",
-  "role_name": "",
+  "password": "",
+  "role": "",
   "characters": [
     {
-      "character_id": ,
+      "_id": "",
       "name": "",
-      "balance": ,
-      "eye_color": "",
+      "balance": 0,
       "gender": "",
+      "skincolor": "",
+      "eyecolor": "",
       "height": "",
-      "skin_color": "",
       "weight": "",
       "house": {
-        "house_id": ,
-        "amount_rooms": ,
-        "amount_bathrooms":
+        "_id": "",
+        "amount_rooms": 0,
+        "amount_bathrooms": 0
       },
-      "gangs": [
+      "garage": {
+        "_id": "",
+        "capacity": 0,
+        "vehicles": [
+          {
+            "_id": "",
+            "model": "",
+            "type": "",
+            "plate_number": ""
+          }
+        ]
+      },
+      "character_drugs": [
         {
-          "gang_id": ,
-          "type": "",
+          "drug_id": "",
+          "quantity": 0
+        }
+      ],
+      "character_quests": [
+        {
+          "quest_id": "",
+          "status": "",
+          "accepted_at": ""
+        }
+      ],
+      "gang_memberships": [
+        {
+          "gang_id": "",
           "join_date": ""
         }
       ]
@@ -1403,117 +1531,122 @@ illustrate the expected structure and data types, not real values.
 
 The profile document contains:
 
-- `profile_id`
-- `email`, `first_name`, `last_name`, `username`
-- `role_name`
+- `_id`
+- `email`, `first_name`, `last_name`, `username`, `password`
+- `role`
 - `characters` (array)
 
 This means one MongoDB document represents one player profile plus all
 playable characters owned by that profile.
 
-The top-level identity fields (`email`, `username`, etc.) are stored
-directly in the profile document because they are always needed when
-working with profile data. We keep them close to character data to avoid
-multiple cross-collection lookups in common read scenarios.
-
-`role_name` is also kept at top level. In the relational database, role
-is normalized through a foreign key to a `roles` table. In MongoDB, we
-store the role as a direct value because role names are stable, very
-small, and frequently displayed. This is a deliberate denormalization
-choice to optimize reads.
+The top-level identity fields are stored directly in the profile
+document because they are always needed when working with profile data.
+We keep them close to character data to avoid multiple cross-collection
+lookups in common read scenarios.
 
 #### Character array design
 
 Inside each profile document, `characters` is an array of character
 objects. Each character includes:
 
-- `character_id`
+- `_id`
 - `name`
 - `balance`
-- `eye_color`, `gender`, `height`, `skin_color`, `weight`
+- `gender`, `skincolor`, `eyecolor`, `height`, `weight`
 - `house` (embedded object)
-- `gangs` (embedded array)
+- `garage` (embedded object)
+- `character_drugs` (embedded relation array)
+- `character_quests` (embedded relation array)
+- `gang_memberships` (embedded relation array)
 
-This design follows an aggregate boundary: profile -> characters ->
-house/gangs. If the application frequently loads all characters for one
-profile, embedding gives a natural and efficient structure.
+This design follows an aggregate boundary:
+profile -> characters -> house/garage/vehicles and relation metadata.
+If the application frequently loads all characters for one profile,
+embedding gives a natural and efficient structure.
 
-Appearance attributes are stored as readable values (`eye_color`,
-`gender`, etc.) rather than foreign-key IDs. In MongoDB this simplifies
-documents and avoids resolving small lookup tables at runtime.
+Appearance attributes are stored as readable values instead of foreign
+key IDs. In MongoDB this simplifies documents and avoids resolving small
+lookup tables at runtime.
 
-#### Embedded house subdocument
+#### Embedded house, garage, and vehicles
 
-Each character has a `house` object:
+Each character embeds both `house` and `garage`. The garage also embeds
+its `vehicles` array.
 
-- `house_id`
-- `amount_rooms`
-- `amount_bathrooms`
+This is a good fit because:
 
-Because house and character have a strict one-to-one relationship in the
-domain, embedding the house inside the character is a strong fit. It
-keeps ownership explicit and supports atomic updates when house-related
-and character-related fields must change together.
+- house and garage are one-to-one with character
+- vehicles are naturally scoped to one garage
+- profile pages often need to show the complete owned asset structure in
+  one read
 
-#### Embedded gangs array and membership metadata
+#### Separate collections for drugs, quests, and gangs
 
-Gang membership is represented as an array in each character:
+In the updated MongoDB design, `drugs`, `quests`, and `gangs` are not
+embedded as full shared objects inside each profile. They live in their
+own collections and are referenced from characters by ID.
 
-- `gang_id`
-- `type`
-- `join_date`
+This avoids duplicating shared catalog data across many profiles and
+makes administrative updates easier.
 
-This structure models the many-to-many nature of gang memberships from
-the point of view of one character. A key idea here is that
-`join_date` belongs to the membership relation itself, not only to gang
-or character. Therefore it is stored in each membership element in the
-`gangs` array.
-
-The design file also includes a standalone gang document shape:
-
-- `gang_id`
-- `name`
-- `type`
-
-This second shape is useful for a dedicated `gangs` collection when we
-need gang use cases, such as administration of gang metadata,
-listing all gangs, or validating that a membership references a known
-gang.
+The design file also includes standalone collection structures:
 
 ```json
 {
-  "gang_id": ,
-  "name": "",
-  "type": ""
+  "drugs": [
+    {
+      "_id": "",
+      "name": "",
+      "type": ""
+    }
+  ],
+  "quests": [
+    {
+      "_id": "",
+      "title": "",
+      "description": "",
+      "reward": 0
+    }
+  ],
+  "gangs": [
+    {
+      "_id": "",
+      "name": "",
+      "type": ""
+    }
+  ]
 }
 ```
 
 #### Why this model works well in MongoDB
 
 The document structure is optimized for **profile**:
-retrieving a profile and all related gameplay context in one query. In
-relational systems this often requires multiple joins; in MongoDB the
-same result can be returned directly from one document.
+retrieving a profile and all related owned gameplay context in one
+query. In relational systems this often requires multiple joins; in
+MongoDB the same result can be returned directly from one document.
 
 Main advantages of this approach:
 
 - Fewer round trips for profile pages and account dashboards.
 - Natural JSON shape that aligns with API responses.
 - Easy retrieval of all character details without join logic.
-- Membership metadata (`join_date`) stored exactly where it is used.
+- House, garage, and vehicles stay together as one owned aggregate.
+- Shared concepts such as drugs, quests, and gangs are not duplicated as
+  full objects inside each profile.
 
 Trade-offs and considerations:
 
-- Data duplication can occur (for example repeated gang `type` values in
-  many character memberships).
-- Updates to shared concepts may require multi-document updates if values
-  are copied widely.
+- Characters still carry relation metadata for drugs, quests, and gang
+  membership, so write operations must keep references consistent.
+- Updates to referenced collections still require care across documents.
 - Very large character arrays could grow document size, so practical
   limits and pagination strategy must be considered.
 
 For this project's scope, the design is a pragmatic balance: it
 prioritizes fast and simple reads for the most common gameplay view
-(profile with characters), while still allowing a separate gang catalog
+(profile with characters, house, garage, and vehicles), while still
+keeping shared catalogs such as drugs, quests, and gangs in their own
+collections.
 for management use cases.
 
 In summary, the MongoDB model intentionally differs from the normalized
@@ -1538,23 +1671,23 @@ in the figure below.
 The main node types are:
 
 - `Profile`
-- `Role`
 - `Character`
 - `House`
+- `Garage`
+- `Vehicle`
+- `Drug`
+- `Quest`
 - `Gang`
-- `Gender`, `SkinColor`, `EyeColor`, `Height`, `Weight`
 
 The main relationship types are:
 
-- `(:Profile)-[:HAS_ROLE]->(:Role)`
 - `(:Profile)-[:OWNS_CHARACTER]->(:Character)`
 - `(:Character)-[:LIVES_IN]->(:House)`
-- `(:Character)-[:HAS_GENDER]->(:Gender)`
-- `(:Character)-[:HAS_SKIN_COLOR]->(:SkinColor)`
-- `(:Character)-[:HAS_EYE_COLOR]->(:EyeColor)`
-- `(:Character)-[:HAS_HEIGHT]->(:Height)`
-- `(:Character)-[:HAS_WEIGHT]->(:Weight)`
-- `(:Character)-[:MEMBER_OF {joinDate: ...}]->(:Gang)`
+- `(:Character)-[:OWNS_GARAGE]->(:Garage)`
+- `(:Garage)-[:STORES]->(:Vehicle)`
+- `(:Character)-[:USES {quantity: ...}]->(:Drug)`
+- `(:Character)-[:HAS_QUEST {status: ..., accepted_at: ...}]->(:Quest)`
+- `(:Character)-[:MEMBER_OF {join_date: ...}]->(:Gang)`
 
 #### No junction table in Neo4j
 
@@ -1564,18 +1697,20 @@ In Neo4j we do **not** use a junction table. Instead, we connect
 `Character` directly to `Gang` with the `MEMBER_OF` relationship and
 store membership-specific data on the relationship itself.
 
-This is why `joinDate` is modeled as a property on
-`[:MEMBER_OF]`, not as a separate node. The relationship itself carries
-the context of the membership.
+This is why `join_date` is modeled as a property on
+`[:MEMBER_OF]`, not as a separate node. The same idea is used for
+`quantity` on `[:USES]` and `status` / `accepted_at` on `[:HAS_QUEST]`.
+These values come from the relational junction tables, so they are the
+only extra attributes shown directly on graph relationships.
 
 #### Why not all attributes are shown in detail
 
 The Neo4j diagram is intentionally kept compact. We do not list every
-single node property in the figure because the attribute set is the same
-as in the relational model at a one-to-one semantic level. The focus of
-the graph diagram is therefore on **relationship structure** and
-traversal logic, especially the membership relation where data lives on
-the edge (`MEMBER_OF.joinDate`).
+single node property in the figure because the attribute set is already
+known from the relational and document models. The focus of the graph
+diagram is therefore on **relationship structure** and traversal logic.
+Only values that belong to junction-style relationships are shown on the
+edges.
 
 With this design, Neo4j expresses domain connections directly and makes
 relationship-centric queries natural, while still preserving the same
@@ -1584,14 +1719,14 @@ business meaning as the relational model.
 ### 2.6.4. Application implementation (Javalin, Auth, Controller, DAO/DTO, Routes, SQL security)
 
 This section documents the implemented backend structure in the Java
-application. The purpose is to show how HTTP configuration,
-authentication/authorization, data-access patterns, and database
-privileges are connected in one coherent setup.
+application after the simplification of the route and persistence-facing
+layers. The goal was to keep the code straightforward and aligned with
+the new model instead of preserving the earlier, more generic design.
 
 Current request flow in the relational implementation:
 
-- `Route -> Controller -> DAO -> DTO -> JSON response`
-- `Auth route -> AuthService -> ProfileDao -> AuthPrincipal/LoginResponseDTO`
+- `Route -> CrudController -> DAO -> DTO -> JSON response`
+- `Auth route -> AuthService -> ProfileDao -> LoginResponseDTO`
 
 #### ApplicationConfig (Javalin bootstrap)
 
@@ -1615,40 +1750,30 @@ app = Javalin.create(config -> {
 This ensures the whole API runs with a consistent base path and response
 format.
 
-#### Auth (login/logout + role-based authorization)
+#### Auth (login/register/logout + role-based authorization)
 
-Authentication is implemented with token-based sessions in memory:
+Authentication is intentionally simple:
 
 - `POST /api/auth/login`
+- `POST /api/auth/register`
 - `POST /api/auth/logout`
-- `GET /api/auth/me`
 
-Authorization is enforced by role:
+Protected routes use Basic Authentication in the `Authorization` header.
+`AuthService` reads the credentials, authenticates against `ProfileDao`,
+and then applies either:
 
-- `ADMIN` for privileged routes (`profiles`, `roles`)
-- `USER` or `ADMIN` for normal gameplay/reference routes
+- authenticated-user access
+- `ADMIN` access
+- profile-owner-or-admin access for `/profiles/{id}`
 
-Code example (authentication delegated to DAO):
+Because the application uses stateless Basic Authentication, logout does
+not invalidate a server-side session. Instead, `POST /api/auth/logout`
+acts as an explicit client-facing endpoint that confirms the user should
+remove the `Authorization` header. This keeps the flow simple while
+still covering login/logout behavior in the API contract.
 
-```java
-private Optional<AuthPrincipal> authenticate(String username, String password) {
-    return profileDao.authenticate(username, password);
-}
-```
-
-Security hardening in `AuthService` includes:
-
-- session expiration (TTL)
-- login attempt throttling
-- input format validation
-
-Code example (admin guard):
-
-```java
-if (principal.roleName() != RoleName.ADMIN) {
-    throw new ForbiddenResponse("Admin role required");
-}
-```
+This is simpler than the previous session/token design and is easier to
+trace in the code.
 
 #### init.sql (database users and privileges)
 
@@ -1675,14 +1800,13 @@ database access.
 
 #### DAO layer
 
-The DAO layer is implemented in `src/main/java/app/dao` with:
+The DAO layer is implemented in `src/main/java/app/dao` with a concrete
+class structure:
 
-- `GenericDao<T, ID>` interface
-- `AbstractJpaDao<T>` base class
-- entity DAOs (`ProfileDao`, `GameCharacterDao`, etc.)
-- read DAO contract (`ReadDao<T>`) and reusable implementation (`JpaReadDao<T>`)
-- resource-specific read DAOs in `src/main/java/app/dao/read`
-  (`RoleReadDao`, `ProfileReadDao`, `GameCharacterReadDao`, etc.)
+- `AbstractJpaDao<T>` as reusable base class for entity CRUD
+- `JpaReadDao<T>` for DTO projections
+- entity-specific DAOs such as `ProfileDao`, `GameCharacterDao`,
+  `GarageDao`, `VehicleDao`, `DrugDao`, and `QuestDao`
 
 Code example (generic save with transaction handling):
 
@@ -1701,52 +1825,40 @@ return em.createQuery(criteria).getResultList();
 ```
 
 Using Criteria API here avoids string-concatenated dynamic queries and
-improves safety/readability.
-
-Code example (read DAO contract):
-
-```java
-public interface ReadDao<T> {
-    List<T> findAll();
-    Optional<T> findById(Integer id);
-}
-```
+improves safety/readability for entity CRUD. DTO projection queries are
+kept explicit in `JpaReadDao`.
 
 #### Controller layer
 
-To keep responsibilities explicit, request handling logic is placed in
-`src/main/java/app/controller` and routes delegate to controllers.
+The controller layer is simplified to one reusable class:
 
-Code example:
+- `CrudController<R, W>`
 
-```java
-public class ReadController<T> {
-    public void getAll(Context ctx) { ... }
-    public void getById(Context ctx) { ... }
-}
-```
+This controller handles:
 
-This ensures route classes remain focused on endpoint mapping and
-authorization, while controllers stay focused on HTTP concerns
-(input/response handling). Query execution is handled in DAO classes.
+- `getAll`
+- `getById`
+- `create`
+- `update`
+- `delete`
 
-Code example (controller delegates to DAO):
-
-```java
-public void getAll(Context ctx) {
-    ctx.json(readDao.findAll());
-}
-```
+This makes route classes shorter and avoids duplicating the same HTTP
+parsing logic across resources.
 
 #### DTO layer
 
-The DTO layer is implemented in `src/main/java/app/dto` using Java
-records. Each entity has a corresponding DTO, for example:
+The DTO layer is implemented in `src/main/java/app/dto` using simple
+Java classes instead of records. Each important resource has a DTO, for
+example:
 
 - `ProfileDTO`
 - `GameCharacterDTO`
 - `GangAffiliationDTO`
-- `RoleDTO`
+- `GarageDTO`
+- `VehicleDTO`
+- `DrugDTO`
+- `QuestDTO`
+- `CharacterQuestDTO`
 
 DTOs are intentionally not required to be 1:1 with the database model.
 For example, `ProfileDTO` does not expose `password`, even though the
@@ -1755,14 +1867,14 @@ field exists in the `profiles` table/entity.
 Code example:
 
 ```java
-public record ProfileDTO(
-    int id,
-    String firstName,
-    String lastName,
-    String email,
-    String username,
-    int roleId
-) {}
+public class ProfileDTO {
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String username;
+    private ProfileRole role;
+}
 ```
 
 DTOs decouple API payloads from JPA entities and avoid serialization
@@ -1774,9 +1886,7 @@ problems with lazy-loaded relationships.
 
 ```java
 EntityManagerFactory emf = HibernateConfig.getEntityManagerFactoryConfig(false);
-ApplicationConfig.getInstance()
-    .setRoute(Routes.getRoutes(emf))
-    .startServer(port);
+new ApplicationConfig().start(port, Routes.getRoutes(emf));
 ```
 
 This startup flow ensures that all routes, auth checks, and DB access
@@ -1832,10 +1942,30 @@ cd Bajls
 docker compose up -d
 ```
 
-3. Verify that PostgreSQL is running and that schema/data scripts are
-available in `sqls/` and DB bootstrap script in `db/init.sql`.
+3. Create the empty database if needed:
 
-4. Set application environment variables (example values):
+```bash
+createdb bajls_db
+```
+
+4. Import the relational database objects in this order:
+
+```bash
+psql -d bajls_db -f db/init.sql
+psql -d bajls_db -f sqls/schema.sql
+psql -d bajls_db -f sqls/views.sql
+psql -d bajls_db -f sqls/trigger.sql
+psql -d bajls_db -f sqls/functions/get_wealth.sql
+psql -d bajls_db -f sqls/procedures/create_character_with_house.sql
+psql -d bajls_db -f sqls/daily_loyalty_bonus.sql
+psql -d bajls_db -f sqls/seed.sql
+```
+
+This sequence creates users/privileges, tables/constraints, read models,
+trigger logic, reusable database code, scheduled behavior, and finally
+realistic test data.
+
+5. Set application environment variables (example values):
 
 ```bash
 DB_URL=jdbc:postgresql://localhost:5432/bajls
@@ -1844,27 +1974,27 @@ DB_PASSWORD=postgres
 PORT=7070
 ```
 
-5. Build and run the application:
+6. Build and run the application:
 
 ```bash
 mvn clean compile
 mvn exec:java -Dexec.mainClass=app.Main
 ```
 
-6. Validate API availability:
-
-```bash
-GET http://localhost:7070/api/health
-```
-
-7. Authenticate and test secured CRUD endpoints:
+7. Validate API availability:
 
 ```bash
 POST http://localhost:7070/api/auth/login
+```
+
+8. Authenticate and test secured CRUD endpoints:
+
+```bash
+POST http://localhost:7070/api/auth/register
 GET  http://localhost:7070/api/characters
 ```
 
-Use the returned bearer token in the `Authorization` header for secured
+Use Basic Authentication in the `Authorization` header for secured
 routes.
 
 \newpage
@@ -1893,41 +2023,73 @@ Graphical structure (collection-level overview):
 ```text
 profiles (collection)
 `-- profile document
+    |-- _id
     |-- profile_id
     |-- email
     |-- first_name
     |-- last_name
     |-- username
-    |-- role_name
+    |-- password
+    |-- role
     `-- characters [array]
         `-- character document
-            |-- character_id
+            |-- _id
             |-- name
             |-- balance
-            |-- eye_color
             |-- gender
+            |-- skincolor
+            |-- eyecolor
             |-- height
-            |-- skin_color
             |-- weight
             |-- house {embedded object}
-            |   |-- house_id
+            |   |-- _id
             |   |-- amount_rooms
             |   `-- amount_bathrooms
-            `-- gangs [array]
-                `-- gang membership
+            |-- garage {embedded object}
+            |   |-- _id
+            |   |-- capacity
+            |   `-- vehicles [array]
+            |       `-- vehicle document
+            |           |-- _id
+            |           |-- model
+            |           |-- type
+            |           `-- plate_number
+            |-- character_drugs [array]
+            |   `-- relation document
+            |       |-- drug_id
+            |       `-- quantity
+            |-- character_quests [array]
+            |   `-- relation document
+            |       |-- quest_id
+            |       |-- status
+            |       `-- accepted_at
+            `-- gang_memberships [array]
+                `-- relation document
                     |-- gang_id
-                    |-- type
                     `-- join_date
+
+drugs (collection)
+`-- drug document
+    |-- _id
+    |-- name
+    `-- type
+
+quests (collection)
+`-- quest document
+    |-- _id
+    |-- title
+    |-- description
+    `-- reward
 
 gangs (collection)
 `-- gang document
-    |-- gang_id
+    |-- _id
     |-- name
     `-- type
 ```
 
 This design gives a profile-centric aggregate in `profiles`, while
-keeping `gangs` available as a separate catalog.
+keeping `drugs`, `quests`, and `gangs` as separate shared collections.
 
 ## 3.3. Features: indexes, transactions, PKs, constraints, stored objects
 
@@ -1937,8 +2099,8 @@ Typical MongoDB indexes for this design:
 
 - unique index on `profiles.username`
 - unique index on `profiles.email`
-- index on `characters.character_id` (if queried directly through array
-  filters)
+- index on `characters._id` or `characters.name` inside embedded array
+  queries, if those access patterns are used
 - index on `gangs.name`
 
 Example:
@@ -1995,8 +2157,9 @@ Example difference in write behavior:
 
 - RDBMS: insert into `characters`, then link to `houses` and
   `gang_affiliations`.
-- MongoDB: update one profile aggregate document with embedded character
-  and nested house/gang membership structures.
+- MongoDB: update one profile aggregate document with embedded character,
+  nested house/garage/vehicle data, and relation arrays such as
+  `gang_memberships`.
 
 \newpage
 
@@ -2024,7 +2187,7 @@ nodes (`Profile`, `Character`, `Gang`, etc.) and typed relationships
 
 The model keeps relationship semantics explicit. In particular,
 membership between character and gang is represented by
-`[:MEMBER_OF {joinDate}]`, where `joinDate` is stored on the
+`[:MEMBER_OF {join_date}]`, where `join_date` is stored on the
 relationship itself.
 
 ## 4.3. Features: indexes, transactions, PKs, constraints, stored objects
@@ -2087,42 +2250,45 @@ Important modeling difference:
   (`gang_affiliations`).
 - In Neo4j, we do not create a junction table/node for this relation.
   We connect `Character` and `Gang` directly with `MEMBER_OF` and store
-  membership metadata (for example `joinDate`) on the relationship.
+  membership metadata (for example `join_date`) on the relationship.
 
 This keeps the graph model close to its core strength: relationships are
 first-class data.
 
 ## 4.5. API route overview
 
-The HTTP route contract is centralized through modular route classes:
+The HTTP route contract is now centralized through modular route
+classes:
 
 - `Routes` (top-level composition)
-- `AuthRoutes` (authentication endpoints)
-- `ReadRoutes` (secured read endpoints)
+- `AuthRoutes`
+- `ProfileRoutes`
+- `AdminRoutes`
+- `GameplayRoutes`
 
-The route structure is
-intentionally consistent: each domain resource exposes a collection
-endpoint (`GET /api/<resource>`) and a single-resource endpoint
-(`GET /api/<resource>/{id}`), while access control is applied at route
-level with explicit guards.
-
-This gives a clear operational contract for frontend integration, manual
-API testing, and role-based security verification.
+Each route class owns its own CRUD endpoints directly. `Routes` only
+collects them into one API tree.
 
 Route schema (current structure):
 
 ```text
 Routes
-|-- GET /api/health
-|-- /api/auth         -> AuthRoutes
+|-- /api/auth -> AuthRoutes
 |   |-- POST /login
-|   |-- POST /logout
-|   `-- GET  /me
-`-- secured resources -> ReadRoutes
-    |-- /roles, /profiles                 (ADMIN)
-    `-- /characters, /genders, /skin-colors, /eye-colors,
-        /heights, /weights, /houses, /gangs, /gang-affiliations
-        (USER or ADMIN)
+|   |-- POST /register
+|   `-- POST /logout
+|-- /api/profiles -> ProfileRoutes
+|   |-- GET /            (ADMIN)
+|   |-- POST /           (ADMIN)
+|   `-- /{id}
+|       |-- GET          (owner or ADMIN)
+|       |-- PUT          (owner or ADMIN)
+|       `-- DELETE       (owner or ADMIN)
+|-- /api/drugs -> AdminRoutes (ADMIN CRUD)
+|-- /api/quests -> AdminRoutes (ADMIN CRUD)
+`-- /api/characters, /houses, /garages, /vehicles,
+    /character-drug, /character-quest, /gangs,
+    /gang-affiliations -> GameplayRoutes (authenticated CRUD)
 ```
 
 \begingroup
@@ -2138,57 +2304,37 @@ Routes
 \textbf{Method} & \textbf{Endpoint} & \textbf{Access} & \textbf{Purpose} \\
 \hline
 \endhead
-GET & /api/health & Public & Service health check ("ok"). \\
+POST & /api/auth/login & Public & Authenticate by username and password. \\
 \hline
-POST & /api/auth/login & Public & Authenticate user and issue session/token context. \\
+POST & /api/auth/register & Public & Register a new profile with default `USER` role. \\
 \hline
-POST & /api/auth/logout & Authenticated (USER or ADMIN) & End active session for the current principal. \\
-\hline
-GET & /api/auth/me & Authenticated (USER or ADMIN) & Return identity/role for current authenticated user. \\
-\hline
-GET & /api/roles & ADMIN & List all roles. \\
-\hline
-GET & /api/roles/\{id\} & ADMIN & Get one role by id. \\
+POST & /api/auth/logout & Public & Confirm logout in the stateless Basic Auth flow. \\
 \hline
 GET & /api/profiles & ADMIN & List all profiles. \\
 \hline
-GET & /api/profiles/\{id\} & ADMIN & Get one profile by id. \\
+POST & /api/profiles & ADMIN & Create a profile directly from the admin side. \\
 \hline
-GET & /api/characters & Authenticated (USER or ADMIN) & List all characters. \\
+GET & /api/profiles/\{id\} & Owner or ADMIN & Get one profile. \\
 \hline
-GET & /api/characters/\{id\} & Authenticated (USER or ADMIN) & Get one character by id. \\
+PUT & /api/profiles/\{id\} & Owner or ADMIN & Update one profile. \\
 \hline
-GET & /api/genders & Authenticated (USER or ADMIN) & List all genders. \\
+DELETE & /api/profiles/\{id\} & Owner or ADMIN & Delete one profile. \\
 \hline
-GET & /api/genders/\{id\} & Authenticated (USER or ADMIN) & Get one gender by id. \\
+GET & /api/characters & Authenticated & List all characters. \\
 \hline
-GET & /api/skin-colors & Authenticated (USER or ADMIN) & List all skin colors. \\
+POST & /api/characters & Authenticated & Create one character. \\
 \hline
-GET & /api/skin-colors/\{id\} & Authenticated (USER or ADMIN) & Get one skin color by id. \\
+PUT & /api/characters/\{id\} & Authenticated & Update one character. \\
 \hline
-GET & /api/eye-colors & Authenticated (USER or ADMIN) & List all eye colors. \\
+DELETE & /api/characters/\{id\} & Authenticated & Delete one character. \\
 \hline
-GET & /api/eye-colors/\{id\} & Authenticated (USER or ADMIN) & Get one eye color by id. \\
+GET/POST/PUT/DELETE & /api/houses, /api/garages, /api/vehicles & Authenticated & CRUD access to character-owned assets. \\
 \hline
-GET & /api/heights & Authenticated (USER or ADMIN) & List all heights. \\
+GET/POST/PUT/DELETE & /api/character-drug, /api/character-quest & Authenticated & CRUD access to many-to-many gameplay links. \\
 \hline
-GET & /api/heights/\{id\} & Authenticated (USER or ADMIN) & Get one height by id. \\
+GET/POST/PUT/DELETE & /api/gangs, /api/gang-affiliations & Authenticated & CRUD access to gangs and memberships. \\
 \hline
-GET & /api/weights & Authenticated (USER or ADMIN) & List all weights. \\
-\hline
-GET & /api/weights/\{id\} & Authenticated (USER or ADMIN) & Get one weight by id. \\
-\hline
-GET & /api/houses & Authenticated (USER or ADMIN) & List all houses. \\
-\hline
-GET & /api/houses/\{id\} & Authenticated (USER or ADMIN) & Get one house by id. \\
-\hline
-GET & /api/gangs & Authenticated (USER or ADMIN) & List all gangs. \\
-\hline
-GET & /api/gangs/\{id\} & Authenticated (USER or ADMIN) & Get one gang by id. \\
-\hline
-GET & /api/gang-affiliations & Authenticated (USER or ADMIN) & List all gang affiliation rows. \\
-\hline
-GET & /api/gang-affiliations/\{id\} & Authenticated (USER or ADMIN) & Get one gang affiliation by id. \\
+GET/POST/PUT/DELETE & /api/drugs, /api/quests & ADMIN & CRUD access to admin-managed catalogs. \\
 \hline
 \end{longtable}
 \endgroup
@@ -2236,28 +2382,28 @@ GET & /api/gang-affiliations/\{id\} & Authenticated (USER or ADMIN) & Get one ga
 - [ApplicationConfig.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/ApplicationConfig.java)
 - [Routes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/Routes.java)
 - [AuthRoutes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/AuthRoutes.java)
-- [ReadRoutes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/ReadRoutes.java)
-- [ReadController.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/controller/ReadController.java)
+- [ProfileRoutes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/ProfileRoutes.java)
+- [AdminRoutes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/AdminRoutes.java)
+- [GameplayRoutes.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/route/GameplayRoutes.java)
+- [CrudController.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/controller/CrudController.java)
 - [AuthService.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/auth/AuthService.java)
-- [AuthPrincipal.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/auth/AuthPrincipal.java)
 - [LoginRequestDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/LoginRequestDTO.java)
 - [LoginResponseDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/LoginResponseDTO.java)
 - [ProfileDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/ProfileDTO.java)
 - [AbstractJpaDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/AbstractJpaDao.java)
-- [GenericDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/GenericDao.java)
-- [ReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/ReadDao.java)
 - [JpaReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/JpaReadDao.java)
 - [ProfileDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/ProfileDao.java)
-- [RoleReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/read/RoleReadDao.java)
-- [GameCharacterReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/read/GameCharacterReadDao.java)
+- [GameCharacterDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/GameCharacterDao.java)
+- [DrugDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/DrugDao.java)
+- [QuestDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/QuestDao.java)
 - [MongoDB-design.json](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/mongodb/design.json)
 - [Neo4j-design.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/neo4j/design.png)
 - [Document3.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Document3.png)
 - [Graph-Database.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/Graph-Database.png)
 - [What-is-a-relational-database.jpg](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/what-is-a-relational-database.jpg)
-- [Conceptual-model.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/conceptual-model-2026-02-10.png)
-- [Logical-model.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/logical-model-2026-02-10.png)
-- [Physical-model.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/physical-model-2026-02-10.png)
+- [Conceptual-uml-03092026.puml](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/conceptual-uml-03092026.puml)
+- [Logical-uml-09032026.puml](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/logical-uml-09032026.puml)
+- [Physical-uml-03092026.puml](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/conceptual-logical-physical/physical-uml-03092026.puml)
 - [View-v_character_overview.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_overview.png)
 - [View-v_gang_overview.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_gang_overview.png)
 - [View-v_character_appearance.png](https://github.com/AhmadAlkaseb/Bajls/blob/main/report/images/frontpage/View-v_character_appearance.png)

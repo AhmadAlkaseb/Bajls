@@ -1,11 +1,20 @@
 package app.dto;
 
-public record ProfileDTO(
-        int id,
-        String firstName,
-        String lastName,
-        String email,
-        String username,
-        int roleId
-) {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import persistence.enums.ProfileRole;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProfileDTO {
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String username;
+    private ProfileRole role;
 }

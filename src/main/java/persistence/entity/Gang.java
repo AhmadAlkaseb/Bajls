@@ -2,6 +2,7 @@ package persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import persistence.enums.GangType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,13 +15,14 @@ public class Gang {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 20)
+    @Column(name = "name", nullable = false, unique = true, length = 50)
     private String name;
 
-    @Column(name = "type", nullable = false, length = 20)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, length = 30)
+    private GangType type;
 
     @OneToMany(mappedBy = "gang", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

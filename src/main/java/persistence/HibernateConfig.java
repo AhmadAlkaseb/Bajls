@@ -95,14 +95,14 @@ public class HibernateConfig {
 
     private static void getAnnotationConfiguration(Configuration configuration) {
         configuration.addAnnotatedClass(Profile.class);
-        configuration.addAnnotatedClass(Role.class);
         configuration.addAnnotatedClass(GameCharacter.class);
-        configuration.addAnnotatedClass(Gender.class);
-        configuration.addAnnotatedClass(SkinColor.class);
-        configuration.addAnnotatedClass(EyeColor.class);
-        configuration.addAnnotatedClass(Height.class);
-        configuration.addAnnotatedClass(Weight.class);
         configuration.addAnnotatedClass(House.class);
+        configuration.addAnnotatedClass(Garage.class);
+        configuration.addAnnotatedClass(Vehicle.class);
+        configuration.addAnnotatedClass(Drug.class);
+        configuration.addAnnotatedClass(CharacterDrug.class);
+        configuration.addAnnotatedClass(Quest.class);
+        configuration.addAnnotatedClass(CharacterQuest.class);
         configuration.addAnnotatedClass(Gang.class);
         configuration.addAnnotatedClass(GangAffiliation.class);
     }

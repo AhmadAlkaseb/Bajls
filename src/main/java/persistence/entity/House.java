@@ -11,7 +11,7 @@ public class House {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(name = "amount_rooms", nullable = false)
     private int amountRooms;

@@ -1,6 +1,17 @@
 package app.dto;
 
-import persistence.enums.RoleName;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import persistence.enums.ProfileRole;
 
-public record LoginResponseDTO(String token, String expiresAt, int profileId, String username, RoleName role) {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginResponseDTO {
+    private Long profileId;
+    private String username;
+    private ProfileRole role;
 }

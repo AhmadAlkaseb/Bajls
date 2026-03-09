@@ -23,10 +23,10 @@ SELECT cron.schedule(
     FROM (
         SELECT
             c2.id AS character_id,
-            SUM(GREATEST((CURRENT_DATE - ga.join_date), 0))::double precision AS bonus
+            (100 + COUNT(DISTINCT ga.gang_id) * 25 + COUNT(DISTINCT cq.quest_id) * 10)::numeric(12,2) AS bonus
         FROM characters c2
-        LEFT JOIN gang_affiliations ga
-            ON ga.character_id = c2.id
+        LEFT JOIN gang_affiliations ga ON ga.character_id = c2.id
+        LEFT JOIN character_quest cq ON cq.character_id = c2.id
         GROUP BY c2.id
     ) b
     WHERE c.id = b.character_id;
