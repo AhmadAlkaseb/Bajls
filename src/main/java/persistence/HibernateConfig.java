@@ -95,6 +95,7 @@ public class HibernateConfig {
 
     private static void getAnnotationConfiguration(Configuration configuration) {
         configuration.addAnnotatedClass(Profile.class);
+        configuration.addAnnotatedClass(AuditLog.class);
         configuration.addAnnotatedClass(GameCharacter.class);
         configuration.addAnnotatedClass(House.class);
         configuration.addAnnotatedClass(Garage.class);

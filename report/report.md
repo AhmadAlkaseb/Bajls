@@ -591,7 +591,7 @@ The script creates the database structure in a logical order:
 - Core identity tables first, such as `profiles`, `houses`, and
   `garages`.
 - Main gameplay tables next, such as `characters`, `vehicles`, `drugs`,
-  `quests`, and `gangs`.
+  `quests`, `gangs`, and `audit_log`.
 - Relationship tables last: `character_drug`, `character_quest`, and
   `gang_affiliations`.
 
@@ -633,6 +633,29 @@ CREATE TABLE gang_affiliations (
 The unique constraint prevents duplicate memberships for the same
 character-gang pair while still allowing the table to use a simple
 surrogate primary key.
+
+#### Audit logging in the physical model
+
+The physical schema also includes an `audit_log` table used for
+administrative traceability. Its purpose is to record who changed data,
+what was changed, and when the change happened. Each audit row stores:
+
+- the acting profile ID, username, and role
+- the type of action (`CREATE`, `UPDATE`, or `DELETE`)
+- the affected entity name and entity ID
+- the HTTP method and route path that triggered the change
+- a snapshot of previous values and new values
+- the timestamp of the change
+
+This table is append-only. In PostgreSQL, update and delete operations on
+`audit_log` are blocked by triggers, so existing log entries cannot be
+edited or removed through normal application use. This supports
+accountability and makes the audit trail suitable for administrative
+inspection.
+
+At application level, the log is exposed only through admin routes. This
+means ordinary users can trigger audited business operations, but only
+administrators can read the resulting audit history.
 
 #### Quick verification after running the script
 
@@ -687,6 +710,8 @@ table structure and foreign-key network used by the project.
   characters and gangs, including `join_date`.
 - `character_drug` and `character_quest` store many-to-many links with
   relationship-specific attributes.
+- `audit_log` stores append-only administrative history for create,
+  update, and delete operations performed through the application.
 - Controlled values such as `role`, `gender`, `skincolor`, `eyecolor`,
   `vehicle.type`, `drug.type`, `gang.type`, and `character_quest.status`
   are enforced with SQL `CHECK` constraints and mirrored as Java enums.
@@ -710,6 +735,7 @@ Operationally, the physical design also supports maintainability:
 - Dedicated junction table for many-to-many associations.
 - SQL `CHECK` constraints and enums for controlled value domains.
 - Predictable join paths for reporting and administration tools.
+- An append-only audit trail for administrative review.
 
 #### Cardinality and Modality in the Physical Model
 
@@ -758,6 +784,8 @@ definitions in `sqls/schema.sql`:
   and drug quantity
 - `date` for `gang_affiliations.join_date`
 - `timestamp` for `character_quest.accepted_at`
+- `timestamp` for `audit_log.changed_at`
+- `text` for `audit_log.old_values` and `audit_log.new_values`
 
 These choices balance simplicity and correctness. `bigint` identity keys
 provide stable row identity, `varchar` columns keep bounded text easy to
@@ -783,6 +811,7 @@ Foreign keys encode the core relationships:
 - `character_quest.quest_id` -> `quests.id`
 - `gang_affiliations.character_id` -> `characters.id`
 - `gang_affiliations.gang_id` -> `gangs.id`
+- `audit_log.actor_profile_id` -> `profiles.id`
 - `characters.house_id` -> `houses.id` (unique)
 - `characters.garage_id` -> `garages.id` (unique)
 
