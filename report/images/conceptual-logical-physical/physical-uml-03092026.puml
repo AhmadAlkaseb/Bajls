@@ -1,0 +1,113 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+title Physical Data Model - 2026-03-09
+
+class "profiles" as profiles {
+  id : bigint <<PK>>
+  --
+  first_name : varchar(50)
+  last_name : varchar(50)
+  email : varchar(255) <<UK>>
+  username : varchar(50) <<UK>>
+  password : varchar(255)
+  role : varchar(30)
+}
+
+class "characters" as characters {
+  id : bigint <<PK>>
+  profile_id : bigint <<FK>>
+  house_id : bigint <<FK,UK>>
+  garage_id : bigint <<FK,UK>>
+  --
+  name : varchar(50)
+  balance : decimal(12,2)
+  gender : varchar(30)
+  skincolor : varchar(30)
+  eyecolor : varchar(30)
+  height : varchar(30)
+  weight : varchar(30)
+}
+
+class "houses" as houses {
+  id : bigint <<PK>>
+  --
+  amount_rooms : integer
+  amount_bathrooms : integer
+}
+
+class "garages" as garages {
+  id : bigint <<PK>>
+  --
+  capacity : integer
+}
+
+class "vehicles" as vehicles {
+  id : bigint <<PK>>
+  garage_id : bigint <<FK>>
+  --
+  model : varchar(50)
+  type : varchar(30)
+  plate_number : varchar(20) <<UK>>
+}
+
+class "drugs" as drugs {
+  id : bigint <<PK>>
+  --
+  name : varchar(50) <<UK>>
+  type : varchar(30)
+}
+
+class "character_drug" as character_drug {
+  id : bigint <<PK>>
+  character_id : bigint <<FK>>
+  drug_id : bigint <<FK>>
+  --
+  quantity : integer
+}
+
+class "quests" as quests {
+  id : bigint <<PK>>
+  --
+  title : varchar(100)
+  description : text
+  reward : decimal(12,2)
+}
+
+class "character_quest" as character_quest {
+  id : bigint <<PK>>
+  character_id : bigint <<FK>>
+  quest_id : bigint <<FK>>
+  --
+  status : varchar(30)
+  accepted_at : timestamp
+}
+
+class "gangs" as gangs {
+  id : bigint <<PK>>
+  --
+  name : varchar(50) <<UK>>
+  type : varchar(30)
+}
+
+class "gang_affiliations" as gang_affiliations {
+  id : bigint <<PK>>
+  character_id : bigint <<FK>>
+  gang_id : bigint <<FK>>
+  --
+  join_date : date
+}
+
+profiles ||--o{ characters : owns
+characters ||--|| houses : lives_in
+characters ||--|| garages : owns
+garages ||--o{ vehicles : stores
+characters ||--o{ character_drug : carries
+drugs ||--o{ character_drug : references
+characters ||--o{ character_quest : has
+quests ||--o{ character_quest : assigned_to
+characters ||--o{ gang_affiliations : has
+gangs ||--o{ gang_affiliations : has
+
+@enduml
