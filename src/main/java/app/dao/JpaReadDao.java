@@ -4,9 +4,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
 import java.util.List;
-import java.util.Optional;
 
-public class JpaReadDao<T> implements ReadDao<T> {
+public class JpaReadDao<T> {
 
     private final EntityManagerFactory entityManagerFactory;
     private final String listJpql;
@@ -20,7 +19,6 @@ public class JpaReadDao<T> implements ReadDao<T> {
         this.dtoClass = dtoClass;
     }
 
-    @Override
     public List<T> findAll() {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {
@@ -30,14 +28,14 @@ public class JpaReadDao<T> implements ReadDao<T> {
         }
     }
 
-    @Override
-    public Optional<T> findById(Integer id) {
+    public T findById(Long id) {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {
             return em.createQuery(byIdJpql, dtoClass)
                     .setParameter("id", id)
                     .getResultStream()
-                    .findFirst();
+                    .findFirst()
+                    .orElse(null);
         } finally {
             em.close();
         }

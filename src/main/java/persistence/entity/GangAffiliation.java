@@ -19,7 +19,7 @@ public class GangAffiliation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "character_id", nullable = false, foreignKey = @ForeignKey(name = "fk_gang_aff_char"))

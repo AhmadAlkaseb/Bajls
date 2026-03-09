@@ -4,9 +4,6 @@ import app.auth.AuthService;
 import io.javalin.apibuilder.EndpointGroup;
 import jakarta.persistence.EntityManagerFactory;
 
-import static io.javalin.apibuilder.ApiBuilder.get;
-import static io.javalin.apibuilder.ApiBuilder.path;
-
 public class Routes {
 
     private Routes() {
@@ -16,9 +13,10 @@ public class Routes {
         AuthService authService = new AuthService(entityManagerFactory);
 
         return () -> {
-            get("/health", ctx -> ctx.json("ok"));
-            path("auth", AuthRoutes.routes(authService));
-            ReadRoutes.routes(entityManagerFactory, authService).addEndpoints();
+            AuthRoutes.routes(authService).addEndpoints();
+            ProfileRoutes.routes(entityManagerFactory, authService).addEndpoints();
+            AdminRoutes.routes(entityManagerFactory, authService).addEndpoints();
+            GameplayRoutes.routes(entityManagerFactory, authService).addEndpoints();
         };
     }
 }

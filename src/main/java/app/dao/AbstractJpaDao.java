@@ -6,9 +6,8 @@ import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.criteria.CriteriaQuery;
 
 import java.util.List;
-import java.util.Optional;
 
-public abstract class AbstractJpaDao<T> implements GenericDao<T, Integer> {
+public abstract class AbstractJpaDao<T> {
 
     private final EntityManagerFactory entityManagerFactory;
     private final Class<T> entityClass;
@@ -18,7 +17,6 @@ public abstract class AbstractJpaDao<T> implements GenericDao<T, Integer> {
         this.entityClass = entityClass;
     }
 
-    @Override
     public T save(T entity) {
         EntityManager em = entityManagerFactory.createEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -35,7 +33,6 @@ public abstract class AbstractJpaDao<T> implements GenericDao<T, Integer> {
         }
     }
 
-    @Override
     public T update(T entity) {
         EntityManager em = entityManagerFactory.createEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -52,8 +49,7 @@ public abstract class AbstractJpaDao<T> implements GenericDao<T, Integer> {
         }
     }
 
-    @Override
-    public void deleteById(Integer id) {
+    public void deleteById(Long id) {
         EntityManager em = entityManagerFactory.createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
@@ -71,17 +67,15 @@ public abstract class AbstractJpaDao<T> implements GenericDao<T, Integer> {
         }
     }
 
-    @Override
-    public Optional<T> findById(Integer id) {
+    public T findById(Long id) {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {
-            return Optional.ofNullable(em.find(entityClass, id));
+            return em.find(entityClass, id);
         } finally {
             em.close();
         }
     }
 
-    @Override
     public List<T> findAll() {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {

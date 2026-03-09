@@ -1,66 +1,49 @@
 CREATE OR REPLACE VIEW v_character_overview AS
-
 SELECT
-
-profiles.username AS username,
-characters.name AS name,
-characters.balance AS balance,
-COALESCE(STRING_AGG(gangs.name, ', '), 'Spineless') AS affiliations
-
-FROM characters
-
-JOIN profiles ON profiles.id = characters.profile_id
-LEFT JOIN gang_affiliations ON gang_affiliations.character_id = characters.id
-LEFT JOIN gangs ON gangs.id = gang_affiliations.gang_id
-
-GROUP BY
-
-profiles.username,
-characters.name,
-characters.balance;
-
-
-
-
-
-
-CREATE OR REPLACE VIEW v_gang_overview AS
-
-SELECT
-
-gangs.name AS gang_name,
-COALESCE(STRING_AGG(characters.name, ', '), 'No members') AS members
-
-FROM gangs
-
-LEFT JOIN gang_affiliations ON gang_affiliations.gang_id = gangs.id
-LEFT JOIN characters ON characters.id = gang_affiliations.character_id
-
-GROUP BY
-
-gangs.name;
-
-
-
-
-
+    p.username,
+    c.name AS character_name,
+    c.balance,
+    h.amount_rooms,
+    h.amount_bathrooms,
+    g.capacity AS garage_capacity,
+    COALESCE(STRING_AGG(DISTINCT ga2.name, ', '), 'No gang') AS affiliations
+FROM characters c
+JOIN profiles p ON p.id = c.profile_id
+JOIN houses h ON h.id = c.house_id
+JOIN garages g ON g.id = c.garage_id
+LEFT JOIN gang_affiliations gaf ON gaf.character_id = c.id
+LEFT JOIN gangs ga2 ON ga2.id = gaf.gang_id
+GROUP BY p.username, c.name, c.balance, h.amount_rooms, h.amount_bathrooms, g.capacity;
 
 CREATE OR REPLACE VIEW v_character_appearance AS
-
 SELECT
+    c.name AS character_name,
+    c.gender,
+    c.skincolor,
+    c.eyecolor,
+    c.height,
+    c.weight
+FROM characters c;
 
-characters.name AS character_name,
-characters.balance AS balance,
-genders.name AS gender,
-weights.name AS weight,
-heights.name AS height,
-eyecolors.name AS eye_color,
-skincolors.name AS skin_color
+CREATE OR REPLACE VIEW v_gang_overview AS
+SELECT
+    g.name AS gang_name,
+    g.type AS gang_type,
+    COALESCE(STRING_AGG(c.name, ', '), 'No members') AS members
+FROM gangs g
+LEFT JOIN gang_affiliations ga ON ga.gang_id = g.id
+LEFT JOIN characters c ON c.id = ga.character_id
+GROUP BY g.name, g.type;
 
-FROM characters
-
-JOIN genders ON genders.id = characters.gender_id
-JOIN weights ON weights.id = characters.weight_id
-JOIN heights ON heights.id = characters.height_id
-JOIN eyecolors ON eyecolors.id = characters.eyecolor_id
-JOIN skincolors ON skincolors.id = characters.skincolor_id;
+CREATE OR REPLACE VIEW v_character_assets AS
+SELECT
+    c.name AS character_name,
+    COUNT(DISTINCT v.id) AS vehicle_count,
+    COUNT(DISTINCT cd.drug_id) AS drug_types,
+    COUNT(DISTINCT cq.quest_id) AS quest_count
+FROM characters c
+LEFT JOIN garages g ON g.id = c.garage_id
+LEFT JOIN vehicles v ON v.garage_id = g.id
+LEFT JOIN character_drug cd ON cd.character_id = c.id
+LEFT JOIN character_quest cq ON cq.character_id = c.id
+GROUP BY c.name;

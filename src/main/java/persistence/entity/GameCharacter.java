@@ -2,9 +2,12 @@ package persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import persistence.enums.EyeColorType;
+import persistence.enums.GenderType;
+import persistence.enums.SkinColorType;
 
 @Entity
 @Table(name = "characters")
@@ -14,44 +17,37 @@ public class GameCharacter {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
-    @Column(name = "name", nullable = false, length = 20)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Column(name = "balance", nullable = false)
+    @Column(name = "balance", nullable = false, precision = 12, scale = 2)
     @Builder.Default
-    private float balance = 0;
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id", nullable = false, foreignKey = @ForeignKey(name = "fk_characters_profile"))
     @ToString.Exclude
     private Profile profile;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "gender_id", nullable = false, foreignKey = @ForeignKey(name = "fk_characters_gender"))
-    @ToString.Exclude
-    private Gender gender;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false, length = 30)
+    private GenderType gender;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "skincolor_id", nullable = false, foreignKey = @ForeignKey(name = "fk_characters_skincolor"))
-    @ToString.Exclude
-    private SkinColor skinColor;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "skincolor", nullable = false, length = 30)
+    private SkinColorType skincolor;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "eyecolor_id", nullable = false, foreignKey = @ForeignKey(name = "fk_characters_eyecolor"))
-    @ToString.Exclude
-    private EyeColor eyeColor;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "eyecolor", nullable = false, length = 30)
+    private EyeColorType eyecolor;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "height_id", nullable = false, foreignKey = @ForeignKey(name = "fk_characters_height"))
-    @ToString.Exclude
-    private Height height;
+    @Column(name = "height", nullable = false, length = 30)
+    private String height;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "weight_id", nullable = false, foreignKey = @ForeignKey(name = "fk_characters_weight"))
-    @ToString.Exclude
-    private Weight weight;
+    @Column(name = "weight", nullable = false, length = 30)
+    private String weight;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
@@ -62,6 +58,26 @@ public class GameCharacter {
     )
     @ToString.Exclude
     private House house;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "garage_id",
+            nullable = false,
+            unique = true,
+            foreignKey = @ForeignKey(name = "fk_characters_garage")
+    )
+    @ToString.Exclude
+    private Garage garage;
+
+    @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private List<CharacterDrug> characterDrugs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private List<CharacterQuest> characterQuests = new ArrayList<>();
 
     @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

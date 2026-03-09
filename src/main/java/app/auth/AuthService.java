@@ -8,168 +8,125 @@ import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManagerFactory;
-import persistence.enums.RoleName;
+import persistence.entity.Profile;
+import persistence.enums.ProfileRole;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Pattern;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class AuthService {
-
-    private static final String PRINCIPAL_ATTR = "authPrincipal";
-    private static final Duration SESSION_TTL = Duration.ofMinutes(30);
-    private static final Duration LOGIN_WINDOW = Duration.ofMinutes(10);
-    private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[A-Za-z0-9_.-]{3,20}$");
+    private static final String CURRENT_USER = "currentUser";
 
     private final ProfileDao profileDao;
-    private final ConcurrentMap<String, SessionState> sessions = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, LoginAttemptState> loginAttempts = new ConcurrentHashMap<>();
 
     public AuthService(EntityManagerFactory entityManagerFactory) {
         this.profileDao = new ProfileDao(entityManagerFactory);
     }
 
     public void login(Context ctx) {
-        cleanupExpiredSessions();
-
         LoginRequestDTO body = ctx.bodyAsClass(LoginRequestDTO.class);
-        if (body == null || isBlank(body.username()) || isBlank(body.password())) {
+        if (body == null || isBlank(body.getUsername()) || isBlank(body.getPassword())) {
             throw new BadRequestResponse("Username and password are required");
         }
-        if (!USERNAME_PATTERN.matcher(body.username()).matches()) {
-            throw new BadRequestResponse("Invalid username format");
+        LoginResponseDTO response = profileDao.authenticate(body.getUsername(), body.getPassword());
+        if (response == null) {
+            throw new UnauthorizedResponse("Invalid credentials");
         }
-        if (body.password().length() > 128) {
-            throw new BadRequestResponse("Invalid password format");
+        ctx.json(response);
+    }
+
+    public void register(Context ctx) {
+        Profile profile = ctx.bodyAsClass(Profile.class);
+        if (profile == null) {
+            throw new BadRequestResponse("Profile is required");
+        }
+        if (isBlank(profile.getFirstName()) || isBlank(profile.getLastName()) || isBlank(profile.getEmail())
+                || isBlank(profile.getUsername()) || isBlank(profile.getPassword())) {
+            throw new BadRequestResponse("Missing required profile fields");
+        }
+        if (profile.getRole() == null) {
+            profile.setRole(ProfileRole.USER);
         }
 
-        String attemptKey = getAttemptKey(ctx, body.username());
-        if (isBlocked(attemptKey)) {
-            throw new ForbiddenResponse("Too many login attempts. Try again later.");
-        }
-
-        AuthPrincipal principal = authenticate(body.username(), body.password())
-                .orElseGet(() -> {
-                    registerFailedAttempt(attemptKey);
-                    throw new UnauthorizedResponse("Invalid credentials");
-                });
-
-        loginAttempts.remove(attemptKey);
-
-        String token = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plus(SESSION_TTL);
-        sessions.put(token, new SessionState(principal, expiresAt));
-
-        ctx.json(new LoginResponseDTO(token, expiresAt.toString(), principal.profileId(), principal.username(), principal.roleName()));
+        Profile savedProfile = profileDao.save(profile);
+        ctx.status(201).json(new LoginResponseDTO(savedProfile.getId(), savedProfile.getUsername(), savedProfile.getRole()));
     }
 
     public void logout(Context ctx) {
-        cleanupExpiredSessions();
-
-        String token = extractBearerToken(ctx)
-                .orElseThrow(() -> new UnauthorizedResponse("Missing bearer token"));
-
-        sessions.remove(token);
-        ctx.status(204);
-    }
-
-    public void me(Context ctx) {
-        cleanupExpiredSessions();
-
-        AuthPrincipal principal = resolvePrincipal(ctx)
-                .orElseThrow(() -> new UnauthorizedResponse("Unauthorized"));
-        ctx.json(principal);
+        ctx.attribute(CURRENT_USER, null);
+        ctx.json("Logged out. Remove the Basic Authorization header on the client.");
     }
 
     public void requireAuthenticated(Context ctx) {
-        cleanupExpiredSessions();
-
-        AuthPrincipal principal = resolvePrincipal(ctx)
-                .orElseThrow(() -> new UnauthorizedResponse("Unauthorized"));
-        ctx.attribute(PRINCIPAL_ATTR, principal);
+        LoginResponseDTO user = getAuthenticatedUser(ctx);
+        ctx.attribute(CURRENT_USER, user);
     }
 
-    public void requireAdmin(Context ctx) {
-        AuthPrincipal principal = Optional.ofNullable(ctx.<AuthPrincipal>attribute(PRINCIPAL_ATTR))
-                .or(() -> resolvePrincipal(ctx))
-                .orElseThrow(() -> new UnauthorizedResponse("Unauthorized"));
-
-        if (principal.roleName() != RoleName.ADMIN) {
-            throw new ForbiddenResponse("Admin role required");
+    public void requireRole(Context ctx, ProfileRole role) {
+        LoginResponseDTO user = getAuthenticatedUser(ctx);
+        if (user.getRole() != role) {
+            throw new ForbiddenResponse("Forbidden");
         }
-        ctx.attribute(PRINCIPAL_ATTR, principal);
+        ctx.attribute(CURRENT_USER, user);
     }
 
-    private Optional<AuthPrincipal> authenticate(String username, String password) {
-        return profileDao.authenticate(username, password);
-    }
-
-    private Optional<AuthPrincipal> resolvePrincipal(Context ctx) {
-        return extractBearerToken(ctx)
-                .map(sessions::get)
-                .filter(session -> session.expiresAt().isAfter(Instant.now()))
-                .map(SessionState::principal);
-    }
-
-    private Optional<String> extractBearerToken(Context ctx) {
-        String authHeader = ctx.header("Authorization");
-        if (authHeader == null) {
-            return Optional.empty();
+    public void requireProfileOwnerOrAdmin(Context ctx) {
+        LoginResponseDTO user = getAuthenticatedUser(ctx);
+        if (user.getRole() == ProfileRole.ADMIN) {
+            ctx.attribute(CURRENT_USER, user);
+            return;
         }
-        if (!authHeader.startsWith("Bearer ")) {
-            return Optional.empty();
+
+        Long profileId;
+        try {
+            profileId = Long.parseLong(ctx.pathParam("id"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestResponse("Invalid id");
         }
-        String token = authHeader.substring("Bearer ".length()).trim();
-        return token.isEmpty() ? Optional.empty() : Optional.of(token);
+
+        if (!user.getProfileId().equals(profileId)) {
+            throw new ForbiddenResponse("Forbidden");
+        }
+
+        ctx.attribute(CURRENT_USER, user);
+    }
+
+    private LoginResponseDTO getAuthenticatedUser(Context ctx) {
+        LoginResponseDTO user = ctx.attribute(CURRENT_USER);
+        if (user != null) {
+            return user;
+        }
+
+        String header = ctx.header("Authorization");
+        if (header == null || !header.startsWith("Basic ")) {
+            throw new UnauthorizedResponse("Missing Authorization header");
+        }
+
+        String credentials;
+        try {
+            byte[] decoded = Base64.getDecoder().decode(header.substring("Basic ".length()).trim());
+            credentials = new String(decoded, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            throw new UnauthorizedResponse("Invalid Authorization header");
+        }
+
+        int separatorIndex = credentials.indexOf(':');
+        if (separatorIndex <= 0) {
+            throw new UnauthorizedResponse("Invalid Authorization header");
+        }
+
+        String username = credentials.substring(0, separatorIndex);
+        String password = credentials.substring(separatorIndex + 1);
+        LoginResponseDTO authenticatedUser = profileDao.authenticate(username, password);
+        if (authenticatedUser == null) {
+            throw new UnauthorizedResponse("Invalid credentials");
+        }
+
+        ctx.attribute(CURRENT_USER, authenticatedUser);
+        return authenticatedUser;
     }
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    private void cleanupExpiredSessions() {
-        Instant now = Instant.now();
-        sessions.entrySet().removeIf(entry -> entry.getValue().expiresAt().isBefore(now));
-        loginAttempts.entrySet().removeIf(entry -> entry.getValue().windowStart().plus(LOGIN_WINDOW).isBefore(now));
-    }
-
-    private String getAttemptKey(Context ctx, String username) {
-        String ip = Optional.ofNullable(ctx.ip()).orElse("unknown");
-        return username + "|" + ip;
-    }
-
-    private boolean isBlocked(String attemptKey) {
-        LoginAttemptState state = loginAttempts.get(attemptKey);
-        if (state == null) {
-            return false;
-        }
-
-        Instant now = Instant.now();
-        if (state.windowStart().plus(LOGIN_WINDOW).isBefore(now)) {
-            loginAttempts.remove(attemptKey);
-            return false;
-        }
-        return state.attempts() >= MAX_LOGIN_ATTEMPTS;
-    }
-
-    private void registerFailedAttempt(String attemptKey) {
-        Instant now = Instant.now();
-        loginAttempts.compute(attemptKey, (k, current) -> {
-            if (current == null || current.windowStart().plus(LOGIN_WINDOW).isBefore(now)) {
-                return new LoginAttemptState(1, now);
-            }
-            return new LoginAttemptState(current.attempts() + 1, current.windowStart());
-        });
-    }
-
-    private record SessionState(AuthPrincipal principal, Instant expiresAt) {
-    }
-
-    private record LoginAttemptState(int attempts, Instant windowStart) {
     }
 }

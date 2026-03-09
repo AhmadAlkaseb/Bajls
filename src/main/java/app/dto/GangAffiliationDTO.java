@@ -1,4 +1,19 @@
 package app.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDate;
-public record GangAffiliationDTO(int id, int characterId, int gangId, LocalDate joinDate) {
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class GangAffiliationDTO {
+    private Long id;
+    private Long characterId;
+    private Long gangId;
+    private LocalDate joinDate;
 }
