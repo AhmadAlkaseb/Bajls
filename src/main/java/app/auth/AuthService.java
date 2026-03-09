@@ -1,5 +1,6 @@
 package app.auth;
 
+import app.audit.AuditContext;
 import app.dao.ProfileDao;
 import app.dto.LoginRequestDTO;
 import app.dto.LoginResponseDTO;
@@ -59,6 +60,7 @@ public class AuthService {
 
     public void requireAuthenticated(Context ctx) {
         LoginResponseDTO user = getAuthenticatedUser(ctx);
+        AuditContext.setAuthenticatedUser(user);
         ctx.attribute(CURRENT_USER, user);
     }
 
@@ -67,12 +69,14 @@ public class AuthService {
         if (user.getRole() != role) {
             throw new ForbiddenResponse("Forbidden");
         }
+        AuditContext.setAuthenticatedUser(user);
         ctx.attribute(CURRENT_USER, user);
     }
 
     public void requireProfileOwnerOrAdmin(Context ctx) {
         LoginResponseDTO user = getAuthenticatedUser(ctx);
         if (user.getRole() == ProfileRole.ADMIN) {
+            AuditContext.setAuthenticatedUser(user);
             ctx.attribute(CURRENT_USER, user);
             return;
         }
@@ -88,6 +92,7 @@ public class AuthService {
             throw new ForbiddenResponse("Forbidden");
         }
 
+        AuditContext.setAuthenticatedUser(user);
         ctx.attribute(CURRENT_USER, user);
     }
 
