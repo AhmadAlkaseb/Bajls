@@ -1,0 +1,81 @@
+@startuml
+hide circle
+hide empty members
+skinparam linetype ortho
+
+title Logical Data Model - 2026-03-09
+
+entity PROFILE {
+  first_name (string)
+  last_name (string)
+  email (string) <<UK>>
+  username (string) <<UK>>
+  password (string)
+  role (string)
+}
+
+entity CHARACTERS {
+  name (string)
+  balance (float)
+  gender (string)
+  skincolor (string)
+  eyecolor (string)
+  height (string)
+  weight (string)
+}
+
+entity HOUSE {
+  amount_rooms (int)
+  amount_bathrooms (int)
+}
+
+entity GARAGE {
+  capacity (int)
+}
+
+entity VEHICLE {
+  model (string)
+  type (string)
+  plate_number (string) <<UK>>
+}
+
+entity DRUG {
+  name (string) <<UK>>
+  type (string)
+}
+
+entity CHARACTER_DRUG {
+  quantity (int)
+}
+
+entity QUEST {
+  title (string)
+  description (string)
+  reward (float)
+}
+
+entity CHARACTER_QUEST {
+  status (string)
+  accepted_at (datetime)
+}
+
+entity GANG {
+  name (string) <<UK>>
+  type (string)
+}
+
+entity GANG_AFFILIATION {
+  join_date (date)
+}
+
+PROFILE ||--o{ CHARACTERS : owns
+CHARACTERS ||--|| HOUSE : lives_in
+CHARACTERS ||--|| GARAGE : owns
+GARAGE ||--o{ VEHICLE : stores
+CHARACTERS ||--o{ CHARACTER_DRUG : carries
+DRUG ||--o{ CHARACTER_DRUG : references
+CHARACTERS ||--o{ CHARACTER_QUEST : has
+QUEST ||--o{ CHARACTER_QUEST : assigned_to
+CHARACTERS ||--o{ GANG_AFFILIATION : has
+GANG ||--o{ GANG_AFFILIATION : has
+@enduml

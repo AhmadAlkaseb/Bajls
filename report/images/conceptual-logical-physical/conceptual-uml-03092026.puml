@@ -1,0 +1,25 @@
+@startuml
+hide empty members
+hide circle
+skinparam linetype ortho
+
+title Conceptual Data Model - 2026-03-09
+
+entity PROFILE
+entity CHARACTERS
+entity HOUSE
+entity GARAGE
+entity VEHICLE
+entity DRUG
+entity QUEST
+entity GANG
+
+PROFILE ||--o{ CHARACTERS : owns
+CHARACTERS ||--|| HOUSE : lives_in
+CHARACTERS ||--|| GARAGE : owns
+GARAGE ||--o{ VEHICLE : stores
+CHARACTERS }o--o{ DRUG : carries
+CHARACTERS }o--o{ QUEST : has
+CHARACTERS }o--o{ GANG : joins
+
+@enduml
