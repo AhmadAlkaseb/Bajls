@@ -2220,21 +2220,35 @@ and attributes) can be committed atomically.
 
 Neo4j has an internal node id, but domain-level IDs should be managed as
 properties (for example `Profile.id`) with uniqueness constraints. This
-is the practical equivalent of primary key strategy in graph models.
+is the practical equivalent of a primary-key strategy in graph models.
+In other words, the project does not rely on Neo4j's internal node ids as
+business identifiers. Instead, stable application-defined ids are stored
+as node properties and protected with uniqueness constraints.
 
 ### Constraints
 
 Relational foreign keys are replaced by controlled relationship
-creation/traversal patterns and constraints on node identity.
+creation/traversal patterns and constraints on node identity. This means
+the graph model enforces uniqueness for important node ids, while valid
+links between nodes are ensured by the Cypher operations used by the
+application. In practice, the application creates only allowed
+relationships such as `(:Character)-[:MEMBER_OF]->(:Gang)` and avoids
+invalid disconnected states through transactional writes.
 
 ### Stored objects and replacement strategy
 
 Neo4j does not use SQL stored procedures/functions/views in the same
-format as PostgreSQL. Equivalent mechanisms include:
+format as PostgreSQL. In this project, that functionality is replaced by
+Cypher queries in the persistence layer and by service-layer logic in the
+Java application. Equivalent mechanisms include:
 
 - Cypher[^cypher] queries and reusable query templates
 - graph projections and named queries at application layer
 - APOC procedures (when enabled) for advanced utility workflows
+
+If APOC is not enabled, reusable read/write behavior is still achieved by
+keeping the query logic in DAO/service classes instead of as stored
+database objects.
 
 ## 4.4. CRUD application for the graph database
 
@@ -2255,6 +2269,23 @@ Important modeling difference:
 This keeps the graph model close to its core strength: relationships are
 first-class data.
 
+From the client perspective, the CRUD flow can remain the same: the same
+HTTP endpoints, DTOs, and auth rules can be reused. The difference is
+that the graph version translates each request into Cypher that creates,
+matches, updates, or deletes nodes and relationships instead of rows in
+tables.
+
+Example:
+
+- **Create membership in RDBMS**: insert a row into
+  `gang_affiliations(character_id, gang_id, join_date)`.
+- **Create membership in Neo4j**: match the `Character` node and the
+  `Gang` node, then create `(:Character)-[:MEMBER_OF {join_date: ...}]->(:Gang)`.
+
+This means the application logic is largely identical to the RDBMS
+version, while the data layer and query language are the main parts that
+change.
+
 ## 4.5. API route overview
 
 The HTTP route contract is now centralized through modular route
@@ -2267,7 +2298,9 @@ classes:
 - `GameplayRoutes`
 
 Each route class owns its own CRUD endpoints directly. `Routes` only
-collects them into one API tree.
+collects them into one API tree. This route structure can stay the same
+for both the RDBMS and graph-database implementations, because the
+difference is mainly below the route layer in services/DAOs.
 
 Route schema (current structure):
 
