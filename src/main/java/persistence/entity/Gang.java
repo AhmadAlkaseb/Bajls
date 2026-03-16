@@ -1,5 +1,6 @@
 package persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import persistence.enums.GangType;
@@ -9,6 +10,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "gangs")
+@JsonIgnoreProperties({"affiliations"})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Gang {

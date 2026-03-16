@@ -1,5 +1,6 @@
 package persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "garages")
+@JsonIgnoreProperties({"character", "vehicles"})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Garage {

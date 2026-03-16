@@ -1,5 +1,6 @@
 package persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import persistence.enums.ProfileRole;
@@ -13,6 +14,7 @@ import java.util.List;
                 @Index(name = "idx_profiles_email", columnList = "email"),
                 @Index(name = "idx_profiles_username", columnList = "username")
         })
+@JsonIgnoreProperties({"characters", "password"})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Profile {

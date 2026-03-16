@@ -28,6 +28,7 @@ Opret databasen `bajls` og tilføj disse miljøvariabler:
 - `DB_USER=postgres`
 - `DB_PASSWORD=postgres`
 - `DB_NAME=bajls`
+- `DB_URL=jdbc:postgresql://localhost:5432/bajls;DB_USER=postgres;DB_PASSWORD=postgres;DB_NAME=bajls`
 
 ## Docker
 

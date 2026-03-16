@@ -1,5 +1,6 @@
 package persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import persistence.enums.DrugType;
 
 @Entity
 @Table(name = "drugs")
+@JsonIgnoreProperties({"characterDrugs"})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Drug {

@@ -1,5 +1,6 @@
 package persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import persistence.enums.SkinColorType;
 
 @Entity
 @Table(name = "characters")
+@JsonIgnoreProperties({"characterDrugs", "characterQuests", "gangAffiliations"})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class GameCharacter {
