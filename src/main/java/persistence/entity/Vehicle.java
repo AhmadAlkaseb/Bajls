@@ -1,11 +1,13 @@
 package persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import persistence.enums.VehicleType;
 
 @Entity
 @Table(name = "vehicles")
+@JsonIgnoreProperties({"garage"})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Vehicle {

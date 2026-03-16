@@ -55,7 +55,7 @@ public abstract class AbstractJpaDao<T> {
             em.flush();
             recordAuditLog(em, AuditAction.UPDATE, previousStateJson, AuditSnapshotUtil.toJson(merged), merged);
             tx.commit();
-            return merged;
+            return entity;
         } catch (RuntimeException e) {
             rollbackIfActive(tx);
             throw e;

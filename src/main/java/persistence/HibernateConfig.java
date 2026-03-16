@@ -43,9 +43,13 @@ public class HibernateConfig {
 
             Properties props = new Properties();
 
-            props.put("hibernate.connection.url", System.getenv("DB_URL"));
-            props.put("hibernate.connection.username", System.getenv("DB_USER"));
-            props.put("hibernate.connection.password", System.getenv("DB_PASSWORD"));
+            String dbUrl = requireEnv("DB_URL");
+            String dbUser = requireEnv("DB_USER");
+            String dbPassword = requireEnv("DB_PASSWORD");
+
+            props.put("hibernate.connection.url", dbUrl);
+            props.put("hibernate.connection.username", dbUser);
+            props.put("hibernate.connection.password", dbPassword);
             props.put("hibernate.show_sql", "true");
             props.put("hibernate.format_sql", "true");
             props.put("hibernate.use_sql_comments", "true");
@@ -123,5 +127,13 @@ public class HibernateConfig {
         boolean isDeployed = (System.getenv("DEPLOYED") != null);
         if (isDeployed) return getEntityManagerFactoryConfigIsDeployed();
         return getEntityManagerFactoryConfigDevelopment();
+    }
+
+    private static String requireEnv(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException("Missing required environment variable: " + name);
+        }
+        return value;
     }
 }
