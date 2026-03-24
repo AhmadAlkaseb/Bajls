@@ -5,7 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 
 import java.util.List;
 
-public class JpaReadDao<T> {
+public class JpaReadDao<T> implements ReadRepository<T> {
 
     private final EntityManagerFactory entityManagerFactory;
     private final String listJpql;
@@ -20,24 +20,18 @@ public class JpaReadDao<T> {
     }
 
     public List<T> findAll() {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        try {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
             return em.createQuery(listJpql, dtoClass).getResultList();
-        } finally {
-            em.close();
         }
     }
 
     public T findById(Long id) {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        try {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
             return em.createQuery(byIdJpql, dtoClass)
                     .setParameter("id", id)
                     .getResultStream()
                     .findFirst()
                     .orElse(null);
-        } finally {
-            em.close();
         }
     }
 }

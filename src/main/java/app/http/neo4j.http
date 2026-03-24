@@ -1,0 +1,375 @@
+@baseUrl = http://localhost:7070/api
+@contentType = application/json
+@adminAuth = Basic YWFuZGVyc2VuOlBAc3NBc3RhNQ==
+@userAuth = Basic bWloYW5zZW46UEBzc01pYTE=
+@ownerProfileId = 1
+@seedDrugId = 1
+@seedQuestId = 1
+@createdProfileId = 9991
+@createdDrugId = 9992
+@createdQuestId = 9993
+@createdCharacterId = 9996
+@createdCharacterHouseId = 9997
+@createdCharacterGarageId = 9998
+@createdVehicleId = 9999
+@createdCharacterDrugId = 10000
+@createdCharacterQuestId = 10001
+@createdGangId = 10002
+@createdGangAffiliationId = 10003
+@unique = {{$timestamp}}
+
+### Admin login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "aandersen",
+  "password": "P@ssAsta5"
+}
+
+### User login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "mihansen",
+  "password": "P@ssMia1"
+}
+
+### Register profile node
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "firstName": "Neo",
+  "lastName": "Tester",
+  "email": "neo.tester.{{unique}}@example.com",
+  "username": "neouser{{unique}}",
+  "password": "NeoPass123!",
+  "role": "USER"
+}
+
+### List profile nodes
+GET {{baseUrl}}/profiles
+Authorization: {{adminAuth}}
+
+### Get own profile node
+GET {{baseUrl}}/profiles/{{ownerProfileId}}
+Authorization: {{userAuth}}
+
+### Create profile node directly
+POST {{baseUrl}}/profiles
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "firstName": "Neo",
+  "lastName": "Profile",
+  "email": "neo.profile.{{unique}}@example.com",
+  "username": "neoprofile{{unique}}",
+  "password": "NeoPass123!",
+  "role": "USER"
+}
+
+### Update created profile node
+PUT {{baseUrl}}/profiles/{{createdProfileId}}
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{createdProfileId}},
+  "firstName": "NeoUpdated",
+  "lastName": "Profile",
+  "email": "neo.profile.updated.manual@example.com",
+  "username": "neoprofile_manual",
+  "password": "NeoPass123!",
+  "role": "USER"
+}
+
+### Create drug node
+POST {{baseUrl}}/drugs
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Neo Dust {{unique}}",
+  "type": "METH"
+}
+
+### Create quest node
+POST {{baseUrl}}/quests
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Neo Quest {{unique}}",
+  "description": "Quest used for graph verification.",
+  "reward": 710.50
+}
+
+### Create gang node
+POST {{baseUrl}}/gangs
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Neo Syndicate {{unique}}",
+  "type": "MAFIA"
+}
+
+### List catalog nodes
+GET {{baseUrl}}/drugs
+Authorization: {{adminAuth}}
+
+### List quest nodes
+GET {{baseUrl}}/quests
+Authorization: {{adminAuth}}
+
+### List gang nodes
+GET {{baseUrl}}/gangs
+Authorization: {{userAuth}}
+
+### Create character node with house and garage nodes
+POST {{baseUrl}}/characters
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "NeoRider {{unique}}",
+  "balance": 1500.50,
+  "profile": {
+    "id": 1
+  },
+  "gender": "FEMALE",
+  "skincolor": "LIGHT",
+  "eyecolor": "GREEN",
+  "height": "AVERAGE",
+  "weight": "LIGHT",
+  "house": {
+    "amountRooms": 2,
+    "amountBathrooms": 1
+  },
+  "garage": {
+    "capacity": 2
+  }
+}
+
+### List character nodes
+GET {{baseUrl}}/characters
+Authorization: {{userAuth}}
+
+### Get created character node
+GET {{baseUrl}}/characters/{{createdCharacterId}}
+Authorization: {{userAuth}}
+
+### Update created character node
+PUT {{baseUrl}}/characters/{{createdCharacterId}}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{createdCharacterId}},
+  "name": "NeoRider Updated Manual",
+  "balance": 1900.75,
+  "profile": {
+    "id": 1
+  },
+  "gender": "FEMALE",
+  "skincolor": "MEDIUM",
+  "eyecolor": "BLUE",
+  "height": "TALL",
+  "weight": "AVERAGE",
+  "house": {
+    "id": {{createdCharacterHouseId}}
+  },
+  "garage": {
+    "id": {{createdCharacterGarageId}}
+  }
+}
+
+### Create vehicle node linked to garage
+POST {{baseUrl}}/vehicles
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "garage": {
+    "id": {{createdCharacterGarageId}}
+  },
+  "model": "Neo Van {{unique}}",
+  "type": "VAN",
+  "plateNumber": "NEO-{{unique}}"
+}
+
+### List vehicle nodes
+GET {{baseUrl}}/vehicles
+Authorization: {{userAuth}}
+
+### Get created vehicle node
+GET {{baseUrl}}/vehicles/{{createdVehicleId}}
+Authorization: {{userAuth}}
+
+### Update created vehicle node
+PUT {{baseUrl}}/vehicles/{{createdVehicleId}}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{createdVehicleId}},
+  "garage": {
+    "id": {{createdCharacterGarageId}}
+  },
+  "model": "Neo Van XL Manual",
+  "type": "TRUCK",
+  "plateNumber": "NEO-MANUAL"
+}
+
+### Create character-to-drug relationship
+POST {{baseUrl}}/character-drug
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "character": {
+    "id": {{createdCharacterId}}
+  },
+  "drug": {
+    "id": {{createdDrugId}}
+  },
+  "quantity": 12
+}
+
+### List character-drug relationships
+GET {{baseUrl}}/character-drug
+Authorization: {{userAuth}}
+
+### Update character-to-drug relationship
+PUT {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{createdCharacterDrugId}},
+  "character": {
+    "id": {{createdCharacterId}}
+  },
+  "drug": {
+    "id": {{createdDrugId}}
+  },
+  "quantity": 20
+}
+
+### Create character-to-quest relationship
+POST {{baseUrl}}/character-quest
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "character": {
+    "id": {{createdCharacterId}}
+  },
+  "quest": {
+    "id": {{createdQuestId}}
+  },
+  "status": "ACCEPTED",
+  "acceptedAt": "2026-03-16T10:30:00"
+}
+
+### List character-quest relationships
+GET {{baseUrl}}/character-quest
+Authorization: {{userAuth}}
+
+### Update character-to-quest relationship
+PUT {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{createdCharacterQuestId}},
+  "character": {
+    "id": {{createdCharacterId}}
+  },
+  "quest": {
+    "id": {{createdQuestId}}
+  },
+  "status": "COMPLETED",
+  "acceptedAt": "2026-03-16T10:30:00"
+}
+
+### Create character-to-gang membership relationship
+POST {{baseUrl}}/gang-affiliations
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "character": {
+    "id": {{createdCharacterId}}
+  },
+  "gang": {
+    "id": {{createdGangId}}
+  },
+  "joinDate": "2026-03-16"
+}
+
+### List gang membership relationships
+GET {{baseUrl}}/gang-affiliations
+Authorization: {{userAuth}}
+
+### Update character-to-gang membership relationship
+PUT {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{createdGangAffiliationId}},
+  "character": {
+    "id": {{createdCharacterId}}
+  },
+  "gang": {
+    "id": {{createdGangId}}
+  },
+  "joinDate": "2026-03-17"
+}
+
+### List audit logs
+GET {{baseUrl}}/audit-logs
+Authorization: {{adminAuth}}
+
+### Delete character-to-drug relationship
+DELETE {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
+Authorization: {{userAuth}}
+
+### Delete character-to-quest relationship
+DELETE {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
+Authorization: {{userAuth}}
+
+### Delete character-to-gang membership relationship
+DELETE {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
+Authorization: {{userAuth}}
+
+### Delete vehicle node
+DELETE {{baseUrl}}/vehicles/{{createdVehicleId}}
+Authorization: {{userAuth}}
+
+### Delete character node
+DELETE {{baseUrl}}/characters/{{createdCharacterId}}
+Authorization: {{userAuth}}
+
+### Delete gang node
+DELETE {{baseUrl}}/gangs/{{createdGangId}}
+Authorization: {{userAuth}}
+
+### Delete drug node
+DELETE {{baseUrl}}/drugs/{{createdDrugId}}
+Authorization: {{adminAuth}}
+
+### Delete quest node
+DELETE {{baseUrl}}/quests/{{createdQuestId}}
+Authorization: {{adminAuth}}
+
+### Delete profile node
+DELETE {{baseUrl}}/profiles/{{createdProfileId}}
+Authorization: {{adminAuth}}
+
+### Logout
+POST {{baseUrl}}/auth/logout

@@ -13,9 +13,9 @@ public class AuthRoutes {
 
     public static EndpointGroup routes(AuthService authService) {
         return () -> path("auth", () -> {
-            post("login", authService::login);
-            post("register", authService::register);
-            post("logout", authService::logout);
+            post("login", ctx -> authService.login(ctx));
+            post("register", ctx -> authService.register(ctx));
+            post("logout", ctx -> authService.logout(ctx));
         });
     }
 }
