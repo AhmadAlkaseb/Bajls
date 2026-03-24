@@ -12,7 +12,7 @@ import persistence.entity.Profile;
 
 import java.util.List;
 
-public abstract class AbstractJpaDao<T> {
+public abstract class AbstractJpaDao<T> implements EntityRepository<T> {
 
     private final EntityManagerFactory entityManagerFactory;
     private final Class<T> entityClass;
@@ -23,9 +23,9 @@ public abstract class AbstractJpaDao<T> {
     }
 
     public T save(T entity) {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
+        EntityTransaction tx = null;
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            tx = em.getTransaction();
             tx.begin();
             em.persist(entity);
             em.flush();
@@ -35,15 +35,13 @@ public abstract class AbstractJpaDao<T> {
         } catch (RuntimeException e) {
             rollbackIfActive(tx);
             throw e;
-        } finally {
-            em.close();
         }
     }
 
     public T update(T entity) {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
+        EntityTransaction tx = null;
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            tx = em.getTransaction();
             tx.begin();
             String previousStateJson = null;
             Long entityId = AuditSnapshotUtil.getEntityId(entity);
@@ -59,15 +57,13 @@ public abstract class AbstractJpaDao<T> {
         } catch (RuntimeException e) {
             rollbackIfActive(tx);
             throw e;
-        } finally {
-            em.close();
         }
     }
 
     public void deleteById(Long id) {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
+        EntityTransaction tx = null;
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            tx = em.getTransaction();
             tx.begin();
             T entity = em.find(entityClass, id);
             if (entity != null) {
@@ -78,28 +74,20 @@ public abstract class AbstractJpaDao<T> {
         } catch (RuntimeException e) {
             rollbackIfActive(tx);
             throw e;
-        } finally {
-            em.close();
         }
     }
 
     public T findById(Long id) {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        try {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
             return em.find(entityClass, id);
-        } finally {
-            em.close();
         }
     }
 
     public List<T> findAll() {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        try {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
             CriteriaQuery<T> criteria = em.getCriteriaBuilder().createQuery(entityClass);
             criteria.from(entityClass);
             return em.createQuery(criteria).getResultList();
-        } finally {
-            em.close();
         }
     }
 

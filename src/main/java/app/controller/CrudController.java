@@ -1,16 +1,18 @@
 package app.controller;
 
-import app.dao.AbstractJpaDao;
-import app.dao.JpaReadDao;
+import app.dao.ReadRepository;
+import app.dao.WriteRepository;
 import io.javalin.http.Context;
+import io.javalin.http.BadRequestResponse;
+import io.javalin.http.NotFoundResponse;
 
 public class CrudController<R, W> {
 
-    private final JpaReadDao<R> readDao;
-    private final AbstractJpaDao<W> writeDao;
+    private final ReadRepository<R> readDao;
+    private final WriteRepository<W> writeDao;
     private final Class<W> bodyClass;
 
-    public CrudController(JpaReadDao<R> readDao, AbstractJpaDao<W> writeDao, Class<W> bodyClass) {
+    public CrudController(ReadRepository<R> readDao, WriteRepository<W> writeDao, Class<W> bodyClass) {
         this.readDao = readDao;
         this.writeDao = writeDao;
         this.bodyClass = bodyClass;
@@ -22,14 +24,9 @@ public class CrudController<R, W> {
 
     public void getById(Context ctx) {
         Long id = parseId(ctx);
-        if (id == null) {
-            return;
-        }
-
         R result = readDao.findById(id);
         if (result == null) {
-            ctx.status(404).json("Not found");
-            return;
+            throw new NotFoundResponse("Not found");
         }
         ctx.json(result);
     }
@@ -47,12 +44,7 @@ public class CrudController<R, W> {
     }
 
     public void delete(Context ctx) {
-        Long id = parseId(ctx);
-        if (id == null) {
-            return;
-        }
-
-        writeDao.deleteById(id);
+        writeDao.deleteById(parseId(ctx));
         ctx.status(204);
     }
 
@@ -60,8 +52,7 @@ public class CrudController<R, W> {
         try {
             return Long.parseLong(ctx.pathParam("id"));
         } catch (NumberFormatException e) {
-            ctx.status(400).json("Invalid id");
-            return null;
+            throw new BadRequestResponse("Invalid id");
         }
     }
 }

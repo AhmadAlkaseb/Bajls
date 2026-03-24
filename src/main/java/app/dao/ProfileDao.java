@@ -5,14 +5,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import persistence.entity.Profile;
 
-public class ProfileDao extends AbstractJpaDao<Profile> {
+public class ProfileDao extends AbstractJpaDao<Profile> implements ProfileEntityRepository {
     public ProfileDao(EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory, Profile.class);
     }
 
     public LoginResponseDTO authenticate(String username, String password) {
-        EntityManager em = getEntityManagerFactory().createEntityManager();
-        try {
+        try (EntityManager em = getEntityManagerFactory().createEntityManager()) {
             return em.createQuery(
                             "SELECT new app.dto.LoginResponseDTO(p.id, p.username, p.role) " +
                                     "FROM Profile p " +
@@ -24,8 +23,6 @@ public class ProfileDao extends AbstractJpaDao<Profile> {
                     .getResultStream()
                     .findFirst()
                     .orElse(null);
-        } finally {
-            em.close();
         }
     }
 }

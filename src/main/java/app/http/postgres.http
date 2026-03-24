@@ -3,11 +3,46 @@
 @adminAuth = Basic YWFuZGVyc2VuOlBAc3NBc3RhNQ==
 @userAuth = Basic bWloYW5zZW46UEBzc01pYTE=
 @ownerProfileId = 1
+@seedDrugId = 1
+@seedQuestId = 1
 @seedHouseId = 1
 @seedGarageId = 1
+@createdProfileId = 9991
+@createdDrugId = 9992
+@createdQuestId = 9993
+@createdHouseId = 9994
+@createdGarageId = 9995
+@createdCharacterId = 9996
+@createdCharacterHouseId = 9997
+@createdCharacterGarageId = 9998
+@createdVehicleId = 9999
+@createdCharacterDrugId = 10000
+@createdCharacterQuestId = 10001
+@createdGangId = 10002
+@createdGangAffiliationId = 10003
 @unique = {{$timestamp}}
 
-### Seed login as admin
+# PostgreSQL route test file.
+# In src/main/java/app/Main.java set:
+# private static final DatabaseType DATABASE_TYPE = DatabaseType.POSTGRES;
+#
+# Local defaults:
+# - DB_URL=jdbc:postgresql://localhost:5432/bajls
+# - DB_USER=postgres
+# - DB_PASSWORD=postgres
+#
+# Start database:
+# docker compose up -d db
+#
+# This file is organized like the relational model:
+# 1. auth and profiles
+# 2. admin-managed catalog tables
+# 3. standalone asset tables
+# 4. relationship tables
+#
+# After each POST, copy the returned id into the matching @created... variable above.
+
+### Admin login
 POST {{baseUrl}}/auth/login
 Content-Type: {{contentType}}
 
@@ -16,7 +51,7 @@ Content-Type: {{contentType}}
   "password": "P@ssAsta5"
 }
 
-### Seed login as user
+### User login
 POST {{baseUrl}}/auth/login
 Content-Type: {{contentType}}
 
@@ -25,7 +60,7 @@ Content-Type: {{contentType}}
   "password": "P@ssMia1"
 }
 
-### Register a new user
+### Register profile
 POST {{baseUrl}}/auth/register
 Content-Type: {{contentType}}
 
@@ -41,7 +76,7 @@ Content-Type: {{contentType}}
 ### Logout
 POST {{baseUrl}}/auth/logout
 
-### Get all profiles
+### List profiles
 GET {{baseUrl}}/profiles
 Authorization: {{adminAuth}}
 
@@ -59,17 +94,17 @@ Content-Type: {{contentType}}
   "role": "USER"
 }
 
-### Get own profile as authenticated user
+### Get own profile
 GET {{baseUrl}}/profiles/{{ownerProfileId}}
 Authorization: {{userAuth}}
 
-### Update profile by id
-PUT {{baseUrl}}/profiles/9991
+### Update created profile
+PUT {{baseUrl}}/profiles/{{createdProfileId}}
 Authorization: {{adminAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 9991,
+  "id": {{createdProfileId}},
   "firstName": "HttpUpdated",
   "lastName": "Profile",
   "email": "http.profile.updated.manual@example.com",
@@ -78,16 +113,12 @@ Content-Type: {{contentType}}
   "role": "USER"
 }
 
-### Delete profile by id
-DELETE {{baseUrl}}/profiles/9991
-Authorization: {{adminAuth}}
-
-### Get all drugs
+### List drugs
 GET {{baseUrl}}/drugs
 Authorization: {{adminAuth}}
 
-### Get drug by id
-GET {{baseUrl}}/drugs/1
+### Get seed drug
+GET {{baseUrl}}/drugs/{{seedDrugId}}
 Authorization: {{adminAuth}}
 
 ### Create drug
@@ -100,23 +131,23 @@ Content-Type: {{contentType}}
   "type": "METH"
 }
 
-### Update drug by id
-PUT {{baseUrl}}/drugs/9992
+### Update created drug
+PUT {{baseUrl}}/drugs/{{createdDrugId}}
 Authorization: {{adminAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 9992,
+  "id": {{createdDrugId}},
   "name": "Route Dust X Manual",
   "type": "COCAINE"
 }
 
-### Get all quests
+### List quests
 GET {{baseUrl}}/quests
 Authorization: {{adminAuth}}
 
-### Get quest by id
-GET {{baseUrl}}/quests/1
+### Get seed quest
+GET {{baseUrl}}/quests/{{seedQuestId}}
 Authorization: {{adminAuth}}
 
 ### Create quest
@@ -130,27 +161,27 @@ Content-Type: {{contentType}}
   "reward": 777.77
 }
 
-### Update quest by id
-PUT {{baseUrl}}/quests/9993
+### Update created quest
+PUT {{baseUrl}}/quests/{{createdQuestId}}
 Authorization: {{adminAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 9993,
+  "id": {{createdQuestId}},
   "title": "HTTP Route Quest Updated Manual",
   "description": "Updated quest used for route verification.",
   "reward": 888.88
 }
 
-### Get all audit logs
+### List audit logs
 GET {{baseUrl}}/audit-logs
 Authorization: {{adminAuth}}
 
-### Get audit log by seed id
+### Get first audit log
 GET {{baseUrl}}/audit-logs/1
 Authorization: {{adminAuth}}
 
-### Get all houses
+### List houses
 GET {{baseUrl}}/houses
 Authorization: {{userAuth}}
 
@@ -164,22 +195,22 @@ Content-Type: {{contentType}}
   "amountBathrooms": 3
 }
 
-### Get standalone house by id
+### Get seed house
 GET {{baseUrl}}/houses/{{seedHouseId}}
 Authorization: {{userAuth}}
 
-### Update house by id
-PUT {{baseUrl}}/houses/9994
+### Update created standalone house
+PUT {{baseUrl}}/houses/{{createdHouseId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 9994,
+  "id": {{createdHouseId}},
   "amountRooms": 7,
   "amountBathrooms": 4
 }
 
-### Get all garages
+### List garages
 GET {{baseUrl}}/garages
 Authorization: {{userAuth}}
 
@@ -192,25 +223,25 @@ Content-Type: {{contentType}}
   "capacity": 6
 }
 
-### Get standalone garage by id
+### Get seed garage
 GET {{baseUrl}}/garages/{{seedGarageId}}
 Authorization: {{userAuth}}
 
-### Update garage by id
-PUT {{baseUrl}}/garages/9995
+### Update created standalone garage
+PUT {{baseUrl}}/garages/{{createdGarageId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 9995,
+  "id": {{createdGarageId}},
   "capacity": 8
 }
 
-### Get all characters
+### List characters
 GET {{baseUrl}}/characters
 Authorization: {{userAuth}}
 
-### Create character
+### Create character with nested house and garage
 POST {{baseUrl}}/characters
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
@@ -235,17 +266,17 @@ Content-Type: {{contentType}}
   }
 }
 
-### Get character by id
-GET {{baseUrl}}/characters/9996
+### Get created character
+GET {{baseUrl}}/characters/{{createdCharacterId}}
 Authorization: {{userAuth}}
 
-### Update character by id
-PUT {{baseUrl}}/characters/9996
+### Update created character
+PUT {{baseUrl}}/characters/{{createdCharacterId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 9996,
+  "id": {{createdCharacterId}},
   "name": "HttpRider Updated Manual",
   "balance": 1900.75,
   "profile": {
@@ -257,51 +288,51 @@ Content-Type: {{contentType}}
   "height": "TALL",
   "weight": "AVERAGE",
   "house": {
-    "id": 9997
+    "id": {{createdCharacterHouseId}}
   },
   "garage": {
-    "id": 9998
+    "id": {{createdCharacterGarageId}}
   }
 }
 
-### Get all vehicles
+### List vehicles
 GET {{baseUrl}}/vehicles
 Authorization: {{userAuth}}
 
-### Create vehicle
+### Create vehicle in character garage
 POST {{baseUrl}}/vehicles
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
   "garage": {
-    "id": 9998
+    "id": {{createdCharacterGarageId}}
   },
   "model": "Route Van {{unique}}",
   "type": "VAN",
   "plateNumber": "HTTP-{{unique}}"
 }
 
-### Get vehicle by id
-GET {{baseUrl}}/vehicles/9999
+### Get created vehicle
+GET {{baseUrl}}/vehicles/{{createdVehicleId}}
 Authorization: {{userAuth}}
 
-### Update vehicle by id
-PUT {{baseUrl}}/vehicles/9999
+### Update created vehicle
+PUT {{baseUrl}}/vehicles/{{createdVehicleId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 9999,
+  "id": {{createdVehicleId}},
   "garage": {
-    "id": 9998
+    "id": {{createdCharacterGarageId}}
   },
   "model": "Route Van XL Manual",
   "type": "TRUCK",
   "plateNumber": "HTTP-MANUAL"
 }
 
-### Get all character-drug rows
+### List character-drug rows
 GET {{baseUrl}}/character-drug
 Authorization: {{userAuth}}
 
@@ -312,35 +343,35 @@ Content-Type: {{contentType}}
 
 {
   "character": {
-    "id": 9996
+    "id": {{createdCharacterId}}
   },
   "drug": {
-    "id": 9992
+    "id": {{createdDrugId}}
   },
   "quantity": 12
 }
 
-### Get character-drug row by id
-GET {{baseUrl}}/character-drug/10000
+### Get created character-drug row
+GET {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
 Authorization: {{userAuth}}
 
-### Update character-drug row by id
-PUT {{baseUrl}}/character-drug/10000
+### Update created character-drug row
+PUT {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 10000,
+  "id": {{createdCharacterDrugId}},
   "character": {
-    "id": 9996
+    "id": {{createdCharacterId}}
   },
   "drug": {
-    "id": 9992
+    "id": {{createdDrugId}}
   },
   "quantity": 20
 }
 
-### Get all character-quest rows
+### List character-quest rows
 GET {{baseUrl}}/character-quest
 Authorization: {{userAuth}}
 
@@ -351,37 +382,37 @@ Content-Type: {{contentType}}
 
 {
   "character": {
-    "id": 9996
+    "id": {{createdCharacterId}}
   },
   "quest": {
-    "id": 9993
+    "id": {{createdQuestId}}
   },
   "status": "ACCEPTED",
   "acceptedAt": "2026-03-16T10:30:00"
 }
 
-### Get character-quest row by id
-GET {{baseUrl}}/character-quest/10001
+### Get created character-quest row
+GET {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
 Authorization: {{userAuth}}
 
-### Update character-quest row by id
-PUT {{baseUrl}}/character-quest/10001
+### Update created character-quest row
+PUT {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 10001,
+  "id": {{createdCharacterQuestId}},
   "character": {
-    "id": 9996
+    "id": {{createdCharacterId}}
   },
   "quest": {
-    "id": 9993
+    "id": {{createdQuestId}}
   },
   "status": "COMPLETED",
   "acceptedAt": "2026-03-16T10:30:00"
 }
 
-### Get all gangs
+### List gangs
 GET {{baseUrl}}/gangs
 Authorization: {{userAuth}}
 
@@ -395,22 +426,22 @@ Content-Type: {{contentType}}
   "type": "MAFIA"
 }
 
-### Get gang by id
-GET {{baseUrl}}/gangs/10002
+### Get created gang
+GET {{baseUrl}}/gangs/{{createdGangId}}
 Authorization: {{userAuth}}
 
-### Update gang by id
-PUT {{baseUrl}}/gangs/10002
+### Update created gang
+PUT {{baseUrl}}/gangs/{{createdGangId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 10002,
+  "id": {{createdGangId}},
   "name": "HTTP Syndicate Prime Manual",
   "type": "CARTEL"
 }
 
-### Get all gang affiliations
+### List gang affiliations
 GET {{baseUrl}}/gang-affiliations
 Authorization: {{userAuth}}
 
@@ -421,70 +452,74 @@ Content-Type: {{contentType}}
 
 {
   "character": {
-    "id": 9996
+    "id": {{createdCharacterId}}
   },
   "gang": {
-    "id": 10002
+    "id": {{createdGangId}}
   },
   "joinDate": "2026-03-16"
 }
 
-### Get gang affiliation by id
-GET {{baseUrl}}/gang-affiliations/10003
+### Get created gang affiliation
+GET {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
 Authorization: {{userAuth}}
 
-### Update gang affiliation by id
-PUT {{baseUrl}}/gang-affiliations/10003
+### Update created gang affiliation
+PUT {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
 
 {
-  "id": 10003,
+  "id": {{createdGangAffiliationId}},
   "character": {
-    "id": 9996
+    "id": {{createdCharacterId}}
   },
   "gang": {
-    "id": 10002
+    "id": {{createdGangId}}
   },
   "joinDate": "2026-03-17"
 }
 
-### Delete character-drug row by id
-DELETE {{baseUrl}}/character-drug/10000
+### Delete created character-drug row
+DELETE {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
 Authorization: {{userAuth}}
 
-### Delete character-quest row by id
-DELETE {{baseUrl}}/character-quest/10001
+### Delete created character-quest row
+DELETE {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
 Authorization: {{userAuth}}
 
-### Delete gang affiliation by id
-DELETE {{baseUrl}}/gang-affiliations/10003
+### Delete created gang affiliation
+DELETE {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
 Authorization: {{userAuth}}
 
-### Delete vehicle by id
-DELETE {{baseUrl}}/vehicles/9999
+### Delete created vehicle
+DELETE {{baseUrl}}/vehicles/{{createdVehicleId}}
 Authorization: {{userAuth}}
 
-### Delete character by id
-DELETE {{baseUrl}}/characters/9996
+### Delete created character
+DELETE {{baseUrl}}/characters/{{createdCharacterId}}
 Authorization: {{userAuth}}
 
-### Delete standalone house by id
-DELETE {{baseUrl}}/houses/9994
+### Delete created standalone house
+DELETE {{baseUrl}}/houses/{{createdHouseId}}
 Authorization: {{userAuth}}
 
-### Delete standalone garage by id
-DELETE {{baseUrl}}/garages/9995
+### Delete created standalone garage
+DELETE {{baseUrl}}/garages/{{createdGarageId}}
 Authorization: {{userAuth}}
 
-### Delete gang by id
-DELETE {{baseUrl}}/gangs/10002
+### Delete created gang
+DELETE {{baseUrl}}/gangs/{{createdGangId}}
 Authorization: {{userAuth}}
 
-### Delete drug by id
-DELETE {{baseUrl}}/drugs/9992
+### Delete created drug
+DELETE {{baseUrl}}/drugs/{{createdDrugId}}
 Authorization: {{adminAuth}}
 
-### Delete quest by id
-DELETE {{baseUrl}}/quests/9993
+### Delete created quest
+DELETE {{baseUrl}}/quests/{{createdQuestId}}
+Authorization: {{adminAuth}}
+
+### Delete created profile
+DELETE {{baseUrl}}/profiles/{{createdProfileId}}
 Authorization: {{adminAuth}}
