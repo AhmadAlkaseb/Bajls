@@ -3,6 +3,7 @@ package app.mongo;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -23,10 +24,11 @@ public final class MongoSupport {
     }
 
     public static ObjectMapper createObjectMapper() {
-        return new ObjectMapper()
-                .registerModule(new JavaTimeModule())
+        return JsonMapper.builder()
+                .addModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .configure(MapperFeature.USE_ANNOTATIONS, false);
+                .disable(MapperFeature.USE_ANNOTATIONS)
+                .build();
     }
 
     static <T> List<T> findAll(MongoCollection<Document> collection, Class<T> type, ObjectMapper objectMapper) {
@@ -99,7 +101,7 @@ public final class MongoSupport {
         throw new IllegalStateException("Entity class does not define an id field: " + type.getName());
     }
 
-    private static Long nextSequenceValue(MongoDatabase database, String collectionName) {
+    static Long nextSequenceValue(MongoDatabase database, String collectionName) {
         MongoCollection<Document> counters = database.getCollection(COUNTERS_COLLECTION);
         Document counter = counters.findOneAndUpdate(
                 Filters.eq("_id", collectionName),

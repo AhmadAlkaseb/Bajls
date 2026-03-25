@@ -23,7 +23,3 @@ public class Main {
         new ApplicationConfig().start(port, appBackend.routes());
     }
 }
-
-// Postgres data findes i pgAdmin
-// MongoDB data findes i Compass
-// Neo4j data findes i Neo4j Browser
