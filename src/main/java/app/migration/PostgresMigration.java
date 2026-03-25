@@ -1,12 +1,21 @@
 package app.migration;
 
 import app.dao.EntityRepository;
+import app.dao.EmptyEntityRepository;
+import app.mongo.MongoCollections;
 import app.mongo.MongoEntityRepository;
 import app.mongo.MongoProfileRepository;
+import app.neo4j.Neo4jCharacterDrugRepository;
+import app.neo4j.Neo4jCharacterQuestRepository;
+import app.neo4j.Neo4jCharacterRepository;
 import app.neo4j.Neo4jEntityRepository;
+import app.neo4j.Neo4jGarageRepository;
+import app.neo4j.Neo4jGangAffiliationRepository;
+import app.neo4j.Neo4jHouseRepository;
 import app.neo4j.Neo4jProfileRepository;
 import app.neo4j.Neo4jSequenceRepository;
 import app.neo4j.Neo4jSupport;
+import app.neo4j.Neo4jVehicleRepository;
 import app.setup.DatabaseType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
@@ -52,6 +61,10 @@ public final class PostgresMigration {
         }
 
         MigrationSnapshot snapshot = loadSnapshot(isTest);
+        if (targetDatabaseType == DatabaseType.MONGODB) {
+            migrateSnapshotToMongo(snapshot);
+            return;
+        }
         try (MigrationTarget target = createTarget(targetDatabaseType)) {
             target.clear();
             migrateSnapshot(snapshot, target);
@@ -187,6 +200,85 @@ public final class PostgresMigration {
         saveAll(target.characterQuestRepository(), snapshot.characterQuests());
         saveAll(target.gangAffiliationRepository(), snapshot.gangAffiliations());
         saveAll(target.auditLogRepository(), snapshot.auditLogs());
+    }
+
+    private static void migrateSnapshotToMongo(MigrationSnapshot snapshot) {
+        try (MongoClient mongoClient = MongoClients.create(System.getenv().getOrDefault("MONGO_URL", DEFAULT_MONGO_URL))) {
+            MongoDatabase database = mongoClient.getDatabase(System.getenv().getOrDefault("MONGO_DB_NAME", DEFAULT_MONGO_DATABASE));
+            database.drop();
+
+            ObjectMapper objectMapper = app.mongo.MongoSupport.createObjectMapper();
+            EntityRepository<Profile> profileRepository = new MongoProfileRepository(database, objectMapper);
+            EntityRepository<Drug> drugRepository = new MongoEntityRepository<>(database, MongoCollections.DRUGS, Drug.class, objectMapper);
+            EntityRepository<Quest> questRepository = new MongoEntityRepository<>(database, MongoCollections.QUESTS, Quest.class, objectMapper);
+            EntityRepository<Gang> gangRepository = new MongoEntityRepository<>(database, MongoCollections.GANGS, Gang.class, objectMapper);
+            EntityRepository<AuditLog> auditLogRepository = new MongoEntityRepository<>(database, MongoCollections.AUDIT_LOG, AuditLog.class, objectMapper);
+
+            for (Profile profile : snapshot.profiles()) {
+                profile.getCharacters().clear();
+            }
+
+            Map<Long, Profile> profilesById = snapshot.profiles().stream()
+                    .collect(java.util.stream.Collectors.toMap(Profile::getId, profile -> profile));
+            Map<Long, GameCharacter> charactersById = snapshot.characters().stream()
+                    .collect(java.util.stream.Collectors.toMap(GameCharacter::getId, character -> character));
+            Map<Long, House> housesByCharacterId = snapshot.houses().stream()
+                    .collect(java.util.stream.Collectors.toMap(house -> house.getCharacter().getId(), house -> house));
+            Map<Long, Garage> garagesByCharacterId = snapshot.garages().stream()
+                    .collect(java.util.stream.Collectors.toMap(garage -> garage.getCharacter().getId(), garage -> garage));
+
+            for (GameCharacter character : snapshot.characters()) {
+                character.setHouse(housesByCharacterId.get(character.getId()));
+                character.setGarage(garagesByCharacterId.get(character.getId()));
+                if (character.getGarage() != null) {
+                    character.getGarage().setVehicles(new ArrayList<>());
+                }
+                character.getCharacterDrugs().clear();
+                character.getCharacterQuests().clear();
+                character.getGangAffiliations().clear();
+                Profile profile = profilesById.get(character.getProfile().getId());
+                if (profile != null) {
+                    profile.getCharacters().add(character);
+                }
+            }
+
+            for (Vehicle vehicle : snapshot.vehicles()) {
+                for (GameCharacter character : charactersById.values()) {
+                    if (character.getGarage() != null && vehicle.getGarage() != null
+                            && vehicle.getGarage().getId().equals(character.getGarage().getId())) {
+                        character.getGarage().getVehicles().add(vehicle);
+                        break;
+                    }
+                }
+            }
+
+            for (CharacterDrug characterDrug : snapshot.characterDrugs()) {
+                GameCharacter character = charactersById.get(characterDrug.getCharacter().getId());
+                if (character != null) {
+                    character.getCharacterDrugs().add(characterDrug);
+                }
+            }
+
+            for (CharacterQuest characterQuest : snapshot.characterQuests()) {
+                GameCharacter character = charactersById.get(characterQuest.getCharacter().getId());
+                if (character != null) {
+                    character.getCharacterQuests().add(characterQuest);
+                }
+            }
+
+            for (GangAffiliation gangAffiliation : snapshot.gangAffiliations()) {
+                GameCharacter character = charactersById.get(gangAffiliation.getCharacter().getId());
+                if (character != null) {
+                    character.getGangAffiliations().add(gangAffiliation);
+                }
+            }
+
+            saveAll(drugRepository, snapshot.drugs());
+            saveAll(questRepository, snapshot.quests());
+            saveAll(gangRepository, snapshot.gangs());
+            saveAll(profileRepository, snapshot.profiles());
+            saveAll(auditLogRepository, snapshot.auditLogs());
+        }
     }
 
     private static <T> void saveAll(EntityRepository<T> repository, List<T> entities) {
@@ -499,17 +591,17 @@ public final class PostgresMigration {
             this.database = mongoClient.getDatabase(System.getenv().getOrDefault("MONGO_DB_NAME", DEFAULT_MONGO_DATABASE));
             ObjectMapper objectMapper = app.mongo.MongoSupport.createObjectMapper();
             this.profileRepository = new MongoProfileRepository(database, objectMapper);
-            this.auditLogRepository = new MongoEntityRepository<>(database, "audit_log", AuditLog.class, objectMapper);
-            this.drugRepository = new MongoEntityRepository<>(database, "drugs", Drug.class, objectMapper);
-            this.questRepository = new MongoEntityRepository<>(database, "quests", Quest.class, objectMapper);
-            this.characterRepository = new MongoEntityRepository<>(database, "characters", GameCharacter.class, objectMapper);
-            this.houseRepository = new MongoEntityRepository<>(database, "houses", House.class, objectMapper);
-            this.garageRepository = new MongoEntityRepository<>(database, "garages", Garage.class, objectMapper);
-            this.vehicleRepository = new MongoEntityRepository<>(database, "vehicles", Vehicle.class, objectMapper);
-            this.characterDrugRepository = new MongoEntityRepository<>(database, "character_drug", CharacterDrug.class, objectMapper);
-            this.characterQuestRepository = new MongoEntityRepository<>(database, "character_quest", CharacterQuest.class, objectMapper);
-            this.gangRepository = new MongoEntityRepository<>(database, "gangs", Gang.class, objectMapper);
-            this.gangAffiliationRepository = new MongoEntityRepository<>(database, "gang_affiliations", GangAffiliation.class, objectMapper);
+            this.auditLogRepository = new MongoEntityRepository<>(database, MongoCollections.AUDIT_LOG, AuditLog.class, objectMapper);
+            this.drugRepository = new MongoEntityRepository<>(database, MongoCollections.DRUGS, Drug.class, objectMapper);
+            this.questRepository = new MongoEntityRepository<>(database, MongoCollections.QUESTS, Quest.class, objectMapper);
+            this.characterRepository = new EmptyEntityRepository<>();
+            this.houseRepository = new EmptyEntityRepository<>();
+            this.garageRepository = new EmptyEntityRepository<>();
+            this.vehicleRepository = new EmptyEntityRepository<>();
+            this.characterDrugRepository = new EmptyEntityRepository<>();
+            this.characterQuestRepository = new EmptyEntityRepository<>();
+            this.gangRepository = new MongoEntityRepository<>(database, MongoCollections.GANGS, Gang.class, objectMapper);
+            this.gangAffiliationRepository = new EmptyEntityRepository<>();
         }
 
         @Override
@@ -562,18 +654,18 @@ public final class PostgresMigration {
             driver.verifyConnectivity();
             ObjectMapper objectMapper = Neo4jSupport.createObjectMapper();
             Neo4jSequenceRepository sequenceRepository = new Neo4jSequenceRepository(driver);
-            this.profileRepository = new Neo4jProfileRepository(driver, sequenceRepository, objectMapper);
+            this.profileRepository = new Neo4jProfileRepository(driver, sequenceRepository);
             this.auditLogRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, AuditLog.class, objectMapper);
             this.drugRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, Drug.class, objectMapper);
             this.questRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, Quest.class, objectMapper);
-            this.characterRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, GameCharacter.class, objectMapper);
-            this.houseRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, House.class, objectMapper);
-            this.garageRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, Garage.class, objectMapper);
-            this.vehicleRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, Vehicle.class, objectMapper);
-            this.characterDrugRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, CharacterDrug.class, objectMapper);
-            this.characterQuestRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, CharacterQuest.class, objectMapper);
+            this.characterRepository = new Neo4jCharacterRepository(driver, sequenceRepository);
+            this.houseRepository = new Neo4jHouseRepository(driver, sequenceRepository);
+            this.garageRepository = new Neo4jGarageRepository(driver, sequenceRepository);
+            this.vehicleRepository = new Neo4jVehicleRepository(driver, sequenceRepository);
+            this.characterDrugRepository = new Neo4jCharacterDrugRepository(driver, sequenceRepository);
+            this.characterQuestRepository = new Neo4jCharacterQuestRepository(driver, sequenceRepository);
             this.gangRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, Gang.class, objectMapper);
-            this.gangAffiliationRepository = new Neo4jEntityRepository<>(driver, sequenceRepository, GangAffiliation.class, objectMapper);
+            this.gangAffiliationRepository = new Neo4jGangAffiliationRepository(driver, sequenceRepository);
         }
 
         @Override

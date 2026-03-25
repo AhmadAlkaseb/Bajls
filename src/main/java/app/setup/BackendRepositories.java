@@ -11,7 +11,6 @@ import persistence.entity.Gang;
 import persistence.entity.GangAffiliation;
 import persistence.entity.Garage;
 import persistence.entity.House;
-import persistence.entity.Profile;
 import persistence.entity.Quest;
 import persistence.entity.Vehicle;
 

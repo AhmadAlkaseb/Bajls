@@ -2,10 +2,17 @@ package app.setup;
 
 import app.auth.AuthService;
 import app.controller.CrudController;
+import app.neo4j.Neo4jCharacterDrugRepository;
+import app.neo4j.Neo4jCharacterQuestRepository;
+import app.neo4j.Neo4jCharacterRepository;
 import app.neo4j.Neo4jEntityRepository;
+import app.neo4j.Neo4jGarageRepository;
+import app.neo4j.Neo4jGangAffiliationRepository;
+import app.neo4j.Neo4jHouseRepository;
 import app.neo4j.Neo4jProfileRepository;
 import app.neo4j.Neo4jSequenceRepository;
 import app.neo4j.Neo4jSupport;
+import app.neo4j.Neo4jVehicleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
@@ -67,18 +74,18 @@ public final class Neo4jAppPersistence implements AppPersistence {
         ObjectMapper objectMapper = Neo4jSupport.createObjectMapper();
         Neo4jSequenceRepository sequenceRepository = new Neo4jSequenceRepository(driver);
         BackendRepositories repositories = new BackendRepositories(
-                new Neo4jProfileRepository(driver, sequenceRepository, objectMapper),
+                new Neo4jProfileRepository(driver, sequenceRepository),
                 new Neo4jEntityRepository<>(driver, sequenceRepository, AuditLog.class, objectMapper),
                 new Neo4jEntityRepository<>(driver, sequenceRepository, Drug.class, objectMapper),
                 new Neo4jEntityRepository<>(driver, sequenceRepository, Quest.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, GameCharacter.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, House.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, Garage.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, Vehicle.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, CharacterDrug.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, CharacterQuest.class, objectMapper),
+                new Neo4jCharacterRepository(driver, sequenceRepository),
+                new Neo4jHouseRepository(driver, sequenceRepository),
+                new Neo4jGarageRepository(driver, sequenceRepository),
+                new Neo4jVehicleRepository(driver, sequenceRepository),
+                new Neo4jCharacterDrugRepository(driver, sequenceRepository),
+                new Neo4jCharacterQuestRepository(driver, sequenceRepository),
                 new Neo4jEntityRepository<>(driver, sequenceRepository, Gang.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, GangAffiliation.class, objectMapper)
+                new Neo4jGangAffiliationRepository(driver, sequenceRepository)
         );
         BackendControllers controllers = PersistenceSupport.controllers(repositories);
 

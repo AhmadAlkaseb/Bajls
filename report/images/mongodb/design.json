@@ -1,5 +1,5 @@
 {
-  "profiles": [
+  "Profile": [
     {
       "_id": "",
       "email": "",
@@ -73,11 +73,27 @@
       "reward": 0
     }
   ],
-  "gangs": [
+  "Gangs": [
     {
       "_id": "",
       "name": "",
       "type": ""
+    }
+  ],
+  "audit_log": [
+    {
+      "_id": "",
+      "actor_profile_id": "",
+      "actor_username": "",
+      "actor_role": "",
+      "action": "",
+      "entity_name": "",
+      "entity_id": "",
+      "request_method": "",
+      "request_path": "",
+      "old_values": "",
+      "new_values": "",
+      "changed_at": ""
     }
   ]
 }

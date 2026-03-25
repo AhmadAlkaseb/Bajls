@@ -78,7 +78,7 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
         recordAuditLog(AuditAction.DELETE, AuditSnapshotUtil.toJson(entity), null, entity);
         try (Session session = driver.session()) {
             session.executeWrite(tx -> {
-                tx.run("MATCH (n:" + label + " {id: $id}) DELETE n", Map.of("id", id));
+                tx.run("MATCH (n:" + label + " {id: $id}) DETACH DELETE n", Map.of("id", id));
                 return null;
             });
         }

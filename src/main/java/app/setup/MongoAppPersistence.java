@@ -2,8 +2,16 @@ package app.setup;
 
 import app.auth.AuthService;
 import app.controller.CrudController;
+import app.mongo.MongoCharacterDrugRepository;
+import app.mongo.MongoCharacterQuestRepository;
+import app.mongo.MongoCharacterRepository;
+import app.mongo.MongoCollections;
 import app.mongo.MongoEntityRepository;
+import app.mongo.MongoGarageRepository;
+import app.mongo.MongoGangAffiliationRepository;
+import app.mongo.MongoHouseRepository;
 import app.mongo.MongoProfileRepository;
+import app.mongo.MongoVehicleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -58,17 +66,17 @@ public final class MongoAppPersistence implements AppPersistence {
         ObjectMapper objectMapper = app.mongo.MongoSupport.createObjectMapper();
         BackendRepositories repositories = new BackendRepositories(
                 new MongoProfileRepository(database, objectMapper),
-                new MongoEntityRepository<>(database, "audit_log", AuditLog.class, objectMapper),
-                new MongoEntityRepository<>(database, "drugs", Drug.class, objectMapper),
-                new MongoEntityRepository<>(database, "quests", Quest.class, objectMapper),
-                new MongoEntityRepository<>(database, "characters", GameCharacter.class, objectMapper),
-                new MongoEntityRepository<>(database, "houses", House.class, objectMapper),
-                new MongoEntityRepository<>(database, "garages", Garage.class, objectMapper),
-                new MongoEntityRepository<>(database, "vehicles", Vehicle.class, objectMapper),
-                new MongoEntityRepository<>(database, "character_drug", CharacterDrug.class, objectMapper),
-                new MongoEntityRepository<>(database, "character_quest", CharacterQuest.class, objectMapper),
-                new MongoEntityRepository<>(database, "gangs", Gang.class, objectMapper),
-                new MongoEntityRepository<>(database, "gang_affiliations", GangAffiliation.class, objectMapper)
+                new MongoEntityRepository<>(database, MongoCollections.AUDIT_LOG, AuditLog.class, objectMapper),
+                new MongoEntityRepository<>(database, MongoCollections.DRUGS, Drug.class, objectMapper),
+                new MongoEntityRepository<>(database, MongoCollections.QUESTS, Quest.class, objectMapper),
+                new MongoCharacterRepository(database),
+                new MongoHouseRepository(database),
+                new MongoGarageRepository(database),
+                new MongoVehicleRepository(database),
+                new MongoCharacterDrugRepository(database),
+                new MongoCharacterQuestRepository(database),
+                new MongoEntityRepository<>(database, MongoCollections.GANGS, Gang.class, objectMapper),
+                new MongoGangAffiliationRepository(database)
         );
         BackendControllers controllers = PersistenceSupport.controllers(repositories);
 
