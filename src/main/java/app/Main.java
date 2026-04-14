@@ -9,7 +9,7 @@ import app.setup.PersistenceBootstrap;
 public class Main {
     private static final int DEFAULT_PORT = 7070;
     private static final boolean RUN_POSTGRES_MIGRATION_ON_STARTUP = true;
-    private static final DatabaseType DATABASE_TYPE = DatabaseType.NEO4J;
+    private static final DatabaseType DATABASE_TYPE = DatabaseType.POSTGRES;
 
     public static void main(String[] args) {
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", String.valueOf(DEFAULT_PORT)));

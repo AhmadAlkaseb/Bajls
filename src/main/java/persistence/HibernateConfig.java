@@ -7,6 +7,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import persistence.entity.*;
+import persistence.entity.Transaction;
 
 import java.util.Properties;
 
@@ -110,6 +111,7 @@ public class HibernateConfig {
         configuration.addAnnotatedClass(CharacterQuest.class);
         configuration.addAnnotatedClass(Gang.class);
         configuration.addAnnotatedClass(GangAffiliation.class);
+        configuration.addAnnotatedClass(Transaction.class);
     }
 
     private static EntityManagerFactory getEntityManagerFactoryConfigDevelopment() {
