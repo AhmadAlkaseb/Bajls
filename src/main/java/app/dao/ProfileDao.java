@@ -5,13 +5,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import persistence.entity.Profile;
 
-public class ProfileDao extends AbstractJpaDao<Profile> implements ProfileEntityRepository {
+public class ProfileDao extends JpaDao<Profile> implements ProfileEntityRepository {
     public ProfileDao(EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory, Profile.class);
     }
 
     public LoginResponseDTO authenticate(String username, String password) {
-        try (EntityManager em = getEntityManagerFactory().createEntityManager()) {
+        try (EntityManager em = entityManagerFactory().createEntityManager()) {
             return em.createQuery(
                             "SELECT new app.dto.LoginResponseDTO(p.id, p.username, p.role) " +
                                     "FROM Profile p " +

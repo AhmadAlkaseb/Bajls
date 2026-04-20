@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
-import persistence.entity.AuditLog;
 import persistence.entity.CharacterDrug;
 import persistence.entity.CharacterQuest;
 import persistence.entity.Drug;
@@ -29,7 +28,6 @@ import persistence.entity.House;
 import persistence.entity.Profile;
 import persistence.entity.Quest;
 import persistence.entity.Vehicle;
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -50,7 +48,6 @@ public final class Neo4jAppPersistence implements AppPersistence {
     private final Driver driver;
     private final AuthService authService;
     private final CrudController<ProfileDTO, Profile> profileController;
-    private final CrudController<AuditLogDTO, AuditLog> auditLogController;
     private final CrudController<DrugDTO, Drug> drugController;
     private final CrudController<QuestDTO, Quest> questController;
     private final CrudController<GameCharacterDTO, GameCharacter> characterController;
@@ -73,40 +70,36 @@ public final class Neo4jAppPersistence implements AppPersistence {
 
         ObjectMapper objectMapper = Neo4jSupport.createObjectMapper();
         Neo4jSequenceRepository sequenceRepository = new Neo4jSequenceRepository(driver);
-        BackendRepositories repositories = new BackendRepositories(
-                new Neo4jProfileRepository(driver, sequenceRepository),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, AuditLog.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, Drug.class, objectMapper),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, Quest.class, objectMapper),
-                new Neo4jCharacterRepository(driver, sequenceRepository),
-                new Neo4jHouseRepository(driver, sequenceRepository),
-                new Neo4jGarageRepository(driver, sequenceRepository),
-                new Neo4jVehicleRepository(driver, sequenceRepository),
-                new Neo4jCharacterDrugRepository(driver, sequenceRepository),
-                new Neo4jCharacterQuestRepository(driver, sequenceRepository),
-                new Neo4jEntityRepository<>(driver, sequenceRepository, Gang.class, objectMapper),
-                new Neo4jGangAffiliationRepository(driver, sequenceRepository)
-        );
-        BackendControllers controllers = PersistenceSupport.controllers(repositories);
+        Neo4jProfileRepository profiles = new Neo4jProfileRepository(driver, sequenceRepository);
 
-        this.authService = controllers.authService();
-        this.profileController = controllers.profileController();
-        this.auditLogController = controllers.auditLogController();
-        this.drugController = controllers.drugController();
-        this.questController = controllers.questController();
-        this.characterController = controllers.characterController();
-        this.houseController = controllers.houseController();
-        this.garageController = controllers.garageController();
-        this.vehicleController = controllers.vehicleController();
-        this.characterDrugController = controllers.characterDrugController();
-        this.characterQuestController = controllers.characterQuestController();
-        this.gangController = controllers.gangController();
-        this.gangAffiliationController = controllers.gangAffiliationController();
+        this.authService = new AuthService(profiles);
+        this.profileController = PersistenceSupport.profileController(profiles);
+        this.drugController = PersistenceSupport.mappedCrudController(
+                new Neo4jEntityRepository<>(driver, sequenceRepository, Drug.class, objectMapper),
+                DtoMappers::toDrugDto,
+                Drug.class
+        );
+        this.questController = PersistenceSupport.mappedCrudController(
+                new Neo4jEntityRepository<>(driver, sequenceRepository, Quest.class, objectMapper),
+                DtoMappers::toQuestDto,
+                Quest.class
+        );
+        this.characterController = PersistenceSupport.mappedCrudController(new Neo4jCharacterRepository(driver, sequenceRepository), DtoMappers::toGameCharacterDto, GameCharacter.class);
+        this.houseController = PersistenceSupport.mappedCrudController(new Neo4jHouseRepository(driver, sequenceRepository), DtoMappers::toHouseDto, House.class);
+        this.garageController = PersistenceSupport.mappedCrudController(new Neo4jGarageRepository(driver, sequenceRepository), DtoMappers::toGarageDto, Garage.class);
+        this.vehicleController = PersistenceSupport.mappedCrudController(new Neo4jVehicleRepository(driver, sequenceRepository), DtoMappers::toVehicleDto, Vehicle.class);
+        this.characterDrugController = PersistenceSupport.mappedCrudController(new Neo4jCharacterDrugRepository(driver, sequenceRepository), DtoMappers::toCharacterDrugDto, CharacterDrug.class);
+        this.characterQuestController = PersistenceSupport.mappedCrudController(new Neo4jCharacterQuestRepository(driver, sequenceRepository), DtoMappers::toCharacterQuestDto, CharacterQuest.class);
+        this.gangController = PersistenceSupport.mappedCrudController(
+                new Neo4jEntityRepository<>(driver, sequenceRepository, Gang.class, objectMapper),
+                DtoMappers::toGangDto,
+                Gang.class
+        );
+        this.gangAffiliationController = PersistenceSupport.mappedCrudController(new Neo4jGangAffiliationRepository(driver, sequenceRepository), DtoMappers::toGangAffiliationDto, GangAffiliation.class);
     }
 
     @Override public AuthService authService() { return authService; }
     @Override public CrudController<ProfileDTO, Profile> profileController() { return profileController; }
-    @Override public CrudController<AuditLogDTO, AuditLog> auditLogController() { return auditLogController; }
     @Override public CrudController<DrugDTO, Drug> drugController() { return drugController; }
     @Override public CrudController<QuestDTO, Quest> questController() { return questController; }
     @Override public CrudController<GameCharacterDTO, GameCharacter> characterController() { return characterController; }

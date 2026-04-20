@@ -74,9 +74,12 @@ public class Neo4jHouseRepository implements EntityRepository<House> {
                 tx.run("""
                         MERGE (h:House {id: $id})
                         SET h.amountRooms = $amountRooms,
-                            h.amountBathrooms = $amountBathrooms
+                            h.amountBathrooms = $amountBathrooms,
+                            h.name = $name,
+                            h.displayName = $name
                         """, Neo4jSupport.props(
                         "id", id,
+                        "name", "House " + id,
                         "amountRooms", entity.getAmountRooms(),
                         "amountBathrooms", entity.getAmountBathrooms()
                 ));

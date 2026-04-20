@@ -3,7 +3,6 @@ package app.setup;
 import app.controller.CrudController;
 import app.dao.JpaDao;
 import app.dao.ProfileDao;
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -16,7 +15,6 @@ import app.dto.ProfileDTO;
 import app.dto.QuestDTO;
 import app.dto.VehicleDTO;
 import jakarta.persistence.EntityManagerFactory;
-import persistence.entity.AuditLog;
 import persistence.entity.CharacterDrug;
 import persistence.entity.CharacterQuest;
 import persistence.entity.Drug;
@@ -40,15 +38,6 @@ public final class RouteControllers {
                 RouteQueries.PROFILE_QUERY,
                 new ProfileDao(entityManagerFactory),
                 Profile.class
-        );
-    }
-
-    public static CrudController<AuditLogDTO, AuditLog> auditLog(EntityManagerFactory entityManagerFactory) {
-        return RouteSupport.jpaCrudController(
-                entityManagerFactory,
-                RouteQueries.AUDIT_LOG_QUERY,
-                new JpaDao<>(entityManagerFactory, AuditLog.class),
-                AuditLog.class
         );
     }
 

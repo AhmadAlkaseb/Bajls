@@ -22,13 +22,18 @@ cph-la356@stud.ek.dk
 
 ## Setup
 
-Opret databasen `bajls` og tilføj disse miljøvariabler:
+Opret databasen `bajls`. Appen bruger disse lokale standardværdier, hvis
+miljøvariablerne ikke er sat:
 
 - `DB_URL=jdbc:postgresql://localhost:5432/bajls`
 - `DB_USER=postgres`
 - `DB_PASSWORD=postgres`
 - `DB_NAME=bajls`
 - `DB_URL=jdbc:postgresql://localhost:5432/bajls;DB_USER=postgres;DB_PASSWORD=postgres;DB_NAME=bajls`
+
+Vælg port og database direkte i `src/main/java/app/Main.java`.
+Når `DATABASE_TYPE` er `MONGODB` eller `NEO4J`, migrerer appen data fra
+PostgreSQL ved startup, hvis `RUN_POSTGRES_MIGRATION_ON_STARTUP` er `true`.
 
 ## Docker
 
@@ -71,4 +76,13 @@ Kør i Query Tool:
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 \i sqls/daily_loyalty_bonus.sql
+```
+
+## Klassediagram
+
+Projektets overordnede klassediagram ligger her:
+
+```text
+report/images/uml/class-diagram.puml
+report/images/uml/class-diagram.png
 ```

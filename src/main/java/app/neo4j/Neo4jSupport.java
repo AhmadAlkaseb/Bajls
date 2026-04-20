@@ -5,14 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Relationship;
 
 import java.math.BigDecimal;
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.Map;
 
 public final class Neo4jSupport {
@@ -28,26 +26,8 @@ public final class Neo4jSupport {
                 .build();
     }
 
-    public static <T> T toEntity(Value jsonValue, Class<T> type, ObjectMapper objectMapper) {
-        if (jsonValue == null || jsonValue.isNull()) {
-            return null;
-        }
-        return objectMapper.convertValue(objectMapper.convertValue(parseJson(jsonValue.asString(), objectMapper), Object.class), type);
-    }
-
-    public static <T> T toEntity(Record record, Class<T> type, ObjectMapper objectMapper) {
-        if (record == null) {
-            return null;
-        }
-        return toEntity(record.get("payload"), type, objectMapper);
-    }
-
-    public static String toJson(Object entity, ObjectMapper objectMapper) {
-        try {
-            return objectMapper.writeValueAsString(entity);
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to serialize entity", e);
-        }
+    public static <T> T toEntity(Node node, Class<T> type, ObjectMapper objectMapper) {
+        return objectMapper.convertValue(node.asMap(), type);
     }
 
     public static Long ensureEntityId(Neo4jSequenceRepository sequenceRepository, String sequenceName, Object entity) {
@@ -63,12 +43,6 @@ public final class Neo4jSupport {
 
     public static String collectionLabel(Class<?> entityClass) {
         return entityClass.getSimpleName();
-    }
-
-    public static <T> List<T> toEntities(List<Record> records, Class<T> type, ObjectMapper objectMapper) {
-        return records.stream()
-                .map(record -> toEntity(record, type, objectMapper))
-                .toList();
     }
 
     public static Long longValue(Node node, String key) {
@@ -152,14 +126,6 @@ public final class Neo4jSupport {
             return BigDecimal.valueOf(number.doubleValue());
         }
         return new BigDecimal(String.valueOf(raw));
-    }
-
-    private static Object parseJson(String json, ObjectMapper objectMapper) {
-        try {
-            return objectMapper.readValue(json, Object.class);
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to deserialize entity", e);
-        }
     }
 
     private static Long readEntityId(Object entity) {

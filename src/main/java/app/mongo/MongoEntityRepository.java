@@ -1,8 +1,5 @@
 package app.mongo;
 
-import app.audit.AuditAction;
-import app.audit.AuditContext;
-import app.audit.AuditSnapshotUtil;
 import app.dao.EntityRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
@@ -10,9 +7,10 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import org.bson.Document;
-import persistence.entity.AuditLog;
+import persistence.entity.Drug;
+import persistence.entity.Gang;
+import persistence.entity.Quest;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class MongoEntityRepository<T> implements EntityRepository<T> {
@@ -41,21 +39,18 @@ public class MongoEntityRepository<T> implements EntityRepository<T> {
     @Override
     public T save(T entity) {
         MongoSupport.ensureEntityId(database, collection.getNamespace().getCollectionName(), entity);
-        collection.insertOne(MongoSupport.toDocument(entity, objectMapper));
-        recordAuditLog(AuditAction.CREATE, null, AuditSnapshotUtil.toJson(entity), entity);
+        collection.insertOne(toDocument(entity));
         return entity;
     }
 
     @Override
     public T update(T entity) {
         Long id = MongoSupport.ensureEntityId(database, collection.getNamespace().getCollectionName(), entity);
-        T previousEntity = findById(id);
         collection.replaceOne(
                 Filters.eq("id", id),
-                MongoSupport.toDocument(entity, objectMapper),
+                toDocument(entity),
                 new ReplaceOptions().upsert(true)
         );
-        recordAuditLog(AuditAction.UPDATE, AuditSnapshotUtil.toJson(previousEntity), AuditSnapshotUtil.toJson(entity), entity);
         return entity;
     }
 
@@ -66,35 +61,20 @@ public class MongoEntityRepository<T> implements EntityRepository<T> {
             return;
         }
 
-        recordAuditLog(AuditAction.DELETE, AuditSnapshotUtil.toJson(entity), null, entity);
         collection.deleteOne(Filters.eq("id", id));
     }
 
-    private void recordAuditLog(AuditAction action, String oldValues, String newValues, T targetEntity) {
-        if (AuditLog.class.equals(entityClass)) {
-            return;
+    private Document toDocument(T entity) {
+        Document document = MongoSupport.toDocument(entity, objectMapper);
+        if (Drug.class.equals(entityClass)) {
+            document.remove("characterDrugs");
         }
-
-        AuditContext.AuditMetadata metadata = AuditContext.getCurrent();
-        if (metadata == null) {
-            return;
+        if (Quest.class.equals(entityClass)) {
+            document.remove("characterQuests");
         }
-
-        AuditLog auditLog = AuditLog.builder()
-                .id(MongoSupport.ensureEntityId(database, "audit_log", new AuditLog()))
-                .actorProfileId(metadata.getActorProfileId())
-                .actorUsername(metadata.getActorUsername())
-                .actorRole(metadata.getActorRole())
-                .action(action.name())
-                .entityName(entityClass.getSimpleName())
-                .entityId(AuditSnapshotUtil.getEntityId(targetEntity))
-                .requestMethod(metadata.getRequestMethod())
-                .requestPath(metadata.getRequestPath())
-                .oldValues(oldValues)
-                .newValues(newValues)
-                .changedAt(LocalDateTime.now())
-                .build();
-
-        database.getCollection("audit_log").insertOne(MongoSupport.toDocument(auditLog, objectMapper));
+        if (Gang.class.equals(entityClass)) {
+            document.remove("affiliations");
+        }
+        return document;
     }
 }

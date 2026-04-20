@@ -1,6 +1,4 @@
 package app.auth;
-
-import app.audit.AuditContext;
 import app.dao.ProfileRepository;
 import app.dto.LoginRequestDTO;
 import app.dto.LoginResponseDTO;
@@ -120,7 +118,6 @@ public class AuthService {
     }
 
     private void rememberAuthenticatedUser(Context ctx, LoginResponseDTO user) {
-        AuditContext.setAuthenticatedUser(user);
         ctx.attribute(CURRENT_USER, user);
     }
 

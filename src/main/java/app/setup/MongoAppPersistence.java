@@ -16,7 +16,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import persistence.entity.AuditLog;
 import persistence.entity.CharacterDrug;
 import persistence.entity.CharacterQuest;
 import persistence.entity.Drug;
@@ -28,7 +27,6 @@ import persistence.entity.House;
 import persistence.entity.Profile;
 import persistence.entity.Quest;
 import persistence.entity.Vehicle;
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -48,7 +46,6 @@ public final class MongoAppPersistence implements AppPersistence {
     private final MongoClient mongoClient;
     private final AuthService authService;
     private final CrudController<ProfileDTO, Profile> profileController;
-    private final CrudController<AuditLogDTO, AuditLog> auditLogController;
     private final CrudController<DrugDTO, Drug> drugController;
     private final CrudController<QuestDTO, Quest> questController;
     private final CrudController<GameCharacterDTO, GameCharacter> characterController;
@@ -64,40 +61,36 @@ public final class MongoAppPersistence implements AppPersistence {
         this.mongoClient = MongoClients.create(System.getenv().getOrDefault("MONGO_URL", DEFAULT_MONGO_URL));
         MongoDatabase database = mongoClient.getDatabase(System.getenv().getOrDefault("MONGO_DB_NAME", DEFAULT_DATABASE_NAME));
         ObjectMapper objectMapper = app.mongo.MongoSupport.createObjectMapper();
-        BackendRepositories repositories = new BackendRepositories(
-                new MongoProfileRepository(database, objectMapper),
-                new MongoEntityRepository<>(database, MongoCollections.AUDIT_LOG, AuditLog.class, objectMapper),
-                new MongoEntityRepository<>(database, MongoCollections.DRUGS, Drug.class, objectMapper),
-                new MongoEntityRepository<>(database, MongoCollections.QUESTS, Quest.class, objectMapper),
-                new MongoCharacterRepository(database),
-                new MongoHouseRepository(database),
-                new MongoGarageRepository(database),
-                new MongoVehicleRepository(database),
-                new MongoCharacterDrugRepository(database),
-                new MongoCharacterQuestRepository(database),
-                new MongoEntityRepository<>(database, MongoCollections.GANGS, Gang.class, objectMapper),
-                new MongoGangAffiliationRepository(database)
-        );
-        BackendControllers controllers = PersistenceSupport.controllers(repositories);
+        MongoProfileRepository profiles = new MongoProfileRepository(database, objectMapper);
 
-        this.authService = controllers.authService();
-        this.profileController = controllers.profileController();
-        this.auditLogController = controllers.auditLogController();
-        this.drugController = controllers.drugController();
-        this.questController = controllers.questController();
-        this.characterController = controllers.characterController();
-        this.houseController = controllers.houseController();
-        this.garageController = controllers.garageController();
-        this.vehicleController = controllers.vehicleController();
-        this.characterDrugController = controllers.characterDrugController();
-        this.characterQuestController = controllers.characterQuestController();
-        this.gangController = controllers.gangController();
-        this.gangAffiliationController = controllers.gangAffiliationController();
+        this.authService = new AuthService(profiles);
+        this.profileController = PersistenceSupport.profileController(profiles);
+        this.drugController = PersistenceSupport.mappedCrudController(
+                new MongoEntityRepository<>(database, MongoCollections.DRUGS, Drug.class, objectMapper),
+                DtoMappers::toDrugDto,
+                Drug.class
+        );
+        this.questController = PersistenceSupport.mappedCrudController(
+                new MongoEntityRepository<>(database, MongoCollections.QUESTS, Quest.class, objectMapper),
+                DtoMappers::toQuestDto,
+                Quest.class
+        );
+        this.characterController = PersistenceSupport.mappedCrudController(new MongoCharacterRepository(database), DtoMappers::toGameCharacterDto, GameCharacter.class);
+        this.houseController = PersistenceSupport.mappedCrudController(new MongoHouseRepository(database), DtoMappers::toHouseDto, House.class);
+        this.garageController = PersistenceSupport.mappedCrudController(new MongoGarageRepository(database), DtoMappers::toGarageDto, Garage.class);
+        this.vehicleController = PersistenceSupport.mappedCrudController(new MongoVehicleRepository(database), DtoMappers::toVehicleDto, Vehicle.class);
+        this.characterDrugController = PersistenceSupport.mappedCrudController(new MongoCharacterDrugRepository(database), DtoMappers::toCharacterDrugDto, CharacterDrug.class);
+        this.characterQuestController = PersistenceSupport.mappedCrudController(new MongoCharacterQuestRepository(database), DtoMappers::toCharacterQuestDto, CharacterQuest.class);
+        this.gangController = PersistenceSupport.mappedCrudController(
+                new MongoEntityRepository<>(database, MongoCollections.GANGS, Gang.class, objectMapper),
+                DtoMappers::toGangDto,
+                Gang.class
+        );
+        this.gangAffiliationController = PersistenceSupport.mappedCrudController(new MongoGangAffiliationRepository(database), DtoMappers::toGangAffiliationDto, GangAffiliation.class);
     }
 
     @Override public AuthService authService() { return authService; }
     @Override public CrudController<ProfileDTO, Profile> profileController() { return profileController; }
-    @Override public CrudController<AuditLogDTO, AuditLog> auditLogController() { return auditLogController; }
     @Override public CrudController<DrugDTO, Drug> drugController() { return drugController; }
     @Override public CrudController<QuestDTO, Quest> questController() { return questController; }
     @Override public CrudController<GameCharacterDTO, GameCharacter> characterController() { return characterController; }

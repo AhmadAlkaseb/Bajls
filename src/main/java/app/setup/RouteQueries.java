@@ -1,6 +1,5 @@
 package app.setup;
 
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -18,12 +17,6 @@ public final class RouteQueries {
             "SELECT new app.dto.ProfileDTO(p.id, p.firstName, p.lastName, p.email, p.username, p.role) FROM Profile p",
             "SELECT new app.dto.ProfileDTO(p.id, p.firstName, p.lastName, p.email, p.username, p.role) FROM Profile p WHERE p.id = :id",
             ProfileDTO.class
-    );
-
-    public static final ReadQuery<AuditLogDTO> AUDIT_LOG_QUERY = new ReadQuery<>(
-            "SELECT new app.dto.AuditLogDTO(a.id, a.actorProfileId, a.actorUsername, a.actorRole, a.action, a.entityName, a.entityId, a.requestMethod, a.requestPath, a.oldValues, a.newValues, a.changedAt) FROM AuditLog a ORDER BY a.changedAt DESC",
-            "SELECT new app.dto.AuditLogDTO(a.id, a.actorProfileId, a.actorUsername, a.actorRole, a.action, a.entityName, a.entityId, a.requestMethod, a.requestPath, a.oldValues, a.newValues, a.changedAt) FROM AuditLog a WHERE a.id = :id",
-            AuditLogDTO.class
     );
 
     public static final ReadQuery<DrugDTO> DRUG_QUERY = new ReadQuery<>(

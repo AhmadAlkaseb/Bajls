@@ -12,6 +12,9 @@ import java.util.Properties;
 
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class HibernateConfig {
+    private static final String DEFAULT_DB_URL = "jdbc:postgresql://localhost:5432/bajls";
+    private static final String DEFAULT_DB_USER = "postgres";
+    private static final String DEFAULT_DB_PASSWORD = "postgres";
 
     private static EntityManagerFactory entityManagerFactory;
 
@@ -43,9 +46,9 @@ public class HibernateConfig {
 
             Properties props = new Properties();
 
-            String dbUrl = requireEnv("DB_URL");
-            String dbUser = requireEnv("DB_USER");
-            String dbPassword = requireEnv("DB_PASSWORD");
+            String dbUrl = envOrDefault("DB_URL", DEFAULT_DB_URL);
+            String dbUser = envOrDefault("DB_USER", DEFAULT_DB_USER);
+            String dbPassword = envOrDefault("DB_PASSWORD", DEFAULT_DB_PASSWORD);
 
             props.put("hibernate.connection.url", dbUrl);
             props.put("hibernate.connection.username", dbUser);
@@ -99,7 +102,6 @@ public class HibernateConfig {
 
     private static void getAnnotationConfiguration(Configuration configuration) {
         configuration.addAnnotatedClass(Profile.class);
-        configuration.addAnnotatedClass(AuditLog.class);
         configuration.addAnnotatedClass(GameCharacter.class);
         configuration.addAnnotatedClass(House.class);
         configuration.addAnnotatedClass(Garage.class);
@@ -129,10 +131,10 @@ public class HibernateConfig {
         return getEntityManagerFactoryConfigDevelopment();
     }
 
-    private static String requireEnv(String name) {
+    private static String envOrDefault(String name, String defaultValue) {
         String value = System.getenv(name);
         if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Missing required environment variable: " + name);
+            return defaultValue;
         }
         return value;
     }

@@ -1,12 +1,10 @@
 package app.setup;
 
-import app.audit.AuditSchemaInitializer;
 import app.auth.AuthService;
 import app.controller.CrudController;
 import app.dao.ProfileDao;
 import jakarta.persistence.EntityManagerFactory;
 import persistence.HibernateConfig;
-import persistence.entity.AuditLog;
 import persistence.entity.CharacterDrug;
 import persistence.entity.CharacterQuest;
 import persistence.entity.Drug;
@@ -18,7 +16,6 @@ import persistence.entity.House;
 import persistence.entity.Profile;
 import persistence.entity.Quest;
 import persistence.entity.Vehicle;
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -37,7 +34,6 @@ public final class JpaAppPersistence implements AppPersistence {
 
     public JpaAppPersistence(boolean isTest) {
         this.entityManagerFactory = HibernateConfig.getEntityManagerFactoryConfig(isTest);
-        AuditSchemaInitializer.initialize(entityManagerFactory);
         this.authService = new AuthService(new ProfileDao(entityManagerFactory));
     }
 
@@ -49,11 +45,6 @@ public final class JpaAppPersistence implements AppPersistence {
     @Override
     public CrudController<ProfileDTO, Profile> profileController() {
         return RouteControllers.profile(entityManagerFactory);
-    }
-
-    @Override
-    public CrudController<AuditLogDTO, AuditLog> auditLogController() {
-        return RouteControllers.auditLog(entityManagerFactory);
     }
 
     @Override

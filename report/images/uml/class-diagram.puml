@@ -1,0 +1,96 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package app {
+  class Main
+  class ApplicationConfig
+}
+
+package "app.route" {
+  class AppRoutes
+  class AuthRoutes
+  class ProfileRoutes
+  class AdminRoutes
+  class GameplayRoutes
+}
+
+package "app.controller" {
+  class CrudController
+}
+
+package "app.auth" {
+  class AuthService
+}
+
+package "app.setup" {
+  interface AppPersistence
+  class PersistenceBootstrap
+  class JpaAppPersistence
+  class MongoAppPersistence
+  class Neo4jAppPersistence
+  enum DatabaseType
+}
+
+package "app.migration" {
+  class PostgresMigration
+  class PostgresSnapshotLoader
+  class MongoMigration
+  class Neo4jMigration
+  class MigrationSnapshot
+}
+
+package "app.dao" {
+  interface ReadRepository
+  interface WriteRepository
+  interface EntityRepository
+  interface ProfileRepository
+  class JpaDao
+  class JpaReadDao
+  class ProfileDao
+}
+
+package "persistence.entity" {
+  class Profile
+  class GameCharacter
+  class House
+  class Garage
+  class Vehicle
+  class Drug
+  class Quest
+  class Gang
+  class CharacterDrug
+  class CharacterQuest
+  class GangAffiliation
+}
+
+Main --> PersistenceBootstrap
+Main --> ApplicationConfig
+Main --> PostgresMigration
+PostgresMigration --> PostgresSnapshotLoader
+PostgresMigration --> MongoMigration
+PostgresMigration --> Neo4jMigration
+PostgresSnapshotLoader --> MigrationSnapshot
+PersistenceBootstrap --> AppPersistence
+AppPersistence <|.. JpaAppPersistence
+AppPersistence <|.. MongoAppPersistence
+AppPersistence <|.. Neo4jAppPersistence
+AppPersistence --> CrudController
+AuthService --> ProfileRepository
+ReadRepository <|-- EntityRepository
+WriteRepository <|-- EntityRepository
+ProfileRepository <|-- EntityRepository
+EntityRepository <|.. JpaDao
+JpaDao <|-- ProfileDao
+ProfileRepository <|.. ProfileDao
+Profile "1" o-- "0..*" GameCharacter
+GameCharacter "1" o-- "1" House
+GameCharacter "1" o-- "1" Garage
+Garage "1" o-- "0..*" Vehicle
+GameCharacter "1" o-- "0..*" CharacterDrug
+Drug "1" o-- "0..*" CharacterDrug
+GameCharacter "1" o-- "0..*" CharacterQuest
+Quest "1" o-- "0..*" CharacterQuest
+GameCharacter "1" o-- "0..*" GangAffiliation
+Gang "1" o-- "0..*" GangAffiliation
+@enduml

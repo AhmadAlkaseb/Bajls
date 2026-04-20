@@ -14,7 +14,6 @@ public class AdminRoutes {
         return () -> {
             RouteSupport.addAdminCrudRoutes("drugs", authService, persistence.drugController());
             RouteSupport.addAdminCrudRoutes("quests", authService, persistence.questController());
-            RouteSupport.addAdminReadRoutes("audit-logs", authService, persistence.auditLogController());
         };
     }
 }

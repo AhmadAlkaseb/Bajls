@@ -1,16 +1,11 @@
 package app.neo4j;
 
-import app.audit.AuditAction;
-import app.audit.AuditContext;
-import app.audit.AuditSnapshotUtil;
 import app.dao.EntityRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
-import persistence.entity.AuditLog;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -33,9 +28,11 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
     public List<T> findAll() {
         try (Session session = driver.session()) {
             List<Record> records = session.executeRead(tx -> tx.run(
-                    "MATCH (n:" + label + ") RETURN n.payload AS payload ORDER BY n.id"
+                    "MATCH (n:" + label + ") RETURN n ORDER BY n.id"
             ).list());
-            return Neo4jSupport.toEntities(records, entityClass, objectMapper);
+            return records.stream()
+                    .map(record -> Neo4jSupport.toEntity(record.get("n").asNode(), entityClass, objectMapper))
+                    .toList();
         }
     }
 
@@ -43,11 +40,11 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
     public T findById(Long id) {
         try (Session session = driver.session()) {
             java.util.List<Record> records = session.executeRead(tx -> tx.run(
-                    "MATCH (n:" + label + " {id: $id}) RETURN n.payload AS payload",
+                    "MATCH (n:" + label + " {id: $id}) RETURN n",
                     Map.of("id", id)
             ).list());
             Record record = records.isEmpty() ? null : records.get(0);
-            return Neo4jSupport.toEntity(record, entityClass, objectMapper);
+            return record == null ? null : Neo4jSupport.toEntity(record.get("n").asNode(), entityClass, objectMapper);
         }
     }
 
@@ -55,16 +52,13 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
     public T save(T entity) {
         Long id = Neo4jSupport.ensureEntityId(sequenceRepository, label, entity);
         writeNode(id, entity);
-        recordAuditLog(AuditAction.CREATE, null, AuditSnapshotUtil.toJson(entity), entity);
         return entity;
     }
 
     @Override
     public T update(T entity) {
         Long id = Neo4jSupport.ensureEntityId(sequenceRepository, label, entity);
-        T previousEntity = findById(id);
         writeNode(id, entity);
-        recordAuditLog(AuditAction.UPDATE, AuditSnapshotUtil.toJson(previousEntity), AuditSnapshotUtil.toJson(entity), entity);
         return entity;
     }
 
@@ -75,7 +69,6 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
             return;
         }
 
-        recordAuditLog(AuditAction.DELETE, AuditSnapshotUtil.toJson(entity), null, entity);
         try (Session session = driver.session()) {
             session.executeWrite(tx -> {
                 tx.run("MATCH (n:" + label + " {id: $id}) DETACH DELETE n", Map.of("id", id));
@@ -85,49 +78,11 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
     }
 
     private void writeNode(Long id, T entity) {
-        String payload = Neo4jSupport.toJson(entity, objectMapper);
         try (Session session = driver.session()) {
             session.executeWrite(tx -> {
                 tx.run(
-                        "MERGE (n:" + label + " {id: $id}) SET n.payload = $payload",
-                        Map.of("id", id, "payload", payload)
-                );
-                return null;
-            });
-        }
-    }
-
-    private void recordAuditLog(AuditAction action, String oldValues, String newValues, T targetEntity) {
-        if (AuditLog.class.equals(entityClass)) {
-            return;
-        }
-
-        AuditContext.AuditMetadata metadata = AuditContext.getCurrent();
-        if (metadata == null) {
-            return;
-        }
-
-        AuditLog auditLog = AuditLog.builder()
-                .id(sequenceRepository.nextValue("AuditLog"))
-                .actorProfileId(metadata.getActorProfileId())
-                .actorUsername(metadata.getActorUsername())
-                .actorRole(metadata.getActorRole())
-                .action(action.name())
-                .entityName(entityClass.getSimpleName())
-                .entityId(AuditSnapshotUtil.getEntityId(targetEntity))
-                .requestMethod(metadata.getRequestMethod())
-                .requestPath(metadata.getRequestPath())
-                .oldValues(oldValues)
-                .newValues(newValues)
-                .changedAt(LocalDateTime.now())
-                .build();
-
-        String payload = Neo4jSupport.toJson(auditLog, objectMapper);
-        try (Session session = driver.session()) {
-            session.executeWrite(tx -> {
-                tx.run(
-                        "MERGE (n:AuditLog {id: $id}) SET n.payload = $payload",
-                        Map.of("id", auditLog.getId(), "payload", payload)
+                        "MERGE (n:" + label + " {id: $id}) SET n = $props",
+                        Map.of("id", id, "props", Neo4jNodeProperties.generic(id, entity))
                 );
                 return null;
             });

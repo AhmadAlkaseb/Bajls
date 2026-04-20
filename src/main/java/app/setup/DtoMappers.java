@@ -1,6 +1,5 @@
 package app.setup;
 
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -12,7 +11,6 @@ import app.dto.HouseDTO;
 import app.dto.ProfileDTO;
 import app.dto.QuestDTO;
 import app.dto.VehicleDTO;
-import persistence.entity.AuditLog;
 import persistence.entity.CharacterDrug;
 import persistence.entity.CharacterQuest;
 import persistence.entity.Drug;
@@ -38,23 +36,6 @@ public final class DtoMappers {
                 profile.getEmail(),
                 profile.getUsername(),
                 profile.getRole()
-        );
-    }
-
-    public static AuditLogDTO toAuditLogDto(AuditLog auditLog) {
-        return new AuditLogDTO(
-                auditLog.getId(),
-                auditLog.getActorProfileId(),
-                auditLog.getActorUsername(),
-                auditLog.getActorRole(),
-                auditLog.getAction(),
-                auditLog.getEntityName(),
-                auditLog.getEntityId(),
-                auditLog.getRequestMethod(),
-                auditLog.getRequestPath(),
-                auditLog.getOldValues(),
-                auditLog.getNewValues(),
-                auditLog.getChangedAt()
         );
     }
 
@@ -127,9 +108,6 @@ public final class DtoMappers {
     }
 
     private static Long nestedId(Object entity) {
-        if (entity == null) {
-            return null;
-        }
-        return app.audit.AuditSnapshotUtil.getEntityId(entity);
+        return EntityIds.get(entity);
     }
 }

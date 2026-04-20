@@ -74,6 +74,8 @@ public class Neo4jVehicleRepository implements EntityRepository<Vehicle> {
                 tx.run("""
                         MERGE (v:Vehicle {id: $id})
                         SET v.model = $model,
+                            v.name = $model,
+                            v.displayName = $model,
                             v.type = $type,
                             v.plateNumber = $plateNumber
                         """, Neo4jSupport.props(

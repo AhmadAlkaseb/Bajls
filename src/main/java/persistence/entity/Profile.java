@@ -14,7 +14,7 @@ import java.util.List;
                 @Index(name = "idx_profiles_email", columnList = "email"),
                 @Index(name = "idx_profiles_username", columnList = "username")
         })
-@JsonIgnoreProperties({"characters", "password"})
+@JsonIgnoreProperties(value = {"characters", "password"}, allowSetters = true)
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Profile {

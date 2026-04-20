@@ -20,14 +20,6 @@ public final class RouteSupport {
     private RouteSupport() {
     }
 
-    public static <R, W> CrudController<R, W> crudController(
-            ReadRepository<R> readRepository,
-            WriteRepository<W> writeRepository,
-            Class<W> entityClass
-    ) {
-        return new CrudController<>(readRepository, writeRepository, entityClass);
-    }
-
     public static <R, W> CrudController<R, W> jpaCrudController(
             EntityManagerFactory entityManagerFactory,
             ReadQuery<R> query,
@@ -40,7 +32,7 @@ public final class RouteSupport {
                 query.getByIdJpql(),
                 query.getDtoClass()
         );
-        return crudController(readRepository, writeRepository, entityClass);
+        return new CrudController<>(readRepository, writeRepository, entityClass);
     }
 
     public static <R, W> void addAuthenticatedCrudRoutes(
@@ -62,18 +54,6 @@ public final class RouteSupport {
         path(resourcePath, () -> {
             before(ctx -> authService.requireRole(ctx, ProfileRole.ADMIN));
             addCrudHandlers(controller);
-        });
-    }
-
-    public static <R, W> void addAdminReadRoutes(
-            String resourcePath,
-            AuthService authService,
-            CrudController<R, W> controller
-    ) {
-        path(resourcePath, () -> {
-            before(ctx -> authService.requireRole(ctx, ProfileRole.ADMIN));
-            get(ctx -> controller.getAll(ctx));
-            get("{id}", ctx -> controller.getById(ctx));
         });
     }
 

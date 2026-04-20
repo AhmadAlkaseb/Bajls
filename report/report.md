@@ -1,4 +1,4 @@
----
+﻿---
 header-includes:
   - '\usepackage{fancyhdr}'
   - '\usepackage{tcolorbox}'
@@ -23,13 +23,14 @@ header-includes:
 \begin{center}
 \textbf{RPG Game Database Design}
 
-Version 1
+Version 2
+
+Group: Bajls
 
 Ahmad Abdel Razak Hussein Alkaseb\\
 Benjamin Sebastian Barrales Hernandez\\
 Jeppe Ronning Koch\\
 Laith Abdel Razak Hussein Alkaseb\\
-Sadek Alsukafi
 \end{center}
 
 ---
@@ -38,10 +39,9 @@ Sadek Alsukafi
 | **Course**                                  | Database            |
 | ------------------------------------------- | ------------------- |
 | **Project**                                 | RPG Game by Bajls   |
-| **Date of delivery**                        | 9/3/2026 |
-| **List of figures**                         | 9 |
-| **List of appendices**                      | 1 |
-| **Number of characters (including spaces)** | 80304 |
+| **Group number**                            | Bajls |
+| **Date of delivery**                        | 20/4/2026 |
+| **List of figures**                         | Generated in PDF |
 
 \vspace{0.5cm}
 \begin{center}
@@ -55,6 +55,11 @@ Sadek Alsukafi
 \thispagestyle{empty}
 
 \newpage
+
+\listoffigures
+
+\newpage
+
 
 \tableofcontents
 
@@ -102,45 +107,58 @@ administrators who manage the system.
 
 ## 1.1. System overview and cloud architecture
 
-This project is organized as a Java application with a PostgreSQL
-database. The same logical architecture is used in cloud deployment and
-in local development, while runtime setup differs by environment.
+This project is organized as a Java REST API with three database
+implementations: PostgreSQL, MongoDB, and Neo4j. PostgreSQL is the
+relational source database, and the migration application can move the
+same domain data into MongoDB and Neo4j.
 
 ### Architecture diagram (cloud deployment)
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{images/uml/cloud-architecture.png}
+\caption{Cloud deployment architecture}
+\end{figure}
 
 ```text
 [Client / Browser / API Consumer]
                 |
                 v
        [Java Application Service]
-         (REST + business logic)
-                |
-                v
-         [PostgreSQL Database]
-                |
-                v
-     [Persistent Cloud Volume/Storage]
+       (REST API + migration)
+          |        |        |
+          v        v        v
+   [PostgreSQL] [MongoDB] [Neo4j]
+          |        |        |
+          v        v        v
+     [Persistent Cloud Storage]
 ```
 
-In cloud environments, the application service and database run as
-separate managed workloads. The database persists data on dedicated
-storage, while the application scales independently.
+In cloud environments, the application service and databases run as
+separate managed workloads. Each database persists data on dedicated
+storage, while the Java application contains the REST API and migration
+logic.
 
 ### Local development deployment (`docker-compose`)
 
 The local setup uses `docker-compose.yml` in the project root to start
 application and database services in one command.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{images/uml/local-docker-deployment.png}
+\caption{Local development deployment using docker-compose}
+\end{figure}
+
 ```text
 docker-compose.yml
     |
-    +-- service: app (Java 17 + Maven/Hibernate)
-    |       |
-    |       +-- depends_on: db
+    +-- db (PostgreSQL source database)
+    +-- mongodb (document database target)
+    +-- neo4j (graph database target)
+    +-- pgadmin (PostgreSQL administration UI)
     |
-    +-- service: db (PostgreSQL)
-            |
-            +-- volume: local persistent data
+    +-- Java app runs from IDE/Maven and connects to the services
 ```
 
 Typical local startup command:
@@ -153,11 +171,23 @@ docker compose up -d
 
 ## 1.2. Explanation of choices for databases and programming languages, and other tools
 
-The project uses **PostgreSQL**[^postgres] as the database system because the
-domain is strongly relational and depends on strict integrity rules.
-PostgreSQL gives stable transactional behavior, strong foreign-key
-enforcement, and good support for normalized schemas with junction tables
-such as `gang_affiliations`.
+The project uses **PostgreSQL**[^postgres], **MongoDB**[^mongodb], and
+**Neo4j**[^neo4j] to compare the same RPG domain across relational,
+document, and graph database paradigms.
+
+PostgreSQL is used because the domain is strongly relational and depends
+on strict integrity rules. It gives stable transactional behavior,
+foreign-key enforcement, and support for normalized schemas with junction
+tables such as `gang_affiliations`.
+
+MongoDB is used because profile-centered reads can be represented as one
+document containing embedded characters, houses, garages, vehicles, and
+relationship metadata. This demonstrates denormalized aggregate
+modeling.
+
+Neo4j is used because gangs, quests, ownership, and character relations
+are naturally traversable as nodes and relationships. It demonstrates
+how relationship-heavy domains can be queried without join tables.
 
 The application is implemented in **Java 17**[^java17] with **Maven**[^maven] as the
 build tool. Java was selected because the project team works with an
@@ -591,7 +621,7 @@ The script creates the database structure in a logical order:
 - Core identity tables first, such as `profiles`, `houses`, and
   `garages`.
 - Main gameplay tables next, such as `characters`, `vehicles`, `drugs`,
-  `quests`, `gangs`, and `audit_log`.
+  `quests`, and `gangs`.
 - Relationship tables last: `character_drug`, `character_quest`, and
   `gang_affiliations`.
 
@@ -633,29 +663,6 @@ CREATE TABLE gang_affiliations (
 The unique constraint prevents duplicate memberships for the same
 character-gang pair while still allowing the table to use a simple
 surrogate primary key.
-
-#### Audit logging in the physical model
-
-The physical schema also includes an `audit_log` table used for
-administrative traceability. Its purpose is to record who changed data,
-what was changed, and when the change happened. Each audit row stores:
-
-- the acting profile ID, username, and role
-- the type of action (`CREATE`, `UPDATE`, or `DELETE`)
-- the affected entity name and entity ID
-- the HTTP method and route path that triggered the change
-- a snapshot of previous values and new values
-- the timestamp of the change
-
-This table is append-only. In PostgreSQL, update and delete operations on
-`audit_log` are blocked by triggers, so existing log entries cannot be
-edited or removed through normal application use. This supports
-accountability and makes the audit trail suitable for administrative
-inspection.
-
-At application level, the log is exposed only through admin routes. This
-means ordinary users can trigger audited business operations, but only
-administrators can read the resulting audit history.
 
 #### Quick verification after running the script
 
@@ -710,8 +717,6 @@ table structure and foreign-key network used by the project.
   characters and gangs, including `join_date`.
 - `character_drug` and `character_quest` store many-to-many links with
   relationship-specific attributes.
-- `audit_log` stores append-only administrative history for create,
-  update, and delete operations performed through the application.
 - Controlled values such as `role`, `gender`, `skincolor`, `eyecolor`,
   `vehicle.type`, `drug.type`, `gang.type`, and `character_quest.status`
   are enforced with SQL `CHECK` constraints and mirrored as Java enums.
@@ -735,7 +740,6 @@ Operationally, the physical design also supports maintainability:
 - Dedicated junction table for many-to-many associations.
 - SQL `CHECK` constraints and enums for controlled value domains.
 - Predictable join paths for reporting and administration tools.
-- An append-only audit trail for administrative review.
 
 #### Cardinality and Modality in the Physical Model
 
@@ -784,8 +788,6 @@ definitions in `sqls/schema.sql`:
   and drug quantity
 - `date` for `gang_affiliations.join_date`
 - `timestamp` for `character_quest.accepted_at`
-- `timestamp` for `audit_log.changed_at`
-- `text` for `audit_log.old_values` and `audit_log.new_values`
 
 These choices balance simplicity and correctness. `bigint` identity keys
 provide stable row identity, `varchar` columns keep bounded text easy to
@@ -811,7 +813,6 @@ Foreign keys encode the core relationships:
 - `character_quest.quest_id` -> `quests.id`
 - `gang_affiliations.character_id` -> `characters.id`
 - `gang_affiliations.gang_id` -> `gangs.id`
-- `audit_log.actor_profile_id` -> `profiles.id`
 - `characters.house_id` -> `houses.id` (unique)
 - `characters.garage_id` -> `garages.id` (unique)
 
@@ -864,7 +865,16 @@ easier to read and maintain.
 
 \newpage
 
-### 2.3.3. Constraints and referential integrity
+### 2.3.3. Indexes
+
+Indexes are used where lookup speed matters for common application
+queries. The relational schema includes indexes on profile identity
+fields such as `email` and `username`, because login and profile lookup
+depend on these values. Primary keys also create index-backed access
+paths automatically. This supports fast lookup for endpoints such as
+`GET /api/characters/{id}` and for joins through foreign keys.
+
+### 2.3.4. Constraints and referential integrity
 
 The schema enforces integrity through a combination of column
 constraints and relationship constraints:
@@ -1274,7 +1284,7 @@ database-side automation.
 
 \newpage
 
-## 2.5. Realistic data
+### 2.4.4. Realistic seed data
 
 ### Introduction
 
@@ -1354,7 +1364,7 @@ COMMIT;
 
 \newpage
 
-### 2.5 Stored Functions & Procedures
+### 2.4.5. Stored functions and procedures
 ### Introduction
 
 Stored functions and procedures are database objects that encapsulate SQL
@@ -1463,9 +1473,47 @@ Procedure workflow:
 4. Character creation:
     * The character is inserted with both `house_id` and `garage_id`.
 
-## 2.6. Security and access control
+## 2.5. Transactions
 
-### 2.6.1. Explanation of users and privileges
+The relational application uses transactions in the DAO layer for
+create, update, and delete operations. Each write operation starts a
+transaction, performs the database operation, flushes changes where
+needed, and commits if no exception occurs. If a runtime exception is
+raised, the transaction is rolled back before the exception continues to
+the HTTP layer.
+
+This structure ensures that partial writes are not persisted. For
+example, if an entity update fails because a foreign key is invalid or a
+constraint is violated, the operation is rolled back and the database
+remains consistent. PostgreSQL also protects multi-table operations
+inside stored procedures, such as creating a character with house and
+garage data, by treating the procedure call as part of the surrounding
+transaction.
+
+The migration application also follows a clear transaction boundary per
+target database operation. PostgreSQL is read as the source snapshot,
+then MongoDB or Neo4j is cleared and rewritten from that snapshot. This
+keeps the migration process deterministic during local development and
+testing.
+
+## 2.6. Auditing
+
+The original project included an audit-log design, but the final
+simplified implementation deliberately removes the audit feature. This
+means there is no `audit_log` table, no audit triggers, and no audit API
+route in the delivered code.
+
+The design decision was made because the project became unnecessarily
+complex for the current learning goals. Removing audit logging made the
+domain model, repositories, and routes easier to understand and reduced
+the amount of hidden behavior during CRUD operations. If audit logging
+were reintroduced later, it should be implemented as a focused
+PostgreSQL trigger-based feature with a separate `audit_log` table and a
+clear administrator-only read endpoint.
+
+## 2.7. Security
+
+### 2.7.1. Explanation of users and privileges
 
 The system uses only two roles: `USER` and `ADMIN`.
 
@@ -1478,274 +1526,20 @@ Each profile has exactly one role, and a profile cannot have both roles
 at the same time. This keeps access control simple and aligned with the
 project requirements.
 
-### 2.6.2. MongoDB design explanation
+### 2.7.2. SQL Injection
 
-To complement the relational model, we also designed a MongoDB document
-model for the same RPG domain. The purpose is to support read patterns
-where the application needs a full player view in one request, for
-example when opening a profile page and showing identity, role,
-characters, house data, and gang memberships together.
+SQL injection happens when untrusted user input is concatenated directly
+into SQL strings and executed as code. The project avoids this by using
+JPA parameter binding, Criteria API queries, and fixed JPQL projection
+queries instead of building SQL from raw request strings.
 
-The design in `design.json` is centered around one main document shape:
-the **profile**. This document stores profile-level data at
-the top level and embeds character-related data in nested arrays. 
-In addition, the file includes a second compact gang
-document used as a reference shape.
+Authentication queries use named parameters such as `:username` and
+`:password`, so user input is sent as values rather than executable SQL.
+CRUD lookup methods use numeric path parameters that are parsed to
+`Long` before database access. This prevents classic string-based SQL
+injection in the implemented data layer.
 
-The JSON structures below are **schema templates**, not populated
-documents. Therefore, fields are intentionally left empty after `:` to
-illustrate the expected structure and data types, not real values.
-
-```json
-{
-  "profile_id": ,
-  "email": "",
-  "first_name": "",
-  "last_name": "",
-  "username": "",
-  "password": "",
-  "role": "",
-  "characters": [
-    {
-      "_id": "",
-      "name": "",
-      "balance": 0,
-      "gender": "",
-      "skincolor": "",
-      "eyecolor": "",
-      "height": "",
-      "weight": "",
-      "house": {
-        "_id": "",
-        "amount_rooms": 0,
-        "amount_bathrooms": 0
-      },
-      "garage": {
-        "_id": "",
-        "capacity": 0,
-        "vehicles": [
-          {
-            "_id": "",
-            "model": "",
-            "type": "",
-            "plate_number": ""
-          }
-        ]
-      },
-      "character_drugs": [
-        {
-          "drug_id": "",
-          "quantity": 0
-        }
-      ],
-      "character_quests": [
-        {
-          "quest_id": "",
-          "status": "",
-          "accepted_at": ""
-        }
-      ],
-      "gang_memberships": [
-        {
-          "gang_id": "",
-          "join_date": ""
-        }
-      ]
-    }
-  ]
-}
-```
-
-#### Main profile document structure
-
-The profile document contains:
-
-- `_id`
-- `email`, `first_name`, `last_name`, `username`, `password`
-- `role`
-- `characters` (array)
-
-This means one MongoDB document represents one player profile plus all
-playable characters owned by that profile.
-
-The top-level identity fields are stored directly in the profile
-document because they are always needed when working with profile data.
-We keep them close to character data to avoid multiple cross-collection
-lookups in common read scenarios.
-
-#### Character array design
-
-Inside each profile document, `characters` is an array of character
-objects. Each character includes:
-
-- `_id`
-- `name`
-- `balance`
-- `gender`, `skincolor`, `eyecolor`, `height`, `weight`
-- `house` (embedded object)
-- `garage` (embedded object)
-- `character_drugs` (embedded relation array)
-- `character_quests` (embedded relation array)
-- `gang_memberships` (embedded relation array)
-
-This design follows an aggregate boundary:
-profile -> characters -> house/garage/vehicles and relation metadata.
-If the application frequently loads all characters for one profile,
-embedding gives a natural and efficient structure.
-
-Appearance attributes are stored as readable values instead of foreign
-key IDs. In MongoDB this simplifies documents and avoids resolving small
-lookup tables at runtime.
-
-#### Embedded house, garage, and vehicles
-
-Each character embeds both `house` and `garage`. The garage also embeds
-its `vehicles` array.
-
-This is a good fit because:
-
-- house and garage are one-to-one with character
-- vehicles are naturally scoped to one garage
-- profile pages often need to show the complete owned asset structure in
-  one read
-
-#### Separate collections for drugs, quests, and gangs
-
-In the updated MongoDB design, `drugs`, `quests`, and `gangs` are not
-embedded as full shared objects inside each profile. They live in their
-own collections and are referenced from characters by ID.
-
-This avoids duplicating shared catalog data across many profiles and
-makes administrative updates easier.
-
-The design file also includes standalone collection structures:
-
-```json
-{
-  "drugs": [
-    {
-      "_id": "",
-      "name": "",
-      "type": ""
-    }
-  ],
-  "quests": [
-    {
-      "_id": "",
-      "title": "",
-      "description": "",
-      "reward": 0
-    }
-  ],
-  "gangs": [
-    {
-      "_id": "",
-      "name": "",
-      "type": ""
-    }
-  ]
-}
-```
-
-#### Why this model works well in MongoDB
-
-The document structure is optimized for **profile**:
-retrieving a profile and all related owned gameplay context in one
-query. In relational systems this often requires multiple joins; in
-MongoDB the same result can be returned directly from one document.
-
-Main advantages of this approach:
-
-- Fewer round trips for profile pages and account dashboards.
-- Natural JSON shape that aligns with API responses.
-- Easy retrieval of all character details without join logic.
-- House, garage, and vehicles stay together as one owned aggregate.
-- Shared concepts such as drugs, quests, and gangs are not duplicated as
-  full objects inside each profile.
-
-Trade-offs and considerations:
-
-- Characters still carry relation metadata for drugs, quests, and gang
-  membership, so write operations must keep references consistent.
-- Updates to referenced collections still require care across documents.
-- Very large character arrays could grow document size, so practical
-  limits and pagination strategy must be considered.
-
-For this project's scope, the design is a pragmatic balance: it
-prioritizes fast and simple reads for the most common gameplay view
-(profile with characters, house, garage, and vehicles), while still
-keeping shared catalogs such as drugs, quests, and gangs in their own
-collections.
-for management use cases.
-
-In summary, the MongoDB model intentionally differs from the normalized
-PostgreSQL schema. PostgreSQL prioritizes strict normalization and
-constraint-driven integrity, while MongoDB here prioritizes aggregate
-reads and document locality. Together, they show how the same domain can
-be modeled with different strengths depending on database paradigm and
-query priorities.
-
-### Neo4j design: nodes and relationships
-
-For the graph model, we represent the same domain with **nodes** and
-**relationships** instead of tables and foreign keys. The model is shown
-in the figure below.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{images/neo4j/design.png}
-\caption{Neo4j graph model (nodes and relationships)}
-\end{figure}
-
-The main node types are:
-
-- `Profile`
-- `Character`
-- `House`
-- `Garage`
-- `Vehicle`
-- `Drug`
-- `Quest`
-- `Gang`
-
-The main relationship types are:
-
-- `(:Profile)-[:OWNS_CHARACTER]->(:Character)`
-- `(:Character)-[:LIVES_IN]->(:House)`
-- `(:Character)-[:OWNS_GARAGE]->(:Garage)`
-- `(:Garage)-[:STORES]->(:Vehicle)`
-- `(:Character)-[:USES {quantity: ...}]->(:Drug)`
-- `(:Character)-[:HAS_QUEST {status: ..., accepted_at: ...}]->(:Quest)`
-- `(:Character)-[:MEMBER_OF {join_date: ...}]->(:Gang)`
-
-#### No junction table in Neo4j
-
-In the relational database, many-to-many membership between characters
-and gangs is implemented through a junction table (`gang_affiliations`).
-In Neo4j we do **not** use a junction table. Instead, we connect
-`Character` directly to `Gang` with the `MEMBER_OF` relationship and
-store membership-specific data on the relationship itself.
-
-This is why `join_date` is modeled as a property on
-`[:MEMBER_OF]`, not as a separate node. The same idea is used for
-`quantity` on `[:USES]` and `status` / `accepted_at` on `[:HAS_QUEST]`.
-These values come from the relational junction tables, so they are the
-only extra attributes shown directly on graph relationships.
-
-#### Why not all attributes are shown in detail
-
-The Neo4j diagram is intentionally kept compact. We do not list every
-single node property in the figure because the attribute set is already
-known from the relational and document models. The focus of the graph
-diagram is therefore on **relationship structure** and traversal logic.
-Only values that belong to junction-style relationships are shown on the
-edges.
-
-With this design, Neo4j expresses domain connections directly and makes
-relationship-centric queries natural, while still preserving the same
-business meaning as the relational model.
-
-### 2.6.4. Application implementation (Javalin, Auth, Controller, DAO/DTO, Routes, SQL security)
+## 2.8. Description of the CRUD application for RDBMS
 
 This section documents the implemented backend structure in the Java
 application after the simplification of the route and persistence-facing
@@ -1756,6 +1550,12 @@ Current request flow in the relational implementation:
 
 - `Route -> CrudController -> DAO -> DTO -> JSON response`
 - `Auth route -> AuthService -> ProfileDao -> LoginResponseDTO`
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/uml/class-diagram.png}
+\caption{Backend module/class diagram}
+\end{figure}
 
 #### ApplicationConfig (Javalin bootstrap)
 
@@ -1832,7 +1632,7 @@ database access.
 The DAO layer is implemented in `src/main/java/app/dao` with a concrete
 class structure:
 
-- `AbstractJpaDao<T>` as reusable base class for entity CRUD
+- `JpaDao<T>` as the concrete class for entity CRUD
 - `JpaReadDao<T>` for DTO projections
 - entity-specific DAOs such as `ProfileDao`, `GameCharacterDao`,
   `GarageDao`, `VehicleDao`, `DrugDao`, and `QuestDao`
@@ -1921,7 +1721,7 @@ new ApplicationConfig().start(port, Routes.getRoutes(emf));
 This startup flow ensures that all routes, auth checks, and DB access
 are active when the application launches.
 
-### 2.6.5. Required delivery artifacts
+### 2.8.1. Required delivery artifacts
 
 This subsection provides the required artifacts for security scripts,
 source code access, and installation in a test environment.
@@ -2401,6 +2201,125 @@ GET/POST/PUT/DELETE & /api/drugs, /api/quests & ADMIN & CRUD access to admin-man
 \end{longtable}
 \endgroup
 
+# 5. Migration
+
+The migration application migrates data from the relational PostgreSQL
+database into both MongoDB and Neo4j. PostgreSQL is treated as the
+source database because it has the strictest normalized model and the
+clearest integrity rules. The migration is started from `Main` when
+`RUN_POSTGRES_MIGRATION_ON_STARTUP` is set to `true` and the selected
+database type is `MONGODB` or `NEO4J`.
+
+The migration is split into small classes:
+
+- `PostgresMigration` coordinates the migration.
+- `PostgresSnapshotLoader` reads all source data from PostgreSQL.
+- `MigrationSnapshot` carries the loaded data.
+- `MongoMigration` writes profile-centered documents and catalog
+  collections.
+- `Neo4jMigration` writes nodes and relationships.
+- `EntityCopies` creates detached entity copies so the migration does
+  not depend on lazy JPA state.
+
+For MongoDB, profile data becomes the main aggregate. Characters,
+houses, garages, vehicles, and relationship metadata are embedded inside
+profile documents, while drugs, quests, and gangs remain separate
+catalog collections. For Neo4j, relational foreign keys and junction
+tables are transformed into relationships such as `OWNS`, `HAS_HOUSE`,
+`HAS_GARAGE`, `STORES`, `HAS_DRUG`, `HAS_QUEST`, and `MEMBER_OF`.
+
+\newpage
+
+# 6. Discussion
+
+The three database types model the same RPG domain in different ways.
+PostgreSQL is strongest when the goal is integrity, normalization, and
+transactional consistency. MongoDB is strongest when the application
+needs to load a complete profile aggregate in one document. Neo4j is
+strongest when the most important questions follow relationships, such
+as which gangs a character belongs to or which assets are connected to a
+character.
+
+For data modeling, PostgreSQL uses normalized tables and junction
+tables. MongoDB uses embedded documents and references to catalog
+collections. Neo4j uses nodes and relationships, with relationship
+properties replacing some relational junction-table columns.
+
+For transactions, PostgreSQL provides the clearest and strongest model
+for multi-table consistency. MongoDB can support transactions, but this
+project mainly uses aggregate-style writes. Neo4j supports transactional
+Cypher writes, which are useful when creating nodes and relationships
+together.
+
+For constraints and integrity, PostgreSQL is the best fit because
+foreign keys, unique constraints, and check constraints are built into
+the schema. MongoDB and Neo4j require more responsibility in application
+code and repository logic. This is a trade-off: they give flexible
+models, but less automatic relational enforcement.
+
+Overall, PostgreSQL fits the domain best as the primary source of truth,
+because the RPG data contains many mandatory relationships. MongoDB and
+Neo4j are valuable alternative views of the same data, optimized for
+different query patterns.
+
+\newpage
+
+# 7. Reflection
+
+The most difficult part was modeling the same domain three times without
+copying the relational design blindly into MongoDB and Neo4j. The team
+had to decide what should remain normalized, what should be embedded,
+and what should become a relationship.
+
+Transactions and security were also challenging because the application
+uses shared route/controller logic while each database has a different
+persistence implementation. The solution was simplified by keeping the
+API contract stable and moving database-specific behavior into the
+repository layer.
+
+One design mistake was adding too much abstraction and audit logic early
+in the project. This made the code harder to understand. The final
+version removes the audit feature and simplifies several layers, which
+makes the project easier to explain and maintain.
+
+In practice, the project showed that database design is not only about
+storing data. It is about choosing where integrity should live, how data
+will be queried, and which compromises are acceptable for the domain.
+
+\newpage
+
+# 8. Conclusion
+
+The project implements one RPG game domain across PostgreSQL, MongoDB,
+and Neo4j. PostgreSQL provides the normalized relational source model,
+MongoDB provides a document-oriented profile aggregate, and Neo4j
+provides a relationship-focused graph model.
+
+The Java application exposes CRUD endpoints through a shared REST API
+and uses database-specific repositories behind the same route structure.
+The migration application demonstrates how relational data can be
+transformed into both document and graph models.
+
+The main insight is that no single database model is best for every
+problem. PostgreSQL is strongest for integrity, MongoDB for aggregate
+documents, and Neo4j for relationship traversal.
+
+\newpage
+
+# 9. References
+
+The report uses the following technical references:
+
+- PostgreSQL Documentation. https://www.postgresql.org/docs/
+- MongoDB Documentation. https://www.mongodb.com/docs/
+- Neo4j Documentation. https://neo4j.com/docs/
+- Cypher Query Language Manual. https://neo4j.com/docs/cypher-manual/current/
+- Java 17 Documentation. https://docs.oracle.com/en/java/javase/17/
+- Apache Maven Documentation. https://maven.apache.org/guides/
+- Hibernate ORM Documentation. https://hibernate.org/orm/documentation/
+- Javalin Documentation. https://javalin.io/documentation
+- Project source repository. https://github.com/AhmadAlkaseb/Bajls
+
 [^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/
 
 [^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/
@@ -2452,7 +2371,7 @@ GET/POST/PUT/DELETE & /api/drugs, /api/quests & ADMIN & CRUD access to admin-man
 - [LoginRequestDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/LoginRequestDTO.java)
 - [LoginResponseDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/LoginResponseDTO.java)
 - [ProfileDTO.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dto/ProfileDTO.java)
-- [AbstractJpaDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/AbstractJpaDao.java)
+- [JpaDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/JpaDao.java)
 - [JpaReadDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/JpaReadDao.java)
 - [ProfileDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/ProfileDao.java)
 - [GameCharacterDao.java](https://github.com/AhmadAlkaseb/Bajls/blob/main/src/main/java/app/dao/GameCharacterDao.java)

@@ -52,12 +52,15 @@ public class Neo4jProfileRepository implements ProfileEntityRepository {
                         MERGE (p:Profile {id: $id})
                         SET p.firstName = $firstName,
                             p.lastName = $lastName,
+                            p.name = $name,
+                            p.displayName = $name,
                             p.email = $email,
                             p.username = $username,
                             p.password = $password,
                             p.role = $role
                         """, Neo4jSupport.props(
                         "id", id,
+                        "name", entity.getUsername(),
                         "firstName", entity.getFirstName(),
                         "lastName", entity.getLastName(),
                         "email", entity.getEmail(),

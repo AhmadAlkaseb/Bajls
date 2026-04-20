@@ -1,6 +1,4 @@
 package app;
-
-import app.audit.AuditContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -21,7 +19,6 @@ public class ApplicationConfig {
             config.plugins.enableCors(cors -> cors.add(rule -> rule.anyHost()));
             config.jsonMapper(new JavalinJackson(createObjectMapper()));
         });
-        configureRequestLifecycle();
     }
 
     public void start(int portNumber, EndpointGroup routes) {
@@ -36,8 +33,4 @@ public class ApplicationConfig {
                 .findAndRegisterModules();
     }
 
-    private void configureRequestLifecycle() {
-        app.before(ctx -> AuditContext.startRequest(ctx.method().name(), ctx.path()));
-        app.after(ctx -> AuditContext.clear());
-    }
 }

@@ -2,34 +2,10 @@
 @contentType = application/json
 @adminAuth = Basic YWFuZGVyc2VuOlBAc3NBc3RhNQ==
 @userAuth = Basic bWloYW5zZW46UEBzc01pYTE=
-@ownerProfileId = 1
-@seedDrugId = 1
-@seedQuestId = 1
-@createdProfileId = 9991
-@createdDrugId = 9992
-@createdQuestId = 9993
-@createdCharacterId = 9996
-@createdCharacterHouseId = 9997
-@createdCharacterGarageId = 9998
-@createdVehicleId = 9999
-@createdCharacterDrugId = 10000
-@createdCharacterQuestId = 10001
-@createdGangId = 10002
-@createdGangAffiliationId = 10003
 @unique = {{$timestamp}}
 
-### Register profile
-POST {{baseUrl}}/auth/register
-Content-Type: {{contentType}}
-
-{
-  "firstName": "Mongo",
-  "lastName": "Tester",
-  "email": "mongo.tester.{{unique}}@example.com",
-  "username": "mongouser{{unique}}",
-  "password": "MongoPass123!",
-  "role": "USER"
-}
+# MongoDB smoke requests.
+# In Main.java, set DATABASE_TYPE = DatabaseType.MONGODB.
 
 ### Admin login
 POST {{baseUrl}}/auth/login
@@ -40,53 +16,11 @@ Content-Type: {{contentType}}
   "password": "P@ssAsta5"
 }
 
-### User login
-POST {{baseUrl}}/auth/login
-Content-Type: {{contentType}}
-
-{
-  "username": "mihansen",
-  "password": "P@ssMia1"
-}
-
-### Get own profile
-GET {{baseUrl}}/profiles/{{ownerProfileId}}
-Authorization: {{userAuth}}
-
 ### List profiles
 GET {{baseUrl}}/profiles
 Authorization: {{adminAuth}}
 
-### Create profile directly
-POST {{baseUrl}}/profiles
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-
-{
-  "firstName": "Mongo",
-  "lastName": "Profile",
-  "email": "mongo.profile.{{unique}}@example.com",
-  "username": "mongoprofile{{unique}}",
-  "password": "MongoPass123!",
-  "role": "USER"
-}
-
-### Update created profile
-PUT {{baseUrl}}/profiles/{{createdProfileId}}
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdProfileId}},
-  "firstName": "MongoUpdated",
-  "lastName": "Profile",
-  "email": "mongo.profile.updated.manual@example.com",
-  "username": "mongoprofile_manual",
-  "password": "MongoPass123!",
-  "role": "USER"
-}
-
-### Create shared drug
+### Create drug
 POST {{baseUrl}}/drugs
 Authorization: {{adminAuth}}
 Content-Type: {{contentType}}
@@ -96,48 +30,22 @@ Content-Type: {{contentType}}
   "type": "METH"
 }
 
-### List drugs
-GET {{baseUrl}}/drugs
-Authorization: {{adminAuth}}
-
-### Get seed drug
-GET {{baseUrl}}/drugs/{{seedDrugId}}
-Authorization: {{adminAuth}}
-
-### Create shared quest
+### Create quest
 POST {{baseUrl}}/quests
 Authorization: {{adminAuth}}
 Content-Type: {{contentType}}
 
 {
-  "title": "Mongo Quest {{unique}}",
-  "description": "Quest used for Mongo aggregate verification.",
-  "reward": 640.25
+  "title": "Mongo Route Quest {{unique}}",
+  "description": "Quest used for route verification.",
+  "reward": 777.77
 }
 
-### List quests
-GET {{baseUrl}}/quests
-Authorization: {{adminAuth}}
-
-### Get seed quest
-GET {{baseUrl}}/quests/{{seedQuestId}}
-Authorization: {{adminAuth}}
-
-### Create shared gang
-POST {{baseUrl}}/gangs
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "name": "Mongo Syndicate {{unique}}",
-  "type": "MAFIA"
-}
-
-### List gangs
-GET {{baseUrl}}/gangs
+### List characters
+GET {{baseUrl}}/characters
 Authorization: {{userAuth}}
 
-### Create character aggregate root
+### Create character
 POST {{baseUrl}}/characters
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
@@ -145,9 +53,7 @@ Content-Type: {{contentType}}
 {
   "name": "MongoRider {{unique}}",
   "balance": 1500.50,
-  "profile": {
-    "id": 1
-  },
+  "profile": { "id": 1 },
   "gender": "FEMALE",
   "skincolor": "LIGHT",
   "eyecolor": "GREEN",
@@ -162,222 +68,6 @@ Content-Type: {{contentType}}
   }
 }
 
-### List characters
-GET {{baseUrl}}/characters
+### List gangs
+GET {{baseUrl}}/gangs
 Authorization: {{userAuth}}
-
-### Get created character
-GET {{baseUrl}}/characters/{{createdCharacterId}}
-Authorization: {{userAuth}}
-
-### Update created character
-PUT {{baseUrl}}/characters/{{createdCharacterId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdCharacterId}},
-  "name": "MongoRider Updated Manual",
-  "balance": 1900.75,
-  "profile": {
-    "id": 1
-  },
-  "gender": "FEMALE",
-  "skincolor": "MEDIUM",
-  "eyecolor": "BLUE",
-  "height": "TALL",
-  "weight": "AVERAGE",
-  "house": {
-    "id": {{createdCharacterHouseId}}
-  },
-  "garage": {
-    "id": {{createdCharacterGarageId}}
-  }
-}
-
-### Add vehicle inside character garage
-POST {{baseUrl}}/vehicles
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "garage": {
-    "id": {{createdCharacterGarageId}}
-  },
-  "model": "Mongo Van {{unique}}",
-  "type": "VAN",
-  "plateNumber": "MONGO-{{unique}}"
-}
-
-### List vehicles
-GET {{baseUrl}}/vehicles
-Authorization: {{userAuth}}
-
-### Get created vehicle
-GET {{baseUrl}}/vehicles/{{createdVehicleId}}
-Authorization: {{userAuth}}
-
-### Update created vehicle
-PUT {{baseUrl}}/vehicles/{{createdVehicleId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdVehicleId}},
-  "garage": {
-    "id": {{createdCharacterGarageId}}
-  },
-  "model": "Mongo Van XL Manual",
-  "type": "TRUCK",
-  "plateNumber": "MONGO-MANUAL"
-}
-
-### Character drug relation metadata
-POST {{baseUrl}}/character-drug
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "drug": {
-    "id": {{createdDrugId}}
-  },
-  "quantity": 12
-}
-
-### List character-drug rows
-GET {{baseUrl}}/character-drug
-Authorization: {{userAuth}}
-
-### Update created character-drug row
-PUT {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdCharacterDrugId}},
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "drug": {
-    "id": {{createdDrugId}}
-  },
-  "quantity": 20
-}
-
-### Character quest relation metadata
-POST {{baseUrl}}/character-quest
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "quest": {
-    "id": {{createdQuestId}}
-  },
-  "status": "ACCEPTED",
-  "acceptedAt": "2026-03-16T10:30:00"
-}
-
-### List character-quest rows
-GET {{baseUrl}}/character-quest
-Authorization: {{userAuth}}
-
-### Update created character-quest row
-PUT {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdCharacterQuestId}},
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "quest": {
-    "id": {{createdQuestId}}
-  },
-  "status": "COMPLETED",
-  "acceptedAt": "2026-03-16T10:30:00"
-}
-
-### Character gang membership metadata
-POST {{baseUrl}}/gang-affiliations
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "gang": {
-    "id": {{createdGangId}}
-  },
-  "joinDate": "2026-03-16"
-}
-
-### List gang affiliations
-GET {{baseUrl}}/gang-affiliations
-Authorization: {{userAuth}}
-
-### Update created gang affiliation
-PUT {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdGangAffiliationId}},
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "gang": {
-    "id": {{createdGangId}}
-  },
-  "joinDate": "2026-03-17"
-}
-
-### List audit logs
-GET {{baseUrl}}/audit-logs
-Authorization: {{adminAuth}}
-
-### Delete created character-drug row
-DELETE {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
-Authorization: {{userAuth}}
-
-### Delete created character-quest row
-DELETE {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
-Authorization: {{userAuth}}
-
-### Delete created gang affiliation
-DELETE {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
-Authorization: {{userAuth}}
-
-### Delete created vehicle
-DELETE {{baseUrl}}/vehicles/{{createdVehicleId}}
-Authorization: {{userAuth}}
-
-### Delete created character
-DELETE {{baseUrl}}/characters/{{createdCharacterId}}
-Authorization: {{userAuth}}
-
-### Delete created gang
-DELETE {{baseUrl}}/gangs/{{createdGangId}}
-Authorization: {{userAuth}}
-
-### Delete created drug
-DELETE {{baseUrl}}/drugs/{{createdDrugId}}
-Authorization: {{adminAuth}}
-
-### Delete created quest
-DELETE {{baseUrl}}/quests/{{createdQuestId}}
-Authorization: {{adminAuth}}
-
-### Delete created profile
-DELETE {{baseUrl}}/profiles/{{createdProfileId}}
-Authorization: {{adminAuth}}
-
-### Logout
-POST {{baseUrl}}/auth/logout

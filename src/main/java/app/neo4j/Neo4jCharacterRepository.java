@@ -79,6 +79,7 @@ public class Neo4jCharacterRepository implements EntityRepository<GameCharacter>
                 tx.run("""
                         MERGE (c:GameCharacter {id: $id})
                         SET c.name = $name,
+                            c.displayName = $name,
                             c.balance = $balance,
                             c.gender = $gender,
                             c.skincolor = $skincolor,
@@ -109,15 +110,10 @@ public class Neo4jCharacterRepository implements EntityRepository<GameCharacter>
                 tx.run("MATCH (c:GameCharacter {id: $id})-[r:HAS_HOUSE]->(:House) DELETE r", Map.of("id", id));
                 if (house != null) {
                     if (!isReferenceOnly(house)) {
-                        tx.run("""
-                                MERGE (h:House {id: $id})
-                                SET h.amountRooms = $amountRooms,
-                                    h.amountBathrooms = $amountBathrooms
-                                """, Neo4jSupport.props(
+                        tx.run("MERGE (h:House {id: $id}) SET h += $props", Map.of(
                                 "id", house.getId(),
-                                "amountRooms", house.getAmountRooms(),
-                                "amountBathrooms", house.getAmountBathrooms()
-                        ));
+                                "props", Map.of("name", "House " + house.getId(), "displayName", "House " + house.getId(),
+                                        "amountRooms", house.getAmountRooms(), "amountBathrooms", house.getAmountBathrooms())));
                     } else {
                         tx.run("MERGE (h:House {id: $id})", Map.of("id", house.getId()));
                     }
@@ -131,13 +127,10 @@ public class Neo4jCharacterRepository implements EntityRepository<GameCharacter>
                 tx.run("MATCH (c:GameCharacter {id: $id})-[r:HAS_GARAGE]->(:Garage) DELETE r", Map.of("id", id));
                 if (garage != null) {
                     if (!isReferenceOnly(garage)) {
-                        tx.run("""
-                                MERGE (g:Garage {id: $id})
-                                SET g.capacity = $capacity
-                                """, Neo4jSupport.props(
+                        tx.run("MERGE (g:Garage {id: $id}) SET g += $props", Map.of(
                                 "id", garage.getId(),
-                                "capacity", garage.getCapacity()
-                        ));
+                                "props", Map.of("name", "Garage " + garage.getId(),
+                                        "displayName", "Garage " + garage.getId(), "capacity", garage.getCapacity())));
                     } else {
                         tx.run("MERGE (g:Garage {id: $id})", Map.of("id", garage.getId()));
                     }

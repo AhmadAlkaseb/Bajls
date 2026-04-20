@@ -73,9 +73,12 @@ public class Neo4jGarageRepository implements EntityRepository<Garage> {
             session.executeWrite(tx -> {
                 tx.run("""
                         MERGE (g:Garage {id: $id})
-                        SET g.capacity = $capacity
+                        SET g.capacity = $capacity,
+                            g.name = $name,
+                            g.displayName = $name
                         """, Neo4jSupport.props(
                         "id", id,
+                        "name", "Garage " + id,
                         "capacity", entity.getCapacity()
                 ));
                 if (entity.getCharacter() != null && entity.getCharacter().getId() != null) {

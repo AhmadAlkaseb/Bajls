@@ -2,7 +2,6 @@ package app.setup;
 
 import app.auth.AuthService;
 import app.controller.CrudController;
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -14,7 +13,6 @@ import app.dto.HouseDTO;
 import app.dto.ProfileDTO;
 import app.dto.QuestDTO;
 import app.dto.VehicleDTO;
-import persistence.entity.AuditLog;
 import persistence.entity.CharacterDrug;
 import persistence.entity.CharacterQuest;
 import persistence.entity.Drug;
@@ -31,8 +29,6 @@ public interface AppPersistence extends AutoCloseable {
     AuthService authService();
 
     CrudController<ProfileDTO, Profile> profileController();
-
-    CrudController<AuditLogDTO, AuditLog> auditLogController();
 
     CrudController<DrugDTO, Drug> drugController();
 

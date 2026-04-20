@@ -2,45 +2,10 @@
 @contentType = application/json
 @adminAuth = Basic YWFuZGVyc2VuOlBAc3NBc3RhNQ==
 @userAuth = Basic bWloYW5zZW46UEBzc01pYTE=
-@ownerProfileId = 1
-@seedDrugId = 1
-@seedQuestId = 1
-@seedHouseId = 1
-@seedGarageId = 1
-@createdProfileId = 9991
-@createdDrugId = 9992
-@createdQuestId = 9993
-@createdHouseId = 9994
-@createdGarageId = 9995
-@createdCharacterId = 9996
-@createdCharacterHouseId = 9997
-@createdCharacterGarageId = 9998
-@createdVehicleId = 9999
-@createdCharacterDrugId = 10000
-@createdCharacterQuestId = 10001
-@createdGangId = 10002
-@createdGangAffiliationId = 10003
 @unique = {{$timestamp}}
 
-# PostgreSQL route test file.
-# In src/main/java/app/Main.java set:
-# private static final DatabaseType DATABASE_TYPE = DatabaseType.POSTGRES;
-#
-# Local defaults:
-# - DB_URL=jdbc:postgresql://localhost:5432/bajls
-# - DB_USER=postgres
-# - DB_PASSWORD=postgres
-#
-# Start database:
-# docker compose up -d db
-#
-# This file is organized like the relational model:
-# 1. auth and profiles
-# 2. admin-managed catalog tables
-# 3. standalone asset tables
-# 4. relationship tables
-#
-# After each POST, copy the returned id into the matching @created... variable above.
+# PostgreSQL smoke requests.
+# In Main.java, set DATABASE_TYPE = DatabaseType.POSTGRES.
 
 ### Admin login
 POST {{baseUrl}}/auth/login
@@ -49,15 +14,6 @@ Content-Type: {{contentType}}
 {
   "username": "aandersen",
   "password": "P@ssAsta5"
-}
-
-### User login
-POST {{baseUrl}}/auth/login
-Content-Type: {{contentType}}
-
-{
-  "username": "mihansen",
-  "password": "P@ssMia1"
 }
 
 ### Register profile
@@ -73,52 +29,12 @@ Content-Type: {{contentType}}
   "role": "USER"
 }
 
-### Logout
-POST {{baseUrl}}/auth/logout
-
 ### List profiles
 GET {{baseUrl}}/profiles
 Authorization: {{adminAuth}}
 
-### Create profile
-POST {{baseUrl}}/profiles
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-
-{
-  "firstName": "Http",
-  "lastName": "Profile",
-  "email": "http.profile.{{unique}}@example.com",
-  "username": "httpprofile{{unique}}",
-  "password": "HttpPass123!",
-  "role": "USER"
-}
-
-### Get own profile
-GET {{baseUrl}}/profiles/{{ownerProfileId}}
-Authorization: {{userAuth}}
-
-### Update created profile
-PUT {{baseUrl}}/profiles/{{createdProfileId}}
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdProfileId}},
-  "firstName": "HttpUpdated",
-  "lastName": "Profile",
-  "email": "http.profile.updated.manual@example.com",
-  "username": "httpprofile_manual",
-  "password": "HttpPass123!",
-  "role": "USER"
-}
-
 ### List drugs
 GET {{baseUrl}}/drugs
-Authorization: {{adminAuth}}
-
-### Get seed drug
-GET {{baseUrl}}/drugs/{{seedDrugId}}
 Authorization: {{adminAuth}}
 
 ### Create drug
@@ -131,23 +47,8 @@ Content-Type: {{contentType}}
   "type": "METH"
 }
 
-### Update created drug
-PUT {{baseUrl}}/drugs/{{createdDrugId}}
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdDrugId}},
-  "name": "Route Dust X Manual",
-  "type": "COCAINE"
-}
-
 ### List quests
 GET {{baseUrl}}/quests
-Authorization: {{adminAuth}}
-
-### Get seed quest
-GET {{baseUrl}}/quests/{{seedQuestId}}
 Authorization: {{adminAuth}}
 
 ### Create quest
@@ -161,87 +62,11 @@ Content-Type: {{contentType}}
   "reward": 777.77
 }
 
-### Update created quest
-PUT {{baseUrl}}/quests/{{createdQuestId}}
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdQuestId}},
-  "title": "HTTP Route Quest Updated Manual",
-  "description": "Updated quest used for route verification.",
-  "reward": 888.88
-}
-
-### List audit logs
-GET {{baseUrl}}/audit-logs
-Authorization: {{adminAuth}}
-
-### Get first audit log
-GET {{baseUrl}}/audit-logs/1
-Authorization: {{adminAuth}}
-
-### List houses
-GET {{baseUrl}}/houses
-Authorization: {{userAuth}}
-
-### Create standalone house
-POST {{baseUrl}}/houses
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "amountRooms": 6,
-  "amountBathrooms": 3
-}
-
-### Get seed house
-GET {{baseUrl}}/houses/{{seedHouseId}}
-Authorization: {{userAuth}}
-
-### Update created standalone house
-PUT {{baseUrl}}/houses/{{createdHouseId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdHouseId}},
-  "amountRooms": 7,
-  "amountBathrooms": 4
-}
-
-### List garages
-GET {{baseUrl}}/garages
-Authorization: {{userAuth}}
-
-### Create standalone garage
-POST {{baseUrl}}/garages
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "capacity": 6
-}
-
-### Get seed garage
-GET {{baseUrl}}/garages/{{seedGarageId}}
-Authorization: {{userAuth}}
-
-### Update created standalone garage
-PUT {{baseUrl}}/garages/{{createdGarageId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdGarageId}},
-  "capacity": 8
-}
-
 ### List characters
 GET {{baseUrl}}/characters
 Authorization: {{userAuth}}
 
-### Create character with nested house and garage
+### Create character
 POST {{baseUrl}}/characters
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
@@ -249,9 +74,7 @@ Content-Type: {{contentType}}
 {
   "name": "HttpRider {{unique}}",
   "balance": 1500.50,
-  "profile": {
-    "id": 1
-  },
+  "profile": { "id": 1 },
   "gender": "FEMALE",
   "skincolor": "LIGHT",
   "eyecolor": "GREEN",
@@ -266,260 +89,6 @@ Content-Type: {{contentType}}
   }
 }
 
-### Get created character
-GET {{baseUrl}}/characters/{{createdCharacterId}}
-Authorization: {{userAuth}}
-
-### Update created character
-PUT {{baseUrl}}/characters/{{createdCharacterId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdCharacterId}},
-  "name": "HttpRider Updated Manual",
-  "balance": 1900.75,
-  "profile": {
-    "id": 1
-  },
-  "gender": "FEMALE",
-  "skincolor": "MEDIUM",
-  "eyecolor": "BLUE",
-  "height": "TALL",
-  "weight": "AVERAGE",
-  "house": {
-    "id": {{createdCharacterHouseId}}
-  },
-  "garage": {
-    "id": {{createdCharacterGarageId}}
-  }
-}
-
-### List vehicles
-GET {{baseUrl}}/vehicles
-Authorization: {{userAuth}}
-
-### Create vehicle in character garage
-POST {{baseUrl}}/vehicles
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "garage": {
-    "id": {{createdCharacterGarageId}}
-  },
-  "model": "Route Van {{unique}}",
-  "type": "VAN",
-  "plateNumber": "HTTP-{{unique}}"
-}
-
-### Get created vehicle
-GET {{baseUrl}}/vehicles/{{createdVehicleId}}
-Authorization: {{userAuth}}
-
-### Update created vehicle
-PUT {{baseUrl}}/vehicles/{{createdVehicleId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdVehicleId}},
-  "garage": {
-    "id": {{createdCharacterGarageId}}
-  },
-  "model": "Route Van XL Manual",
-  "type": "TRUCK",
-  "plateNumber": "HTTP-MANUAL"
-}
-
-### List character-drug rows
-GET {{baseUrl}}/character-drug
-Authorization: {{userAuth}}
-
-### Create character-drug row
-POST {{baseUrl}}/character-drug
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "drug": {
-    "id": {{createdDrugId}}
-  },
-  "quantity": 12
-}
-
-### Get created character-drug row
-GET {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
-Authorization: {{userAuth}}
-
-### Update created character-drug row
-PUT {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdCharacterDrugId}},
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "drug": {
-    "id": {{createdDrugId}}
-  },
-  "quantity": 20
-}
-
-### List character-quest rows
-GET {{baseUrl}}/character-quest
-Authorization: {{userAuth}}
-
-### Create character-quest row
-POST {{baseUrl}}/character-quest
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "quest": {
-    "id": {{createdQuestId}}
-  },
-  "status": "ACCEPTED",
-  "acceptedAt": "2026-03-16T10:30:00"
-}
-
-### Get created character-quest row
-GET {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
-Authorization: {{userAuth}}
-
-### Update created character-quest row
-PUT {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdCharacterQuestId}},
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "quest": {
-    "id": {{createdQuestId}}
-  },
-  "status": "COMPLETED",
-  "acceptedAt": "2026-03-16T10:30:00"
-}
-
 ### List gangs
 GET {{baseUrl}}/gangs
 Authorization: {{userAuth}}
-
-### Create gang
-POST {{baseUrl}}/gangs
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "name": "HTTP Syndicate {{unique}}",
-  "type": "MAFIA"
-}
-
-### Get created gang
-GET {{baseUrl}}/gangs/{{createdGangId}}
-Authorization: {{userAuth}}
-
-### Update created gang
-PUT {{baseUrl}}/gangs/{{createdGangId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdGangId}},
-  "name": "HTTP Syndicate Prime Manual",
-  "type": "CARTEL"
-}
-
-### List gang affiliations
-GET {{baseUrl}}/gang-affiliations
-Authorization: {{userAuth}}
-
-### Create gang affiliation
-POST {{baseUrl}}/gang-affiliations
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "gang": {
-    "id": {{createdGangId}}
-  },
-  "joinDate": "2026-03-16"
-}
-
-### Get created gang affiliation
-GET {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
-Authorization: {{userAuth}}
-
-### Update created gang affiliation
-PUT {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-
-{
-  "id": {{createdGangAffiliationId}},
-  "character": {
-    "id": {{createdCharacterId}}
-  },
-  "gang": {
-    "id": {{createdGangId}}
-  },
-  "joinDate": "2026-03-17"
-}
-
-### Delete created character-drug row
-DELETE {{baseUrl}}/character-drug/{{createdCharacterDrugId}}
-Authorization: {{userAuth}}
-
-### Delete created character-quest row
-DELETE {{baseUrl}}/character-quest/{{createdCharacterQuestId}}
-Authorization: {{userAuth}}
-
-### Delete created gang affiliation
-DELETE {{baseUrl}}/gang-affiliations/{{createdGangAffiliationId}}
-Authorization: {{userAuth}}
-
-### Delete created vehicle
-DELETE {{baseUrl}}/vehicles/{{createdVehicleId}}
-Authorization: {{userAuth}}
-
-### Delete created character
-DELETE {{baseUrl}}/characters/{{createdCharacterId}}
-Authorization: {{userAuth}}
-
-### Delete created standalone house
-DELETE {{baseUrl}}/houses/{{createdHouseId}}
-Authorization: {{userAuth}}
-
-### Delete created standalone garage
-DELETE {{baseUrl}}/garages/{{createdGarageId}}
-Authorization: {{userAuth}}
-
-### Delete created gang
-DELETE {{baseUrl}}/gangs/{{createdGangId}}
-Authorization: {{userAuth}}
-
-### Delete created drug
-DELETE {{baseUrl}}/drugs/{{createdDrugId}}
-Authorization: {{adminAuth}}
-
-### Delete created quest
-DELETE {{baseUrl}}/quests/{{createdQuestId}}
-Authorization: {{adminAuth}}
-
-### Delete created profile
-DELETE {{baseUrl}}/profiles/{{createdProfileId}}
-Authorization: {{adminAuth}}
