@@ -4,9 +4,6 @@
 cph-aa540@stud.ek.dk    
 @AhmadAlkaseb
 
-**Sadek**  
-saal1004@stud.ek.dk  
-@sadekkk12  
 
 **Benjamin**  
 cph-bh226@stud.ek.dk  
