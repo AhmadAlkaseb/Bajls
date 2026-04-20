@@ -1032,7 +1032,8 @@ SELECT * FROM v_character_overview;
 This structure provides a clear and compact overview suitable for
 application use, administration, and reporting.
 
-\newpage
+
+### Gang Overview View
 
 ### Gang Overview View
 
@@ -1049,7 +1050,8 @@ LEFT JOIN gang_affiliations ON gang_affiliations.gang_id = gangs.id
 LEFT JOIN characters ON characters.id = gang_affiliations.character_id
 GROUP BY gangs.name;
 ```
-\newpage
+
+**Result**
 
 **Result**
 
@@ -1164,7 +1166,8 @@ notice to the client application that performed the insert. This allows
 real-time feedback without modifying the data model or adding extra
 tables for logging.
 
-\newpage
+
+### Design considerations
 
 ### Design considerations
 Using a trigger for this purpose has both advantages and disadvantages:
@@ -1339,7 +1342,6 @@ follows the actual foreign keys directly:
 5. `vehicles`
 6. relationship tables
 
-\newpage
 
 ### Gang membership data
 
@@ -2157,7 +2159,7 @@ Routes
 \small
 \setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.15}
-\begin{longtable}{|p{0.10\textwidth}|p{0.28\textwidth}|p{0.24\textwidth}|p{0.30\textwidth}|}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.12\textwidth}|>{\raggedright\arraybackslash}p{0.32\textwidth}|>{\raggedright\arraybackslash}p{0.18\textwidth}|>{\raggedright\arraybackslash}p{0.38\textwidth}|}
 \hline
 \textbf{Method} & \textbf{Endpoint} & \textbf{Access} & \textbf{Purpose} \\
 \hline
@@ -2166,37 +2168,98 @@ Routes
 \textbf{Method} & \textbf{Endpoint} & \textbf{Access} & \textbf{Purpose} \\
 \hline
 \endhead
+\multicolumn{4}{|l|}{\textbf{Authentication}} \\
+\hline
 POST & /api/auth/login & Public & Authenticate by username and password. \\
-\hline
 POST & /api/auth/register & Public & Register a new profile with default `USER` role. \\
-\hline
 POST & /api/auth/logout & Public & Confirm logout in the stateless Basic Auth flow. \\
 \hline
+\multicolumn{4}{|l|}{\textbf{Profiles}} \\
+\hline
 GET & /api/profiles & ADMIN & List all profiles. \\
-\hline
 POST & /api/profiles & ADMIN & Create a profile directly from the admin side. \\
-\hline
 GET & /api/profiles/\{id\} & Owner or ADMIN & Get one profile. \\
-\hline
 PUT & /api/profiles/\{id\} & Owner or ADMIN & Update one profile. \\
-\hline
 DELETE & /api/profiles/\{id\} & Owner or ADMIN & Delete one profile. \\
 \hline
+\multicolumn{4}{|l|}{\textbf{Characters}} \\
+\hline
 GET & /api/characters & Authenticated & List all characters. \\
-\hline
 POST & /api/characters & Authenticated & Create one character. \\
-\hline
 PUT & /api/characters/\{id\} & Authenticated & Update one character. \\
-\hline
 DELETE & /api/characters/\{id\} & Authenticated & Delete one character. \\
 \hline
-GET/POST/PUT/DELETE & /api/houses, /api/garages, /api/vehicles & Authenticated & CRUD access to character-owned assets. \\
+\multicolumn{4}{|l|}{\textbf{Houses}} \\
 \hline
-GET/POST/PUT/DELETE & /api/character-drug, /api/character-quest & Authenticated & CRUD access to many-to-many gameplay links. \\
+GET & /api/houses & Authenticated & List all houses. \\
+POST & /api/houses & Authenticated & Create a house. \\
+GET & /api/houses/\{id\} & Authenticated & Get one house. \\
+PUT & /api/houses/\{id\} & Authenticated & Update one house. \\
+DELETE & /api/houses/\{id\} & Authenticated & Delete one house. \\
 \hline
-GET/POST/PUT/DELETE & /api/gangs, /api/gang-affiliations & Authenticated & CRUD access to gangs and memberships. \\
+\multicolumn{4}{|l|}{\textbf{Garages}} \\
 \hline
-GET/POST/PUT/DELETE & /api/drugs, /api/quests & ADMIN & CRUD access to admin-managed catalogs. \\
+GET & /api/garages & Authenticated & List all garages. \\
+POST & /api/garages & Authenticated & Create a garage. \\
+GET & /api/garages/\{id\} & Authenticated & Get one garage. \\
+PUT & /api/garages/\{id\} & Authenticated & Update one garage. \\
+DELETE & /api/garages/\{id\} & Authenticated & Delete one garage. \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Vehicles}} \\
+\hline
+GET & /api/vehicles & Authenticated & List all vehicles. \\
+POST & /api/vehicles & Authenticated & Create a vehicle. \\
+GET & /api/vehicles/\{id\} & Authenticated & Get one vehicle. \\
+PUT & /api/vehicles/\{id\} & Authenticated & Update one vehicle. \\
+DELETE & /api/vehicles/\{id\} & Authenticated & Delete one vehicle. \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Character-Drug Links}} \\
+\hline
+GET & /api/character-drug & Authenticated & List all character-drug links. \\
+POST & /api/character-drug & Authenticated & Create a character-drug link. \\
+GET & /api/character-drug/\{id\} & Authenticated & Get one character-drug link. \\
+PUT & /api/character-drug/\{id\} & Authenticated & Update one character-drug link. \\
+DELETE & /api/character-drug/\{id\} & Authenticated & Delete one character-drug link. \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Character-Quest Links}} \\
+\hline
+GET & /api/character-quest & Authenticated & List all character-quest links. \\
+POST & /api/character-quest & Authenticated & Create a character-quest link. \\
+GET & /api/character-quest/\{id\} & Authenticated & Get one character-quest link. \\
+PUT & /api/character-quest/\{id\} & Authenticated & Update one character-quest link. \\
+DELETE & /api/character-quest/\{id\} & Authenticated & Delete one character-quest link. \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Gangs}} \\
+\hline
+GET & /api/gangs & Authenticated & List all gangs. \\
+POST & /api/gangs & Authenticated & Create a gang. \\
+GET & /api/gangs/\{id\} & Authenticated & Get one gang. \\
+PUT & /api/gangs/\{id\} & Authenticated & Update one gang. \\
+DELETE & /api/gangs/\{id\} & Authenticated & Delete one gang. \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Gang Affiliations}} \\
+\hline
+GET & /api/gang-affiliations & Authenticated & List all gang affiliations. \\
+POST & /api/gang-affiliations & Authenticated & Create a gang affiliation. \\
+GET & /api/gang-affiliations/\{id\} & Authenticated & Get one gang affiliation. \\
+PUT & /api/gang-affiliations/\{id\} & Authenticated & Update one gang affiliation. \\
+DELETE & /api/gang-affiliations/\{id\} & Authenticated & Delete one gang affiliation. \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Drugs}} \\
+\hline
+GET & /api/drugs & ADMIN & List all drugs. \\
+POST & /api/drugs & ADMIN & Create a drug. \\
+GET & /api/drugs/\{id\} & ADMIN & Get one drug. \\
+PUT & /api/drugs/\{id\} & ADMIN & Update one drug. \\
+DELETE & /api/drugs/\{id\} & ADMIN & Delete one drug. \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Quests}} \\
+\hline
+GET & /api/quests & ADMIN & List all quests. \\
+POST & /api/quests & ADMIN & Create a quest. \\
+GET & /api/quests/\{id\} & ADMIN & Get one quest. \\
+PUT & /api/quests/\{id\} & ADMIN & Update one quest. \\
+DELETE & /api/quests/\{id\} & ADMIN & Delete one quest. \\
 \hline
 \end{longtable}
 \endgroup
@@ -2337,8 +2400,6 @@ The report uses the following technical references:
 [^cypher]: Cypher Query Language Manual: https://neo4j.com/docs/cypher-manual/current/
 
 [^githubrepo]: Project source repository: https://github.com/AhmadAlkaseb/Bajls
-
-\newpage
 
 ## Appendix A. Links and file references
 

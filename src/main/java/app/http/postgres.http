@@ -92,3 +92,298 @@ Content-Type: {{contentType}}
 ### List gangs
 GET {{baseUrl}}/gangs
 Authorization: {{userAuth}}
+
+### --- Houses ---
+### List all houses
+GET {{baseUrl}}/houses
+Authorization: {{userAuth}}
+
+### Create house
+POST {{baseUrl}}/houses
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "amountRooms": 3,
+  "amountBathrooms": 2
+}
+
+### Get house by id
+GET {{baseUrl}}/houses/{id}
+Authorization: {{userAuth}}
+
+### Update house by id
+PUT {{baseUrl}}/houses/{id}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "amountRooms": 4,
+  "amountBathrooms": 3
+}
+
+### Delete house by id
+DELETE {{baseUrl}}/houses/{id}
+Authorization: {{userAuth}}
+
+### --- Garages ---
+### List all garages
+GET {{baseUrl}}/garages
+Authorization: {{userAuth}}
+
+### Create garage
+POST {{baseUrl}}/garages
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "capacity": 2
+}
+
+### Get garage by id
+GET {{baseUrl}}/garages/{id}
+Authorization: {{userAuth}}
+
+### Update garage by id
+PUT {{baseUrl}}/garages/{id}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "capacity": 3
+}
+
+### Delete garage by id
+DELETE {{baseUrl}}/garages/{id}
+Authorization: {{userAuth}}
+
+### --- Vehicles ---
+### List all vehicles
+GET {{baseUrl}}/vehicles
+Authorization: {{userAuth}}
+
+### Create vehicle
+POST {{baseUrl}}/vehicles
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "type": "CAR",
+  "model": "Sedan"
+}
+
+### Get vehicle by id
+GET {{baseUrl}}/vehicles/{id}
+Authorization: {{userAuth}}
+
+### Update vehicle by id
+PUT {{baseUrl}}/vehicles/{id}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "type": "TRUCK",
+  "model": "Pickup"
+}
+
+### Delete vehicle by id
+DELETE {{baseUrl}}/vehicles/{id}
+Authorization: {{userAuth}}
+
+### --- Gangs ---
+### List all gangs
+GET {{baseUrl}}/gangs
+Authorization: {{userAuth}}
+
+### Create gang
+POST {{baseUrl}}/gangs
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "The Bajls"
+}
+
+### Get gang by id
+GET {{baseUrl}}/gangs/{id}
+Authorization: {{userAuth}}
+
+### Update gang by id
+PUT {{baseUrl}}/gangs/{id}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "The Bajls Updated"
+}
+
+### Delete gang by id
+DELETE {{baseUrl}}/gangs/{id}
+Authorization: {{userAuth}}
+
+### --- Gang Affiliations ---
+### List all gang affiliations
+GET {{baseUrl}}/gang-affiliations
+Authorization: {{userAuth}}
+
+### Create gang affiliation
+POST {{baseUrl}}/gang-affiliations
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "gangId": 1,
+  "characterId": 2
+}
+
+### Get gang affiliation by id
+GET {{baseUrl}}/gang-affiliations/{id}
+Authorization: {{userAuth}}
+
+### Update gang affiliation by id
+PUT {{baseUrl}}/gang-affiliations/{id}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "gangId": 1,
+  "characterId": 3
+}
+
+### Delete gang affiliation by id
+DELETE {{baseUrl}}/gang-affiliations/{id}
+Authorization: {{userAuth}}
+
+### --- Drugs ---
+### List all drugs
+GET {{baseUrl}}/drugs
+Authorization: {{adminAuth}}
+
+### Create drug
+POST {{baseUrl}}/drugs
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Route Dust {{unique}}",
+  "type": "METH"
+}
+
+### Get drug by id
+GET {{baseUrl}}/drugs/{id}
+Authorization: {{adminAuth}}
+
+### Update drug by id
+PUT {{baseUrl}}/drugs/{id}
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated Dust {{unique}}",
+  "type": "COCAINE"
+}
+
+### Delete drug by id
+DELETE {{baseUrl}}/drugs/{id}
+Authorization: {{adminAuth}}
+
+### --- Quests ---
+### List all quests
+GET {{baseUrl}}/quests
+Authorization: {{adminAuth}}
+
+### Create quest
+POST {{baseUrl}}/quests
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "title": "HTTP Route Quest {{unique}}",
+  "description": "Quest used for route verification.",
+  "reward": 777.77
+}
+
+### Get quest by id
+GET {{baseUrl}}/quests/{id}
+Authorization: {{adminAuth}}
+
+### Update quest by id
+PUT {{baseUrl}}/quests/{id}
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Updated Quest {{unique}}",
+  "description": "Updated description.",
+  "reward": 888.88
+}
+
+### Delete quest by id
+DELETE {{baseUrl}}/quests/{id}
+Authorization: {{adminAuth}}
+
+### --- Character-Drug Links ---
+### List all character-drug links
+GET {{baseUrl}}/character-drug
+Authorization: {{userAuth}}
+
+### Create character-drug link
+POST {{baseUrl}}/character-drug
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "characterId": 1,
+  "drugId": 2
+}
+
+### Get character-drug link by id
+GET {{baseUrl}}/character-drug/{id}
+Authorization: {{userAuth}}
+
+### Update character-drug link by id
+PUT {{baseUrl}}/character-drug/{id}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "characterId": 1,
+  "drugId": 3
+}
+
+### Delete character-drug link by id
+DELETE {{baseUrl}}/character-drug/{id}
+Authorization: {{userAuth}}
+
+### --- Character-Quest Links ---
+### List all character-quest links
+GET {{baseUrl}}/character-quest
+Authorization: {{userAuth}}
+
+### Create character-quest link
+POST {{baseUrl}}/character-quest
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "characterId": 1,
+  "questId": 2
+}
+
+### Get character-quest link by id
+GET {{baseUrl}}/character-quest/{id}
+Authorization: {{userAuth}}
+
+### Update character-quest link by id
+PUT {{baseUrl}}/character-quest/{id}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "characterId": 1,
+  "questId": 3
+}
+
+### Delete character-quest link by id
+DELETE {{baseUrl}}/character-quest/{id}
+Authorization: {{userAuth}}
