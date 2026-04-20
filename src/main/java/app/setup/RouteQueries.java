@@ -10,6 +10,7 @@ import app.dto.GarageDTO;
 import app.dto.HouseDTO;
 import app.dto.ProfileDTO;
 import app.dto.QuestDTO;
+import app.dto.TransactionDTO;
 import app.dto.VehicleDTO;
 
 public final class RouteQueries {
@@ -77,6 +78,13 @@ public final class RouteQueries {
             "SELECT new app.dto.GangAffiliationDTO(ga.id, ga.character.id, ga.gang.id, ga.joinDate) FROM GangAffiliation ga",
             "SELECT new app.dto.GangAffiliationDTO(ga.id, ga.character.id, ga.gang.id, ga.joinDate) FROM GangAffiliation ga WHERE ga.id = :id",
             GangAffiliationDTO.class
+    );
+
+    // LEFT JOIN on nullable drug/targetCharacter so their ids come back as null when absent
+    public static final ReadQuery<TransactionDTO> TRANSACTION_QUERY = new ReadQuery<>(
+            "SELECT new app.dto.TransactionDTO(t.id, t.character.id, t.type, t.amount, d.id, t.quantity, tc.id, t.description, t.createdAt) FROM Transaction t LEFT JOIN t.drug d LEFT JOIN t.targetCharacter tc ORDER BY t.createdAt DESC",
+            "SELECT new app.dto.TransactionDTO(t.id, t.character.id, t.type, t.amount, d.id, t.quantity, tc.id, t.description, t.createdAt) FROM Transaction t LEFT JOIN t.drug d LEFT JOIN t.targetCharacter tc WHERE t.id = :id",
+            TransactionDTO.class
     );
 
     private RouteQueries() {

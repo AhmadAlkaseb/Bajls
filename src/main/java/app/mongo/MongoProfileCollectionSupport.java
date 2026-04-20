@@ -31,11 +31,9 @@ public final class MongoProfileCollectionSupport {
         return MongoProfileEntityMapper.toProfile(collection.find(Filters.eq("id", id)).first());
     }
 
-    public Profile findProfileByCredentials(String username, String password) {
-        return MongoProfileEntityMapper.toProfile(collection.find(Filters.and(
-                Filters.eq("username", username),
-                Filters.eq("password", password)
-        )).first());
+    public Profile findProfileByUsername(String username) {
+        return MongoProfileEntityMapper.toProfile(collection.find(Filters.eq("username", username)).first());
+    }
     }
 
     public Profile saveProfile(Profile profile) {

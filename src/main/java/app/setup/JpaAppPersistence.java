@@ -2,6 +2,7 @@ package app.setup;
 
 import app.auth.AuthService;
 import app.controller.CrudController;
+import app.controller.TransactionController;
 import app.dao.ProfileDao;
 import jakarta.persistence.EntityManagerFactory;
 import persistence.HibernateConfig;
@@ -95,6 +96,11 @@ public final class JpaAppPersistence implements AppPersistence {
     @Override
     public CrudController<GangAffiliationDTO, GangAffiliation> gangAffiliationController() {
         return RouteControllers.gangAffiliation(entityManagerFactory);
+    }
+
+    @Override
+    public TransactionController transactionController() {
+        return new TransactionController(entityManagerFactory);
     }
 
     @Override

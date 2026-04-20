@@ -10,6 +10,7 @@ import app.dto.GarageDTO;
 import app.dto.HouseDTO;
 import app.dto.ProfileDTO;
 import app.dto.QuestDTO;
+import app.dto.TransactionDTO;
 import app.dto.VehicleDTO;
 import persistence.entity.CharacterDrug;
 import persistence.entity.CharacterQuest;
@@ -21,6 +22,7 @@ import persistence.entity.Garage;
 import persistence.entity.House;
 import persistence.entity.Profile;
 import persistence.entity.Quest;
+import persistence.entity.Transaction;
 import persistence.entity.Vehicle;
 
 public final class DtoMappers {
@@ -104,6 +106,20 @@ public final class DtoMappers {
                 nestedId(gangAffiliation.getCharacter()),
                 nestedId(gangAffiliation.getGang()),
                 gangAffiliation.getJoinDate()
+        );
+    }
+
+    public static TransactionDTO toTransactionDto(Transaction transaction) {
+        return new TransactionDTO(
+                transaction.getId(),
+                nestedId(transaction.getCharacter()),
+                transaction.getType(),
+                transaction.getAmount(),
+                nestedId(transaction.getDrug()),
+                transaction.getQuantity(),
+                nestedId(transaction.getTargetCharacter()),
+                transaction.getDescription(),
+                transaction.getCreatedAt()
         );
     }
 

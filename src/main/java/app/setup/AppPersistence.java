@@ -2,6 +2,8 @@ package app.setup;
 
 import app.auth.AuthService;
 import app.controller.CrudController;
+import app.controller.TransactionController;
+import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;
@@ -49,6 +51,12 @@ public interface AppPersistence extends AutoCloseable {
     CrudController<GangDTO, Gang> gangController();
 
     CrudController<GangAffiliationDTO, GangAffiliation> gangAffiliationController();
+
+    // Only fully supported by JPA/PostgreSQL (requires @Version optimistic locking).
+    // Mongo and Neo4j backends return HTTP 501 for these endpoints.
+    default TransactionController transactionController() {
+        throw new UnsupportedOperationException("Transactions are only supported with JPA/PostgreSQL");
+    }
 
     @Override
     default void close() {

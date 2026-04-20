@@ -2,6 +2,7 @@ package app.neo4j;
 
 import app.dao.ProfileEntityRepository;
 import app.dto.LoginResponseDTO;
+import org.mindrot.jbcrypt.BCrypt;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
@@ -93,14 +94,17 @@ public class Neo4jProfileRepository implements ProfileEntityRepository {
     public LoginResponseDTO authenticate(String username, String password) {
         try (Session session = driver.session()) {
             List<Record> records = session.executeRead(tx -> tx.run("""
-                    MATCH (p:Profile {username: $username, password: $password})
+                    MATCH (p:Profile {username: $username})
                     RETURN p
-                    """, Map.of("username", username, "password", password)).list());
+                    """, Map.of("username", username)).list());
             Record record = records.isEmpty() ? null : records.get(0);
             if (record == null) {
                 return null;
             }
             Profile profile = toProfile(record.get("p").asNode());
+            if (!BCrypt.checkpw(password, profile.getPassword())) {
+                return null;
+            }
             return new LoginResponseDTO(profile.getId(), profile.getUsername(), profile.getRole());
         }
     }

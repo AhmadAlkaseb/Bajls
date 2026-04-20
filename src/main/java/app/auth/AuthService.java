@@ -6,15 +6,20 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
+import org.mindrot.jbcrypt.BCrypt;
 import persistence.entity.Profile;
 import persistence.enums.ProfileRole;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.regex.Pattern;
 
 public class AuthService {
     private static final String CURRENT_USER = "currentUser";
     private static final String BASIC_PREFIX = "Basic ";
+    private static final int MIN_PASSWORD_LENGTH = 8;
+    private static final int MAX_FIELD_LENGTH = 255;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
     private final ProfileRepository profileRepository;
 
@@ -36,7 +41,10 @@ public class AuthService {
     public void register(Context ctx) {
         Profile profile = ctx.bodyAsClass(Profile.class);
         validateProfile(profile);
-        assignDefaultRole(profile);
+        // Always force USER role — prevents privilege escalation where a client
+        // sends "role": "ADMIN" in the request body.
+        profile.setRole(ProfileRole.USER);
+        profile.setPassword(BCrypt.hashpw(profile.getPassword(), BCrypt.gensalt()));
 
         Profile savedProfile = profileRepository.save(profile);
         ctx.status(201).json(new LoginResponseDTO(savedProfile.getId(), savedProfile.getUsername(), savedProfile.getRole()));
@@ -105,15 +113,22 @@ public class AuthService {
         if (profile == null) {
             throw new BadRequestResponse("Profile is required");
         }
-        if (isBlank(profile.getFirstName()) || isBlank(profile.getLastName()) || isBlank(profile.getEmail())
-                || isBlank(profile.getUsername()) || isBlank(profile.getPassword())) {
+        if (isBlank(profile.getFirstName()) || isBlank(profile.getLastName())
+                || isBlank(profile.getEmail()) || isBlank(profile.getUsername())
+                || isBlank(profile.getPassword())) {
             throw new BadRequestResponse("Missing required profile fields");
         }
-    }
-
-    private void assignDefaultRole(Profile profile) {
-        if (profile.getRole() == null) {
-            profile.setRole(ProfileRole.USER);
+        if (profile.getPassword().length() < MIN_PASSWORD_LENGTH) {
+            throw new BadRequestResponse("Password must be at least " + MIN_PASSWORD_LENGTH + " characters");
+        }
+        if (!EMAIL_PATTERN.matcher(profile.getEmail()).matches()) {
+            throw new BadRequestResponse("Invalid email format");
+        }
+        if (profile.getFirstName().length() > MAX_FIELD_LENGTH
+                || profile.getLastName().length() > MAX_FIELD_LENGTH
+                || profile.getUsername().length() > 50
+                || profile.getEmail().length() > MAX_FIELD_LENGTH) {
+            throw new BadRequestResponse("One or more fields exceed the maximum allowed length");
         }
     }
 

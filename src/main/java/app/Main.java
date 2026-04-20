@@ -7,9 +7,9 @@ import app.setup.DatabaseType;
 import app.setup.PersistenceBootstrap;
 
 public class Main {
-    private static final int PORT = 7070;
-    private static final DatabaseType DATABASE_TYPE = DatabaseType.NEO4J;
+    private static final int DEFAULT_PORT = 7070;
     private static final boolean RUN_POSTGRES_MIGRATION_ON_STARTUP = true;
+    private static final DatabaseType DATABASE_TYPE = DatabaseType.POSTGRES;
 
     public static void main(String[] args) {
         if (RUN_POSTGRES_MIGRATION_ON_STARTUP) {
