@@ -12,7 +12,7 @@ import persistence.enums.SkinColorType;
 
 @Entity
 @Table(name = "characters")
-@JsonIgnoreProperties({"characterDrugs", "characterQuests", "gangAffiliations"})
+@JsonIgnoreProperties({"characterDrugs", "characterQuests", "gangAffiliations", "version"})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class GameCharacter {
@@ -20,6 +20,14 @@ public class GameCharacter {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Optimistic locking: Hibernate increments this on every UPDATE.
+    // If two requests read version=N and both try to commit, the second
+    // will find the DB version is already N+1 and throw OptimisticLockException.
+    // columnDefinition sets DEFAULT 0 NOT NULL so existing DB rows get version=0 on ALTER.
+    @Version
+    @Column(name = "version", columnDefinition = "BIGINT DEFAULT 0 NOT NULL")
+    private Long version;
 
     @Column(name = "name", nullable = false, length = 50)
     private String name;

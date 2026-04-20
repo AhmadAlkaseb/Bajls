@@ -53,11 +53,8 @@ public final class MongoProfileCollectionSupport {
         return toProfile(collection.find(Filters.eq("id", id)).first());
     }
 
-    public Profile findProfileByCredentials(String username, String password) {
-        return toProfile(collection.find(Filters.and(
-                Filters.eq("username", username),
-                Filters.eq("password", password)
-        )).first());
+    public Profile findProfileByUsername(String username) {
+        return toProfile(collection.find(Filters.eq("username", username)).first());
     }
 
     public Profile saveProfile(Profile profile) {

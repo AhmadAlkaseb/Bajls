@@ -4,6 +4,7 @@ import app.dao.ProfileEntityRepository;
 import app.dto.LoginResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoDatabase;
+import org.mindrot.jbcrypt.BCrypt;
 import persistence.entity.Profile;
 
 public class MongoProfileRepository extends MongoEntityRepository<Profile> implements ProfileEntityRepository {
@@ -41,11 +42,10 @@ public class MongoProfileRepository extends MongoEntityRepository<Profile> imple
 
     @Override
     public LoginResponseDTO authenticate(String username, String password) {
-        Profile profile = support.findProfileByCredentials(username, password);
-        if (profile == null) {
+        Profile profile = support.findProfileByUsername(username);
+        if (profile == null || !BCrypt.checkpw(password, profile.getPassword())) {
             return null;
         }
-
         return new LoginResponseDTO(profile.getId(), profile.getUsername(), profile.getRole());
     }
 }
