@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>report.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<div align="center">
+</div><p><strong>RPG Game Database Design</strong></p>
+<p>Version 1</p>
+<p>Ahmad Abdel Razak Hussein Alkaseb
+Benjamin Sebastian Barrales Hernandez
+Jeppe Ronning Koch
+Laith Abdel Razak Hussein Alkaseb
+Sadek Alsukafi</p>
+
+<hr>
+<table>
+<thead>
+<tr>
+<th><strong>Course</strong></th>
+<th>Database</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Project</strong></td>
+<td>RPG Game by Bajls</td>
+</tr>
+<tr>
+<td><strong>Date of delivery</strong></td>
+<td><em>(To be filled in)</em></td>
+</tr>
+<tr>
+<td><strong>List of figures</strong></td>
+<td><em>(To be filled in)</em></td>
+</tr>
+<tr>
+<td><strong>List of appendices</strong></td>
+<td><em>(To be filled in)</em></td>
+</tr>
+<tr>
+<td><strong>Number of characters (including spaces)</strong></td>
+<td>46425</td>
+</tr>
+</tbody>
+</table>
+<p>\vspace{0.5cm}
+\begin{center}
+\begin{tabular}{ccc}
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Document3.png} &amp;
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/Graph-Database.png} &amp;
+\includegraphics[width=0.30\textwidth,height=0.17\textheight,keepaspectratio]{images/frontpage/what-is-a-relational-database.jpg}
+\end{tabular}
+\end{center}</p>
+<p>\thispagestyle{empty}</p>
+<p>\newpage</p>
+<p>\tableofcontents</p>
+<p>\newpage</p>
+<h1 id="1-introduction">1. Introduction</h1>
+<p>Our goal is to design and develop a next-generation RPG game inspired by
+the creative freedom and social interaction found in platforms like
+Roblox. The game allows players to explore an interactive world,
+customize their characters in detail, and engage in dynamic gameplay
+experiences.</p>
+<p>At its core, the game revolves around a customizable character that can
+move freely in a large open world. Players experience the game through
+their character, whose appearance, identity, and status are visible to
+others in real time. As in Roblox-inspired games, visual identity and
+personalization are central to the player experience.</p>
+<p>The first development phase focuses on character customization and
+player identity. Players create a personal profile and design one or
+more unique characters with specific physical traits and attributes.
+These traits define how the character looks and can later support social
+interactions and additional gameplay mechanics.</p>
+<p>The world is structured around exploration, housing, and social systems
+such as gangs. Every character is stored in a structured database that
+maintains logical relationships between profiles, characters, roles, and
+properties. The system enforces clear rules for ownership, identity, and
+mandatory attributes.</p>
+<p>The player experience includes:</p>
+<ul>
+<li>Creating a personal profile</li>
+<li>Customizing characters with physical traits</li>
+<li>Exploring the map</li>
+<li>Owning a house</li>
+<li>Optionally joining a gang</li>
+<li>Interacting with other players</li>
+</ul>
+<p>The game architecture must support both regular players and
+administrators who manage the system.</p>
+<h2 id="11-system-overview-and-cloud-architecture">1.1. System overview and cloud architecture</h2>
+<p>This project is organized as a Java application with a PostgreSQL
+database. The same logical architecture is used in cloud deployment and
+in local development, while runtime setup differs by environment.</p>
+<h3 id="architecture-diagram-cloud-deployment">Architecture diagram (cloud deployment)</h3>
+<pre class="hljs"><code><div>[Client / Browser / API Consumer]
+                |
+                v
+       [Java Application Service]
+         (REST + business logic)
+                |
+                v
+         [PostgreSQL Database]
+                |
+                v
+     [Persistent Cloud Volume/Storage]
+</div></code></pre>
+<p>In cloud environments, the application service and database run as
+separate managed workloads. The database persists data on dedicated
+storage, while the application scales independently.</p>
+<h3 id="local-development-deployment-docker-compose">Local development deployment (<code>docker-compose</code>)</h3>
+<p>The local setup uses <code>docker-compose.yml</code> in the project root to start
+application and database services in one command.</p>
+<pre class="hljs"><code><div>docker-compose.yml
+    |
+    +-- service: app (Java 17 + Maven/Hibernate)
+    |       |
+    |       +-- depends_on: db
+    |
+    +-- service: db (PostgreSQL)
+            |
+            +-- volume: local persistent data
+</div></code></pre>
+<p>Typical local startup command:</p>
+<pre class="hljs"><code><div>docker compose up -d
+</div></code></pre>
+<p>\newpage</p>
+<h2 id="12-explanation-of-choices-for-databases-and-programming-languages-and-other-tools">1.2. Explanation of choices for databases and programming languages, and other tools</h2>
+<p>The project uses <strong>PostgreSQL</strong>[^postgres] as the database system because the
+domain is strongly relational and depends on strict integrity rules.
+PostgreSQL gives stable transactional behavior, strong foreign-key
+enforcement, and good support for normalized schemas with junction tables
+such as <code>gang_affiliations</code>.</p>
+<p>The application is implemented in <strong>Java 17</strong>[^java17] with <strong>Maven</strong>[^maven] as the
+build tool. Java was selected because the project team works with an
+object-oriented domain model, and Java integrates directly with JPA
+annotations for entity mapping. Maven provides predictable dependency
+management and reproducible builds across environments.</p>
+<p>For persistence, the project uses <strong>Hibernate (JPA)</strong>[^hibernate]. This allows the
+team to model business entities (<code>Profile</code>, <code>GameCharacter</code>, <code>House</code>,
+<code>Gang</code>, <code>Role</code>, <code>Gender</code>, <code>Weight</code>, <code>Height</code>, <code>EyeColor</code>, <code>SkinColor</code>)
+directly in code and keep the SQL schema aligned
+through mapping metadata. Hibernate is configured for PostgreSQL and
+supports both local development and deployment profiles through
+environment variables.</p>
+<p>Additional tools include:</p>
+<ul>
+<li><strong>Lombok</strong> for reducing boilerplate code in entities (getters,
+setters, constructors, builders).</li>
+<li><strong>Testcontainers</strong> for disposable PostgreSQL instances during tests,
+which improves repeatability and reduces local setup variance.</li>
+<li><strong>pgAdmin</strong> for visual inspection of the physical schema and foreign
+key network.</li>
+</ul>
+<p>The next chapter turns these technology choices into concrete database
+rules and schema decisions.</p>
+<hr>
+<p>\newpage</p>
+<h1 id="2-relational-database">2. Relational database</h1>
+<p>This section defines the functional requirements for our RPG game
+inspired by Roblox. The purpose is to clearly define persons, profiles,
+characters, and their relationships in the system. The system must
+enforce strict rules to ensure data integrity, logical consistency, and
+reliable gameplay functionality.</p>
+<p>To keep a clear thread through the chapter, we move in this order:
+requirements -&gt; conceptual/logical design -&gt; normalization -&gt; physical
+implementation -&gt; stored database objects -&gt; realistic seed data -&gt;
+access control.</p>
+<h2 id="21-intro-to-relational-databases">2.1. Intro to relational databases</h2>
+<p>A relational database organizes information in tables connected by
+keys. This model is suitable for the RPG domain because core business
+rules are relationship-based: one profile can own many characters, each
+character must belong to exactly one profile, and gang membership is
+many-to-many through a junction table.</p>
+<p>Relational systems are also appropriate when consistency is more
+important than schema flexibility. In this project, invalid states such
+as characters without profiles, houses without owners, or duplicate
+membership records must be prevented in the database itself. PostgreSQL
+handles this through primary keys, foreign keys, unique constraints, and
+transaction guarantees.</p>
+<h2 id="22-database-design">2.2. Database design</h2>
+<p>The database design follows a layered progression from requirements to
+implementation:</p>
+<ul>
+<li>First, domain requirements define mandatory entities.</li>
+<li>Next, the conceptual and logical models translate those rules into
+normalized relations.</li>
+<li>Finally, the physical model implements data types, keys, and
+constraints in PostgreSQL/Hibernate.</li>
+</ul>
+<p>This process ensures that design decisions are traceable from business
+rules to concrete table definitions and mapping annotations.</p>
+<p>\newpage</p>
+<h3 id="profile-and-role-requirements">Profile and Role Requirements</h3>
+<h4 id="person-and-profile">Person and Profile</h4>
+<ul>
+<li>A person can have exactly one profile in the system.</li>
+<li>The profile represents the player's digital identity.</li>
+<li>A profile must be uniquely identifiable (for example by <code>profile_id</code>
+or <code>username</code>).</li>
+<li>A person is not allowed to create multiple profiles.</li>
+</ul>
+<p>This ensures that each real-world player is connected to one controlled
+game identity.</p>
+<h4 id="role-system">Role System</h4>
+<ul>
+<li>A profile must have exactly one role.</li>
+<li>The role can be either <code>User</code> or <code>Admin</code>.</li>
+<li>A profile cannot have multiple roles at the same time.</li>
+<li><code>Admin</code> accounts have extended permissions compared to <code>User</code>
+accounts, such as management and moderation functionality.</li>
+</ul>
+<p>This establishes role-based access control in the game.</p>
+<h3 id="character-requirements">Character Requirements</h3>
+<h4 id="profile-to-character-relationship">Profile to Character Relationship</h4>
+<ul>
+<li>A profile can have one or more characters.</li>
+<li>A character must belong to exactly one profile.</li>
+<li>A character cannot exist without being linked to a profile.</li>
+</ul>
+<p>This creates a one-to-many relationship between <code>Profile</code> and
+<code>Character</code>.</p>
+<h4 id="character-attributes">Character Attributes</h4>
+<p>Each character must have exactly one of each required attribute:</p>
+<ul>
+<li>One gender</li>
+<li>One weight</li>
+<li>One height</li>
+<li>One eye color</li>
+<li>One skin color</li>
+</ul>
+<p>All attributes are mandatory and cannot be empty. A character cannot
+have multiple values for any of these attributes. The system must
+validate that all required attributes are present before a character can
+be created.</p>
+<h4 id="housing-requirement">Housing Requirement</h4>
+<ul>
+<li>A character must have exactly one house.</li>
+<li>A character cannot exist without an assigned house.</li>
+<li>A house belongs to exactly one character.</li>
+<li>A house cannot be shared by multiple characters.</li>
+</ul>
+<p>This creates a mandatory one-to-one relationship between <code>Character</code> and
+<code>House</code>. The system must prevent characters without houses and houses
+without assigned characters.</p>
+<h4 id="gang-membership-requirement">Gang Membership Requirement</h4>
+<ul>
+<li>Gang membership is optional.</li>
+<li>A character can belong to zero or more gangs.</li>
+<li>A gang can have zero or more characters.</li>
+</ul>
+<p>This establishes an optional many-to-many relationship between
+<code>Character</code> and <code>Gang</code>.</p>
+<h4 id="data-integrity-rules">Data Integrity Rules</h4>
+<p>The system must enforce the following constraints:</p>
+<ul>
+<li>Every person has at most one profile.</li>
+<li>Every profile has exactly one role.</li>
+<li>Every character belongs to exactly one profile.</li>
+<li>Every character has all required physical attributes.</li>
+<li>Every character has exactly one house.</li>
+<li>A character may belong to zero or more gangs.</li>
+</ul>
+<p>The system must prevent invalid states such as orphan characters,
+missing houses, missing roles, or duplicate role assignments.</p>
+<h4 id="relationship-summary">Relationship Summary</h4>
+<ul>
+<li><code>Profile</code> to <code>Role</code>: Many-to-One</li>
+<li><code>Profile</code> to <code>Character</code>: One-to-Many</li>
+<li><code>Character</code> to <code>House</code>: One-to-One (Mandatory)</li>
+<li><code>Character</code> to <code>Gang</code>: Optional Many-to-Many</li>
+<li><code>Character</code> to Attributes: Many-to-One</li>
+</ul>
+<h4 id="conclusion">Conclusion</h4>
+<p>These requirements define the structural foundation of the RPG system.
+They ensure clear identity management, controlled permissions, complete
+character definitions, and mandatory housing ownership. This
+specification forms the basis for conceptual, logical, and physical
+database modeling.</p>
+<hr>
+<p>\newpage</p>
+<h3 id="221-entityrelationship-model-conceptual---logical---physical-model">2.2.1. Entity/Relationship Model (Conceptual -&gt; Logical -&gt; Physical model)</h3>
+<p>This section presents the entity/relationship progression from
+conceptual understanding to logical structure, and prepares the
+transition to the physical implementation in Section 2.3.</p>
+<h4 id="conceptual-model">Conceptual Model</h4>
+<p>The conceptual model describes the business domain without technical
+implementation details such as data types, indexes, or SQL syntax. Its
+purpose is to show what information the system must manage and how core
+concepts are related from a game and business perspective. In this
+project, <code>Characters</code> is the central concept because most game actions,
+ownership rules, and social interactions are represented through
+character entities.</p>
+<h4 id="conceptual-diagram">Conceptual Diagram</h4>
+<p><img src="file:///Users/jeppekoch/Projects/SOFT/DB/Bajls/report/images/conceptual-logical-physical/conceptual-model-2026-02-10.png" alt="Conceptual data model">
+<em>Date: 10.2.2026</em></p>
+<p>The model includes the following core entities:</p>
+<ul>
+<li><strong>Profiles</strong>: the persistent player identity used for login and
+account-level ownership.</li>
+<li><strong>Roles</strong>: access-level definitions (<code>User</code> and <code>Admin</code>) connected
+to profile permissions.</li>
+<li><strong>Characters</strong>: playable identities controlled by profiles inside
+the game world.</li>
+<li><strong>Houses</strong>: character-owned properties used to represent private
+assets and ownership constraints.</li>
+<li><strong>Gangs</strong>: social groups that support optional membership and
+multi-character affiliation.</li>
+<li><strong>Genders, Weights, Heights, Eyecolors, Skincolors</strong>: controlled
+attribute domains used to define mandatory character appearance
+traits.</li>
+</ul>
+<p>\newpage</p>
+<h4 id="key-relationships-in-the-diagram">Key Relationships in the Diagram</h4>
+<ul>
+<li><code>Profiles</code> to <code>Roles</code>: many-to-one.
+Each profile has exactly one role, while one role can be assigned to
+many profiles.</li>
+<li><code>Profiles</code> to <code>Characters</code>: one-to-many.
+A profile can own multiple characters, and each character belongs to
+one profile.</li>
+<li><code>Characters</code> to <code>Houses</code>: one-to-one (mandatory).
+Each character must be linked to one house, and each house belongs
+to one character.</li>
+<li><code>Characters</code> to appearance tables (<code>Genders</code>, <code>Weights</code>, <code>Heights</code>,
+<code>Eyecolors</code>, <code>Skincolors</code>): many-to-one for each attribute.
+Each character has exactly one value per attribute, and many
+characters can share the same attribute value.</li>
+<li><code>Characters</code> to <code>Gangs</code>: optional many-to-many.
+A character may join zero or more gangs, and each gang may contain
+multiple characters.</li>
+</ul>
+<h4 id="cardinality-and-modality">Cardinality and Modality</h4>
+<p>In this project, relationship rules are described using both
+<strong>cardinality</strong> and <strong>modality</strong>:</p>
+<ul>
+<li><strong>Cardinality</strong> defines the maximum number of related rows (for
+example one-to-one, one-to-many, many-to-many).</li>
+<li><strong>Modality</strong> defines whether participation is mandatory or optional
+(minimum 1 or minimum 0).</li>
+</ul>
+<p>Applied to our model:</p>
+<ul>
+<li><code>Profile</code> -&gt; <code>Character</code>: cardinality is one-to-many, modality is
+mandatory on <code>Character</code> side (every character must have one
+profile) and optional on profile side (a profile can exist with zero
+characters).</li>
+<li><code>Character</code> -&gt; <code>House</code>: cardinality is one-to-one, modality is
+mandatory on character side in our JPA mapping because
+<code>characters.house_id</code> is <code>NOT NULL</code> and <code>UNIQUE</code>. On house side, a
+house can exist without being referenced by a character unless extra
+business rules are added.</li>
+<li><code>Character</code> &lt;-&gt; <code>Gang</code>: cardinality is many-to-many via
+<code>gang_affiliations</code>, modality is optional on both sides (0..N).</li>
+<li><code>Character</code> -&gt; attribute reference tables (<code>Gender</code>, <code>Weight</code>,
+<code>Height</code>, <code>EyeColor</code>, <code>SkinColor</code>): cardinality is many-to-one,
+modality is mandatory on character side because each FK is required.</li>
+</ul>
+<p>The conceptual model also defines participation rules. Participation is
+mandatory for <code>Character</code> to <code>Profile</code>, <code>Character</code> to <code>House</code>, and
+<code>Character</code> to each appearance category because these are required for
+valid gameplay state. Participation is optional for gang membership
+because not all players must engage in group-based social mechanics.</p>
+<p>From a domain perspective, this model prevents ambiguous ownership. A
+profile owns characters, characters own houses, and social membership is
+kept independent through gangs. This separation is important because
+each area has different lifecycle rules: deleting or deactivating a
+profile affects owned characters, while gang membership can be added or
+removed without changing character identity.</p>
+<p>The conceptual view therefore acts as the foundation for the next
+models. It communicates business meaning to both technical and
+non-technical stakeholders, verifies that rules are complete before
+implementation, and reduces redesign risk later in the project.</p>
+<p>\newpage</p>
+<h4 id="logical-model">Logical Model</h4>
+<p>The logical model translates the conceptual design into a normalized
+relational structure. At this level business rules are transformed into
+enforceable structural constraints with attributes.</p>
+<h4 id="logical-diagram">Logical Diagram</h4>
+<p><img src="file:///Users/jeppekoch/Projects/SOFT/DB/Bajls/report/images/conceptual-logical-physical/logical-model-2026-02-10.png" alt="Logical data model">
+<em>Date: 10.2.2026</em></p>
+<h4 id="main-tables">Main Tables</h4>
+<ul>
+<li><strong>Profiles</strong> (first_name, last_name, email, username, password)</li>
+<li><strong>Roles</strong> (name)</li>
+<li><strong>Characters</strong> (name, balance)</li>
+<li><strong>Houses</strong> (amount_rooms, amount_bathrooms)</li>
+<li><strong>Gangs</strong> (name, type)</li>
+<li><strong>Gang_Affiliations</strong> (join_date)</li>
+<li><strong>Genders, Weights, Heights, Eyecolors, Skincolors</strong> (name)</li>
+</ul>
+<p>The table layout intentionally separates high-change data from
+low-change reference data. <code>characters</code> is transaction-heavy and
+contains gameplay-relevant state, while reference tables hold stable
+classification values. This design reduces redundancy and makes updates
+predictable. For example, changing a reference label does not require
+editing every character row.</p>
+<h4 id="logical-relationship-rules">Logical Relationship Rules</h4>
+<ul>
+<li>One <code>Profile</code> belongs to one <code>Role</code>; one <code>Role</code> can be used by many
+profiles.</li>
+<li>One <code>Profile</code> can own many <code>Characters</code>.</li>
+<li>Each <code>Character</code> must reference exactly one value in each attribute
+category.</li>
+<li><code>Character</code> and <code>House</code> are modeled as a mandatory one-to-one
+relationship.</li>
+<li><code>Character</code> and <code>Gang</code> are modeled through the junction table
+<code>Gang_Affiliations</code> (many-to-many).</li>
+</ul>
+<p>In addition to these cardinalities, the logical model defines key
+strategy and uniqueness boundaries:</p>
+<ul>
+<li><code>username</code> should be unique at profile level to guarantee a single
+login identity per player.</li>
+</ul>
+<p>This structure keeps the data model clear and easier to maintain.
+Relationships are defined in a simple way, so common queries are easier
+to build and understand before implementing the final PostgreSQL
+optimization.</p>
+<h3 id="222-normalization-process">2.2.2. Normalization process</h3>
+<p>Normalization keeps data in one place and makes updates and queries more
+consistent. The goal is to eliminate
+redundancy and avoid insertion, update, and deletion anomalies that
+would otherwise appear in gameplay data.</p>
+<h4 id="first-normal-form-1nf">First Normal Form (1NF)</h4>
+<p>1NF requires atomic attributes and no repeating groups in a single
+column. In this schema, all tables satisfy 1NF because each column holds
+one value per row. For example, a character does not store multiple eye
+colors or multiple gang IDs in one field. Multi-valued relationships are
+modeled through separate tables (especially <code>gang_affiliations</code>).</p>
+<h4 id="second-normal-form-2nf">Second Normal Form (2NF)</h4>
+<p>2NF requires that non-key attributes depend on the full primary key, not
+part of it. This is especially relevant in tables with composite keys.
+<code>gang_affiliations</code> satisfies 2NF because <code>join_date</code> depends on the
+specific combination of <code>character_id</code> and <code>gang_id</code> rather than only
+one of them. No partial dependency is present.</p>
+<h4 id="third-normal-form-3nf">Third Normal Form (3NF)</h4>
+<p>3NF removes transitive dependencies where non-key attributes depend on
+other non-key attributes. The schema satisfies this by separating roles,
+appearance categories, and gangs into dedicated tables referenced by
+foreign keys. For example, role names are not duplicated in <code>profiles</code>,
+and appearance labels are not duplicated in <code>characters</code>.</p>
+<p>The resulting 3NF design improves consistency and maintainability:</p>
+<ul>
+<li>Changes are localized to one table.</li>
+<li>Duplicate text values are minimized.</li>
+<li>Integrity constraints become easier to enforce.</li>
+<li>Queries stay clear and consistent as data grows.</li>
+</ul>
+<p>The final logical schema therefore satisfies <strong>3NF</strong> and provides a
+reliable base for physical implementation.</p>
+<hr>
+<p>\newpage</p>
+<h2 id="23-physical-data-model">2.3. Physical data model</h2>
+<h4 id="database-setup-and-schema-execution">Database setup and schema execution</h4>
+<p>The physical database can be created directly from
+<code>sqls/schema.sql</code>. This makes onboarding simple: one script builds the
+tables, keys, and constraints used by the project.</p>
+<h4 id="schema-export">Schema export</h4>
+<p>To make the database reproducible without access to the project host, a
+full schema export is included as <code>sqls/schema.sql</code>. The file is
+generated with <code>pg_dump</code> and contains the DDL (Data Definition Language)
+needed to recreate the database structure: tables, constraints, foreign
+keys, indexes, and sequences.</p>
+<p>The schema file acts as a portable snapshot of the physical data model.
+Anyone cloning the repository can create an identical empty database by
+running:</p>
+<pre class="hljs"><code><div>psql -U postgres -d bajls -f sqls/schema.sql
+</div></code></pre>
+<p>If your local database name is different, replace <code>bajls</code> with your own
+database name (for example <code>bajls_db</code>).</p>
+<p>Minimum setup:</p>
+<pre class="hljs"><code><div>createdb bajls_db
+psql -d bajls_db -f sqls/schema.sql
+</div></code></pre>
+<p>Clean reset (useful during development):</p>
+<pre class="hljs"><code><div>dropdb --<span class="hljs-keyword">if</span>-exists bajls_db
+createdb bajls_db
+psql -d bajls_db -f sqls/schema.sql
+</div></code></pre>
+<p>If your PostgreSQL user is not the default user, specify it explicitly:</p>
+<pre class="hljs"><code><div>psql -U postgres -d bajls_db -f sqls/schema.sql
+</div></code></pre>
+<h4 id="what-the-schema-script-creates">What the schema script creates</h4>
+<p>The script creates the database structure in a logical order:</p>
+<ul>
+<li>Reference tables first (for controlled values), such as <code>roles</code>,
+<code>genders</code>, <code>weights</code>, <code>heights</code>, <code>eyecolors</code>, and <code>skincolors</code>.</li>
+<li>Core business tables next, such as <code>profiles</code>, <code>characters</code>, <code>houses</code>,
+and <code>gangs</code>.</li>
+<li>Relationship table last: <code>gang_affiliations</code>, which links characters
+and gangs in a many-to-many pattern.</li>
+</ul>
+<p>This order matters because foreign keys can only point to tables that
+already exist.</p>
+<h4 id="how-constraints-implement-business-rules">How constraints implement business rules</h4>
+<p>Example from the same pattern used in <code>sqls/schema.sql</code>:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">characters</span> (
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">SERIAL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    profile_id <span class="hljs-built_in">INTEGER</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-keyword">profiles</span>(<span class="hljs-keyword">id</span>),
+    house_id <span class="hljs-built_in">INTEGER</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">UNIQUE</span> <span class="hljs-keyword">REFERENCES</span> houses(<span class="hljs-keyword">id</span>)
+);
+</div></code></pre>
+<p>This simple definition enforces important rules at database level:</p>
+<ul>
+<li><code>PRIMARY KEY</code> gives each character a stable identity.</li>
+<li><code>NOT NULL</code> makes profile and house assignment mandatory.</li>
+<li><code>REFERENCES</code> prevents invalid IDs that do not exist in parent tables.</li>
+<li><code>UNIQUE</code> on <code>house_id</code> enforces one house per character (one-to-one).</li>
+</ul>
+<p>Many-to-many membership is handled with a junction table:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> gang_affiliations (
+    character_id <span class="hljs-built_in">INTEGER</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-keyword">characters</span>(<span class="hljs-keyword">id</span>),
+    gang_id <span class="hljs-built_in">INTEGER</span> <span class="hljs-keyword">REFERENCES</span> gangs(<span class="hljs-keyword">id</span>),
+    join_date <span class="hljs-built_in">DATE</span>,
+    PRIMARY <span class="hljs-keyword">KEY</span> (character_id, gang_id)
+);
+</div></code></pre>
+<p>The composite primary key prevents duplicate memberships for the same
+character-gang pair.</p>
+<h4 id="quick-verification-after-running-the-script">Quick verification after running the script</h4>
+<p>After importing <code>sqls/schema.sql</code>, a developer can run short checks:</p>
+<pre class="hljs"><code><div><span class="hljs-comment">-- list created tables</span>
+\dt
+
+<span class="hljs-comment">-- inspect columns and constraints</span>
+\d characters
+\d gang_affiliations
+</div></code></pre>
+<p>And a quick join test:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">SELECT</span> c.id, p.username, h.id <span class="hljs-keyword">AS</span> house_id
+<span class="hljs-keyword">FROM</span> <span class="hljs-keyword">characters</span> c
+<span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">profiles</span> p <span class="hljs-keyword">ON</span> p.id = c.profile_id
+<span class="hljs-keyword">JOIN</span> houses h <span class="hljs-keyword">ON</span> h.id = c.house_id
+<span class="hljs-keyword">LIMIT</span> <span class="hljs-number">5</span>;
+</div></code></pre>
+<p>If these queries run successfully, the schema is loaded and core
+relationships are working as expected.</p>
+<p>The physical model is the concrete PostgreSQL implementation of the
+logical schema. At this stage, abstract relations are converted into
+actual database objects with column types, constraints, and execution
+characteristics. The implementation shown in pgAdmin reflects the final
+table structure and foreign-key network used by the project.</p>
+<h4 id="physical-diagram">Physical Diagram</h4>
+<p><img src="file:///Users/jeppekoch/Projects/SOFT/DB/Bajls/report/images/conceptual-logical-physical/physical-model-2026-02-10.png" alt="Physical data model in PostgreSQL">
+<em>Date: 10.2.2026</em></p>
+<h4 id="implementation-details">Implementation Details</h4>
+<ul>
+<li>Primary keys are implemented as integer identifiers (<code>id</code>).</li>
+<li>Foreign keys are created between dependent tables to enforce
+referential integrity.</li>
+<li>The <code>characters.house_id</code> column is unique, enforcing one house per
+character.</li>
+<li>The <code>gang_affiliations</code> table stores many-to-many links between
+characters and gangs, including <code>join_date</code>.</li>
+<li>Reference tables (<code>genders</code>, <code>weights</code>, <code>heights</code>, <code>eyecolors</code>,
+<code>skincolors</code>, <code>roles</code>) reduce redundancy and centralize valid
+values.</li>
+</ul>
+<p>The PostgreSQL schema is designed to enforce business rules at database
+level, not only in application code. Mandatory fields are protected with
+<code>NOT NULL</code>, key relationships are protected with foreign keys, and
+entity identity is protected with primary-key constraints. This reduces
+the risk of inconsistent data even if multiple services or scripts write
+to the same database.</p>
+<p>For relationship-heavy queries, indexing strategy is important. Primary
+keys are indexed automatically, and foreign-key columns should be
+indexed to improve join performance, especially for frequent operations
+such as loading profile characters, character attributes, or gang
+memberships. As data volume increases, this prevents full-table scans
+for common gameplay queries.</p>
+<p>Operationally, the physical design also supports maintainability:</p>
+<ul>
+<li>Clear naming conventions for tables and columns.</li>
+<li>Dedicated junction table for many-to-many associations.</li>
+<li>Stable reference tables for controlled enumerations.</li>
+<li>Predictable join paths for reporting and administration tools.</li>
+</ul>
+<h4 id="cardinality-and-modality-in-the-physical-model">Cardinality and Modality in the Physical Model</h4>
+<p>At the physical level, cardinality and modality are enforced through
+foreign keys, uniqueness, and nullability:</p>
+<ul>
+<li><code>profiles.role_id</code> is <code>NOT NULL</code> and references <code>roles.id</code>, so each
+profile must have exactly one role (mandatory many-to-one).</li>
+<li><code>characters.profile_id</code> is <code>NOT NULL</code>, so each character must belong
+to one profile, while a profile can still have zero or many
+characters.</li>
+<li><code>characters.house_id</code> is both <code>NOT NULL</code> and <code>UNIQUE</code>, enforcing one
+mandatory house per character and preventing multiple characters from
+referencing the same house.</li>
+<li>Attribute foreign keys in <code>characters</code> (<code>gender_id</code>, <code>weight_id</code>,
+<code>height_id</code>, <code>eyecolor_id</code>, <code>skincolor_id</code>) are mandatory, which
+enforces complete character definitions.</li>
+<li><code>gang_affiliations</code> implements optional many-to-many membership:
+both sides can have zero or many links, while each link row must
+reference exactly one character and one gang.</li>
+</ul>
+<h3 id="231-data-types">2.3.1. Data types</h3>
+<ul>
+<li><code>INTEGER</code> for primary and foreign keys</li>
+<li><code>VARCHAR(20)</code> for names and short text values</li>
+<li><code>REAL</code> for character balance</li>
+<li><code>DATE</code> for <code>join_date</code> in <code>gang_affiliations</code></li>
+<li><code>NOT NULL</code> on mandatory columns</li>
+</ul>
+<p>These choices balance simplicity and correctness. Integer keys are fast
+for joins, short varchar fields are sufficient for constrained labels,
+and date storage supports timeline analysis of gang membership. If
+future requirements demand larger values or stricter validation, the
+model can be extended with wider text constraints, check constraints,
+and additional indexes without breaking the current structure.</p>
+<h3 id="232-primary-and-foreign-keys">2.3.2. Primary and foreign keys</h3>
+<p>Primary keys use auto-generated integer IDs (<code>GenerationType.IDENTITY</code>)
+in all main tables. This gives each row a simple and stable identifier.</p>
+<p>Foreign keys encode the core relationships:</p>
+<ul>
+<li><code>characters.profile_id</code> -&gt; <code>profiles.id</code></li>
+<li><code>characters.gender_id</code> -&gt; <code>genders.id</code></li>
+<li><code>characters.skincolor_id</code> -&gt; <code>skincolors.id</code></li>
+<li><code>characters.eyecolor_id</code> -&gt; <code>eyecolors.id</code></li>
+<li><code>characters.height_id</code> -&gt; <code>heights.id</code></li>
+<li><code>characters.weight_id</code> -&gt; <code>weights.id</code></li>
+<li><code>profiles.role_id</code> -&gt; <code>roles.id</code></li>
+<li><code>characters.house_id</code> -&gt; <code>houses.id</code> (unique)</li>
+<li><code>gang_affiliations.character_id</code> -&gt; <code>characters.id</code></li>
+<li><code>gang_affiliations.gang_id</code> -&gt; <code>gangs.id</code></li>
+</ul>
+<p>The many-to-many relation between characters and gangs is implemented
+with <code>gang_affiliations</code>, where the composite key
+(<code>character_id</code>, <code>gang_id</code>) prevents duplicate memberships for the same
+pair.</p>
+<h3 id="233-constraints-and-referential-integrity">2.3.3. Constraints and referential integrity</h3>
+<p>The schema enforces integrity through a combination of column
+constraints and relationship constraints:</p>
+<ul>
+<li><code>NOT NULL</code> is used on mandatory attributes (for example profile
+names, credentials, role references, character references, and
+<code>join_date</code>).</li>
+<li><code>UNIQUE</code> constraints prevent duplicates on identity-like values:
+<code>profiles.email</code>, <code>profiles.username</code>, <code>gangs.name</code>, and
+<code>characters.house_id</code>.</li>
+<li>Foreign-key constraints ensure references remain valid across table
+boundaries. Examples include <code>fk_profiles_role</code>,
+<code>fk_characters_profile</code>, <code>fk_characters_house</code>, <code>fk_gang_aff_char</code>,
+and <code>fk_gang_aff_gang</code>.</li>
+</ul>
+<h2 id="in-jpahibernate-required-references-are-marked-as-mandatory-thismatches-the-database-rules-and-helps-prevent-missing-links-unclearownership-and-duplicate-relationships">In JPA/Hibernate, required references are marked as mandatory. This
+matches the database rules and helps prevent missing links, unclear
+ownership, and duplicate relationships.</h2>
+<p>\newpage</p>
+<h2 id="24-stored-objects---views-triggers-events">2.4. Stored objects - views, triggers, events</h2>
+<p>Views are virtual tables defined by an SQL query. Instead of storing data physically, a view presents data from one or more underlying tables based on a predefined query. This allows users and applications to access filtered, structured, or combined data without directly interacting with the base tables.</p>
+<p>A view behaves like a regular table in queries. Users can perform <code>SELECT</code> operations on a view, while the database executes the underlying query dynamically and returns the result set. Because the data is not stored separately, a view always reflects the current state of the underlying tables.</p>
+<p>Views are useful in systems where data should be presented in a controlled or simplified way. In this RPG project, views could be used to expose selected character information, player summaries, or administrative overviews without giving direct access to the full database structure.</p>
+<p>In short: this section covers read-oriented objects (<code>views</code>),
+write-time validation (<code>triggers</code>), and time-based automation (<code>events</code>
+through <code>pg_cron</code>).</p>
+<h3 id="241-views">2.4.1. Views</h3>
+<p><strong>Simplification of complex queries:</strong>
+A view can encapsulate joins and filters that would otherwise require long and complex SQL statements. This makes application queries easier to write and maintain.</p>
+<p><strong>Abstraction from physical structure:</strong>
+Views create a logical layer between the application and the database tables. If table structures change, only the view definition needs to be updated, while application queries can remain unchanged.</p>
+<p><strong>Security and access control:</strong>
+Views can restrict access to sensitive data by exposing only selected columns or rows. For example, administrative or private fields such as passwords or internal identifiers can be hidden.</p>
+<p><strong>Low storage overhead:</strong>
+Standard views do not store data physically, since they generate results dynamically from the base tables.</p>
+<h4 id="limitations-of-views">Limitations of Views</h4>
+<p><strong>Performance overhead:</strong>
+Since the underlying query is executed each time the view is accessed, complex views can reduce performance, especially when based on multiple joins or large tables.</p>
+<p><strong>Dependency on base tables:</strong>
+A view depends on the structure of its underlying tables. If referenced columns or tables are changed or removed, the view may become invalid.</p>
+<p><strong>Update Limitations:</strong>
+Not all views are updatable, particularly those involving joins, grouping, or complex calculations.</p>
+<h4 id="how-views-will-be-used-in-the-rpg-project">How Views Will Be Used in the RPG Project</h4>
+<p>In the RPG system, many features require data from multiple related tables such as profiles, characters and gangs.</p>
+<p><strong>Simplify complex queries:</strong><br>
+Instead of writing long SQL statements with multiple joins, the application can query a single view.</p>
+<p><strong>Provide abstraction:</strong>
+Views create a logical layer between the application and the physical database. If the table structure changes, only the view definition needs to be updated, reducing the impact on the application code.</p>
+<p><strong>Improve security:</strong>
+Views can hide sensitive information such as passwords or internal identifiers and expose only the data needed by the application or administrative tools.</p>
+<p><strong>Support administration and reporting:</strong>
+Views can present summarized information about players, characters, houses, and gang memberships in a clear and structured format.
+This approach improves maintainability and ensures controlled access to the game data.</p>
+<h4 id="character-overview-view">Character Overview View</h4>
+<p>The following example creates a view that provides an overview of each character, including the associated profile and any gang affiliations.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">REPLACE</span> <span class="hljs-keyword">VIEW</span> v_character_overview <span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">SELECT</span>
+    profiles.username <span class="hljs-keyword">AS</span> username,
+    characters.name <span class="hljs-keyword">AS</span> <span class="hljs-keyword">name</span>,
+    characters.balance <span class="hljs-keyword">AS</span> balance,
+    <span class="hljs-keyword">COALESCE</span>(STRING_AGG(gangs.name, <span class="hljs-string">', '</span>), <span class="hljs-string">'Spineless'</span>) <span class="hljs-keyword">AS</span> affiliations
+<span class="hljs-keyword">FROM</span> <span class="hljs-keyword">characters</span>
+<span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">profiles</span> <span class="hljs-keyword">ON</span> profiles.id = characters.profile_id
+<span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> gang_affiliations <span class="hljs-keyword">ON</span> gang_affiliations.character_id = characters.id
+<span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> gangs <span class="hljs-keyword">ON</span> gangs.id = gang_affiliations.gang_id
+<span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> profiles.username, characters.name, characters.balance;
+</div></code></pre>
+<p>The v_character_overview view combines data from multiple related tables into a single logical structure. The purpose of this view is to present information together with the owning profile and any gang affiliations in a simplified format.
+The query is centered around the characters table, since characters represent the core entity in the gameplay domain.<br>
+The <code>view</code> uses <code>CREATE</code> <code>OR</code> <code>REPLACE</code> to allow changes to the query logic without recreating the view manually. However, PostgreSQL does not allow columns to be removed or added when using <code>OR</code> <code>REPLACE</code>. In such cases, the view must be dropped and created again.</p>
+<h5 id="characters-to-gangs-optional-many-to-many-relationship">Characters to Gangs (optional many-to-many relationship)</h5>
+<p>Gang membership is optional and modeled through the junction table gang_affiliations.</p>
+<p>A <code>LEFT</code> <code>JOIN</code> is used because a character may belong to zero or more gangs. This ensures that characters without gang membership are still included in the result.<br>
+The COALESCE function is applied to the STRING_AGG result:
+<code>COALESCE</code>(STRING_AGG(gangs.name, ', '), 'Spineless')</p>
+<p>If a character has no gang affiliations, STRING_AGG returns NULL.
+<code>COALESCE</code> replaces this NULL value with the text 'Spineless', ensuring that characters without a gang are clearly identified instead of showing a NULL value. Since the relationship is many-to-many, a character may be linked to multiple gangs.</p>
+<h5 id="aggregation-and-grouping">Aggregation and Grouping</h5>
+<p>To ensure that each character appears only once, the PostgreSQL aggregation function STRING_AGG is used:</p>
+<p><code>STRING_AGG</code>(gangs.name, ', ') AS affiliations</p>
+<p>This function combines multiple gang names into a single comma-separated string.
+The grouping ensures that all rows belonging to the same character are combined into one result row.
+The view does not expose characters.id. Instead, uniqueness is determined by the combination of username, character name, and balance.
+Hiding internal identifiers helps abstract the database structure and prevents exposing internal technical details, which can improve both security and data encapsulation. This ensures that each character appears only once, even if multiple gang memberships exist. All non-aggregated columns in the SELECT clause must be included in the GROUP BY clause to ensure deterministic results.</p>
+<p><strong>Result</strong></p>
+<p>When querying the view:
+<code>SELECT * FROM v_character_overview;</code></p>
+<p><img src="file:///Users/jeppekoch/Projects/SOFT/DB/Bajls/report/images/frontpage/View-v_character_overview.png" alt="v_character_overview"></p>
+<p>This structure provides a clear and compact overview suitable for application use, administration, and reporting.</p>
+<h4 id="gang-overview-view">Gang Overview View</h4>
+<p>The v_gang_overview view provides a summarized overview of each gang and its members.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">REPLACE</span> <span class="hljs-keyword">VIEW</span> v_gang_overview <span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">SELECT</span>
+    gangs.name <span class="hljs-keyword">AS</span> gang_name,
+    <span class="hljs-keyword">COALESCE</span>(STRING_AGG(characters.name, <span class="hljs-string">', '</span>), <span class="hljs-string">'No members'</span>) <span class="hljs-keyword">AS</span> members
+<span class="hljs-keyword">FROM</span> gangs
+<span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> gang_affiliations <span class="hljs-keyword">ON</span> gang_affiliations.gang_id = gangs.id
+<span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">characters</span> <span class="hljs-keyword">ON</span> characters.id = gang_affiliations.character_id
+<span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> gangs.name;
+</div></code></pre>
+<p><strong>Result</strong></p>
+<p>When querying the view:<br>
+<code>SELECT * FROM v_gang_overview;</code></p>
+<p><img src="file:///Users/jeppekoch/Projects/SOFT/DB/Bajls/report/images/frontpage/View-v_gang_overview.png" alt="v_character_overview"></p>
+<p>The view combines data from the <code>gangs</code>, <code>gang_affiliations</code>, and <code>characters</code> tables to present gang information in a simplified format.</p>
+<h4 id="character-appearance-overview-view">Character Appearance Overview View</h4>
+<p>The v_character_appearance view provides a structured overview of each character’s physical attributes</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">REPLACE</span> <span class="hljs-keyword">VIEW</span> v_character_appearance <span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">SELECT</span>
+    characters.name <span class="hljs-keyword">AS</span> character_name,
+    characters.balance <span class="hljs-keyword">AS</span> balance,
+    genders.name <span class="hljs-keyword">AS</span> gender,
+    weights.name <span class="hljs-keyword">AS</span> weight,
+    heights.name <span class="hljs-keyword">AS</span> height,
+    eyecolors.name <span class="hljs-keyword">AS</span> eye_color,
+    skincolors.name <span class="hljs-keyword">AS</span> skin_color
+<span class="hljs-keyword">FROM</span> <span class="hljs-keyword">characters</span>
+<span class="hljs-keyword">JOIN</span> genders <span class="hljs-keyword">ON</span> genders.id = characters.gender_id
+<span class="hljs-keyword">JOIN</span> weights <span class="hljs-keyword">ON</span> weights.id = characters.weight_id
+<span class="hljs-keyword">JOIN</span> heights <span class="hljs-keyword">ON</span> heights.id = characters.height_id
+<span class="hljs-keyword">JOIN</span> eyecolors <span class="hljs-keyword">ON</span> eyecolors.id = characters.eyecolor_id
+<span class="hljs-keyword">JOIN</span> skincolors <span class="hljs-keyword">ON</span> skincolors.id = characters.skincolor_id;
+</div></code></pre>
+<p>Each of these attributes is stored as a foreign key in the <code>characters</code> table and linked to a corresponding lookup table. By using joins, the view replaces internal identifier values with readable attribute names. This makes the data easier to understand and use in application features, administration, and reporting.</p>
+<p><strong>Result</strong></p>
+<p>When querying the view:
+<code>SELECT * FROM v_character_appearance;</code></p>
+<p><img src="file:///Users/jeppekoch/Projects/SOFT/DB/Bajls/report/images/frontpage/View-v_character_appearance.png" alt="v_character_overview"></p>
+<p>The view simplifies queries by collecting all appearance-related information in a single logical structure and supports the normalized database design by keeping descriptive values in dedicated reference tables.</p>
+<h3 id="242-triggers">2.4.2. Triggers</h3>
+<p>A trigger is a piece of sql code that automatically executes in response to certain events on a
+particular table. A trigger can be set to execute either before or after an insert, update, or delete operation.
+Triggers are commonly used to enforce complex business rules, maintain data integrity, or perform automatic updates based on changes in the database.</p>
+<h3 id="purpose-of-trigger-in-this-project">Purpose of trigger in this project</h3>
+<p>In this project, a trigger is linked to the characters table. The
+purpose of the trigger is to automatically react whenever a new
+character is created.</p>
+<p>Character creation is a core operation in our RPG game. Each time a
+new character is inserted into the database, the system should generate
+a message indicating that the character has been successfully created.
+Rather than implementing this behavior solely in application code, it is
+defined directly in PostgreSQL. This guarantees that the behavior is
+executed consistently, even if data insertion occurs from administrative
+scripts, test environments, or other services.</p>
+<h3 id="trigger-implementation">Trigger Implementation</h3>
+<p>The trigger is defined as an AFTER INSERT trigger on the
+characters table and executes once per inserted row (FOR EACH ROW).
+When a new character is inserted, PostgreSQL invokes the trigger
+function and exposes the inserted row through the special record
+variable NEW.</p>
+<p>The trigger function uses RAISE NOTICE to send a notice containing
+the newly created character’s name. Because the trigger
+runs after the insert operation, referential integrity is guaranteed at
+the time the message is produced.</p>
+<p>The trigger looks like this:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">REPLACE</span> <span class="hljs-keyword">FUNCTION</span> fn_character_notice()
+<span class="hljs-keyword">RETURNS</span> <span class="hljs-keyword">trigger</span>
+<span class="hljs-keyword">LANGUAGE</span> plpgsql
+<span class="hljs-keyword">AS</span> $$
+<span class="hljs-keyword">BEGIN</span>
+  <span class="hljs-keyword">RAISE</span> <span class="hljs-keyword">NOTICE</span> <span class="hljs-string">'Welcome! Your new character created: name=%'</span>, NEW.name;
+RETURN NEW;
+<span class="hljs-keyword">END</span>;
+$$;
+
+<span class="hljs-keyword">DROP</span> <span class="hljs-keyword">TRIGGER</span> <span class="hljs-keyword">IF</span> <span class="hljs-keyword">EXISTS</span> trg_character_notice <span class="hljs-keyword">ON</span> <span class="hljs-keyword">characters</span>;
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TRIGGER</span> trg_character_notice
+    <span class="hljs-keyword">AFTER</span> <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">ON</span> <span class="hljs-keyword">characters</span>
+    <span class="hljs-keyword">FOR</span> <span class="hljs-keyword">EACH</span> <span class="hljs-keyword">ROW</span>
+    <span class="hljs-keyword">EXECUTE</span> <span class="hljs-keyword">FUNCTION</span> fn_character_notice();
+</div></code></pre>
+<p>The message is not stored in a database table.
+Instead, it is sent as a notice to the client application that performed the insert.
+This allows for real-time feedback without modifying the data model or adding extra tables for logging.</p>
+<h3 id="design-considerations">Design considerations</h3>
+<p>Using a trigger for this purpose has both advantages and disadvantages:</p>
+<ul>
+<li><strong>Advantages</strong>:
+<ul>
+<li>Ensures consistent behavior regardless of how data is inserted.</li>
+<li>Centralizes the logic in the database, reducing reliance on application code.</li>
+<li>Provides immediate feedback to users or administrators when characters are created.</li>
+</ul>
+</li>
+<li><strong>Disadvantages</strong>:
+<ul>
+<li>Reduces transparency of system control flow.</li>
+<li>Debugging may require inspecting database-level logic.</li>
+<li>The message is not stored for later retrieval.</li>
+</ul>
+</li>
+</ul>
+<p>Given the limited scope of the project, this approach provides a clear
+demonstration of automated database behavior without introducing
+additional complexity.</p>
+<h3 id="events">Events</h3>
+<p>An event is a piece of SQL code that is scheduled to execute at a specific time or interval.
+Events are commonly used for tasks such as periodic data cleanup, scheduled reporting, or automated maintenance.
+As we are using Postgres in this project, we do not have access to scheduled events.
+So instead we will show an example of how it would be done in MySQL.</p>
+<h3 id="purpose-of-event-in-this-project">Purpose of event in this project</h3>
+<p>Our thought was that we would use a weekly scheduled event to announce the richest person in our game.
+The event would run every week and execute a query to find the character with the highest balance.
+Then it would raise notice with the name of the richest character and their balance.
+We thought about creating a Notification table to store the results of the event, but we decided to keep it simple and just use RAISE NOTICE for demonstration purposes.</p>
+<h3 id="event-implementation">Event Implementation</h3>
+<pre class="hljs"><code><div>
+</div></code></pre>
+<h3 id="decision-not-made-yet-work-in-progress">decision not made yet. work in progress</h3>
+<h3 id="design-considerations">Design considerations</h3>
+<p>Using an event for this purpose has both advantages and disadvantages:</p>
+<ul>
+<li><strong>Advantages</strong>:
+<ul>
+<li>Automates regular tasks without manual intervention.</li>
+<li>Provides timely updates to users or administrators.</li>
+<li>Can be used for a wide range of scheduled operations.</li>
+</ul>
+</li>
+<li><strong>Disadvantages</strong>:
+<ul>
+<li>May require additional setup and configuration in the database.</li>
+<li>Debugging scheduled events can be more complex than triggers.</li>
+<li>The output may not be easily accessible if not stored in a table.</li>
+</ul>
+</li>
+</ul>
+<h3 id="243-events">2.4.3. Events</h3>
+<h4 id="introduction">Introduction</h4>
+<p>In many relational database courses, &quot;events&quot; usually means scheduled
+database tasks that run automatically at fixed times. PostgreSQL does
+not provide a built-in <code>CREATE EVENT</code> feature like MySQL. For this
+reason, this project implements scheduled behavior using a cron-based
+approach instead.</p>
+<p>The implementation is placed in <code>sqls/daily_loyalty_bonus.sql</code>.</p>
+<h4 id="why-cron-jobs-in-postgresql">Why cron jobs in PostgreSQL</h4>
+<p>Because PostgreSQL has no native event scheduler syntax, we use the
+<code>pg_cron</code> extension to execute SQL commands on a defined schedule. This
+gives us event-like behavior while staying inside PostgreSQL.</p>
+<p>In this project, the scheduled task runs every day at <strong>00:01</strong> and
+updates each character's balance according to gang membership rules:</p>
+<ul>
+<li>Characters with gang affiliation receive a loyalty bonus.</li>
+<li>Characters without gang affiliation receive a fixed fallback bonus of
+<code>100</code>.</li>
+</ul>
+<h4 id="cron-job-file-walkthrough">Cron job file walkthrough</h4>
+<p>The full implementation is in <code>sqls/daily_loyalty_bonus.sql</code> and is
+structured in three parts:</p>
+<ol>
+<li>Enable extension:</li>
+</ol>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> EXTENSION <span class="hljs-keyword">IF</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> pg_cron;
+</div></code></pre>
+<p>This ensures cron scheduling is available in the current database.</p>
+<ol start="2">
+<li>Replace existing job with same name:</li>
+</ol>
+<pre class="hljs"><code><div><span class="hljs-keyword">DO</span> $$
+<span class="hljs-keyword">DECLARE</span>
+    v_job_id <span class="hljs-built_in">integer</span>;
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">SELECT</span> jobid
+    <span class="hljs-keyword">INTO</span> v_job_id
+    <span class="hljs-keyword">FROM</span> cron.job
+    <span class="hljs-keyword">WHERE</span> jobname = <span class="hljs-string">'daily_loyalty_bonus'</span>;
+
+    IF v_job_id IS NOT NULL THEN
+        PERFORM cron.unschedule(v_job_id);
+    <span class="hljs-keyword">END</span> <span class="hljs-keyword">IF</span>;
+<span class="hljs-keyword">END</span> $$;
+</div></code></pre>
+<p>This prevents duplicate schedules if the script is executed multiple
+times.</p>
+<ol start="3">
+<li>Schedule daily payout at <code>00:01</code>:</li>
+</ol>
+<pre class="hljs"><code><div><span class="hljs-keyword">SELECT</span> cron.schedule(
+    <span class="hljs-string">'daily_loyalty_bonus'</span>,
+    <span class="hljs-string">'1 0 * * *'</span>,
+    $cron$
+    <span class="hljs-keyword">UPDATE</span> <span class="hljs-keyword">characters</span> c
+    <span class="hljs-keyword">SET</span> balance = c.balance + <span class="hljs-keyword">COALESCE</span>(b.bonus, <span class="hljs-number">100</span>)
+    <span class="hljs-keyword">FROM</span> (
+        <span class="hljs-keyword">SELECT</span>
+            c2.id <span class="hljs-keyword">AS</span> character_id,
+            <span class="hljs-keyword">SUM</span>(<span class="hljs-keyword">GREATEST</span>((<span class="hljs-keyword">CURRENT_DATE</span> - ga.join_date), <span class="hljs-number">0</span>))::<span class="hljs-keyword">double</span> <span class="hljs-keyword">precision</span> <span class="hljs-keyword">AS</span> bonus
+        <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">characters</span> c2
+        <span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> gang_affiliations ga
+            <span class="hljs-keyword">ON</span> ga.character_id = c2.id
+        <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> c2.id
+    ) b
+    <span class="hljs-keyword">WHERE</span> c.id = b.character_id;
+    $cron$
+);
+</div></code></pre>
+<p>How this works:</p>
+<ul>
+<li><code>'1 0 * * *'</code> means every day at 00:01.</li>
+<li><code>LEFT JOIN</code> keeps all characters in scope, even without gang rows.</li>
+<li><code>CURRENT_DATE - ga.join_date</code> calculates number of days in gang.</li>
+<li><code>SUM(...)</code> adds bonus days if a character has multiple affiliations.</li>
+<li><code>COALESCE(b.bonus, 100)</code> applies fallback <code>100</code> when no gang bonus is
+available.</li>
+</ul>
+<h4 id="summary">Summary</h4>
+<p>PostgreSQL does not have native event objects, so scheduled automation
+is implemented using cron jobs. In this project, the daily loyalty
+payout is implemented as a reusable SQL script in
+<code>sqls/daily_loyalty_bonus.sql</code>, providing predictable and fully
+database-side automation.</p>
+<p>\newpage</p>
+<h2 id="25-realistic-data">2.5. Realistic data</h2>
+<h3 id="introduction">Introduction</h3>
+<p>The project includes a dedicated seed script, <code>sqls/seed.sql</code>, that creates a
+realistic baseline dataset for demos, testing, and validation. Instead
+of random values, the script inserts coherent player profiles,
+characters, houses, and gang memberships, so queries return believable
+results and relationship rules can be verified in practice.</p>
+<h3 id="script-structure">Script Structure</h3>
+<p>The script starts by opening a transaction and resetting all relevant
+tables. This makes each run deterministic and easy to repeat.</p>
+<p>In this context, <em>deterministic</em> means that the script produces the same
+data state every time it is executed on the same schema.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">BEGIN</span>;
+<span class="hljs-keyword">TRUNCATE</span> <span class="hljs-keyword">TABLE</span>
+    gang_affiliations,
+    <span class="hljs-keyword">characters</span>,
+    <span class="hljs-keyword">profiles</span>,
+    gangs,
+    houses,
+    <span class="hljs-keyword">roles</span>,
+    genders,
+    weights,
+    heights,
+    eyecolors,
+    skincolors
+RESTART <span class="hljs-keyword">IDENTITY</span> <span class="hljs-keyword">CASCADE</span>;
+</div></code></pre>
+<p><code>TRUNCATE</code> removes all rows from the listed tables very quickly.
+<code>RESTART IDENTITY</code> resets auto-increment IDs back to their starting
+values, and <code>CASCADE</code> ensures dependent tables are also cleared safely.</p>
+<p>After reset, the script inserts stable reference data first, followed by
+gangs and player profiles.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> <span class="hljs-keyword">roles</span> (<span class="hljs-keyword">id</span>, <span class="hljs-keyword">name</span>) <span class="hljs-keyword">VALUES</span> (<span class="hljs-number">1</span>, <span class="hljs-string">'USER'</span>), (<span class="hljs-number">2</span>, <span class="hljs-string">'ADMIN'</span>);
+<span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> genders (<span class="hljs-keyword">id</span>, <span class="hljs-keyword">name</span>) <span class="hljs-keyword">VALUES</span> (<span class="hljs-number">1</span>, <span class="hljs-string">'MALE'</span>), (<span class="hljs-number">2</span>, <span class="hljs-string">'FEMALE'</span>), (<span class="hljs-number">3</span>, <span class="hljs-string">'OTHER'</span>);
+<span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> weights (<span class="hljs-keyword">id</span>, <span class="hljs-keyword">name</span>) <span class="hljs-keyword">VALUES</span> (<span class="hljs-number">1</span>, <span class="hljs-string">'LIGHT'</span>), (<span class="hljs-number">2</span>, <span class="hljs-string">'AVERAGE'</span>), (<span class="hljs-number">3</span>, <span class="hljs-string">'HEAVY'</span>);
+<span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> heights (<span class="hljs-keyword">id</span>, <span class="hljs-keyword">name</span>) <span class="hljs-keyword">VALUES</span> (<span class="hljs-number">1</span>, <span class="hljs-string">'SHORT'</span>), (<span class="hljs-number">2</span>, <span class="hljs-string">'AVERAGE'</span>), (<span class="hljs-number">3</span>, <span class="hljs-string">'TALL'</span>);
+</div></code></pre>
+<h3 id="schema-aware-character-and-house-seeding">Schema-aware character and house seeding</h3>
+<p>To support schema variants, seeding for <code>characters</code> and <code>houses</code> is
+handled in a <code>DO</code> block. It checks where the foreign key is placed and
+inserts in the correct order to avoid referential errors.</p>
+<pre class="hljs"><code><div>IF characters_has_house_id AND NOT houses_has_character_id THEN
+    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> houses (<span class="hljs-keyword">id</span>, amount_rooms, amount_bathrooms) <span class="hljs-keyword">VALUES</span>
+        (<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span>), (<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">2</span>), (<span class="hljs-number">3</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
+
+    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> <span class="hljs-keyword">characters</span> (
+        <span class="hljs-keyword">id</span>, <span class="hljs-keyword">name</span>, balance, profile_id, gender_id, skincolor_id,
+        eyecolor_id, height_id, weight_id, house_id
+    ) <span class="hljs-keyword">VALUES</span>
+        (<span class="hljs-number">1</span>, <span class="hljs-string">'ShadowMia'</span>, <span class="hljs-number">2450.50</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">2</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span>),
+        (<span class="hljs-number">2</span>, <span class="hljs-string">'SteelNoah'</span>, <span class="hljs-number">1320.00</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-number">2</span>);
+<span class="hljs-keyword">END</span> <span class="hljs-keyword">IF</span>;
+</div></code></pre>
+<p>The condition means: if <code>characters</code> contains <code>house_id</code> and <code>houses</code>
+does not contain <code>character_id</code>, then the foreign key points from
+<code>characters</code> to <code>houses</code>. In that case, <code>houses</code> must be inserted first.</p>
+<p>For <code>INSERT INTO houses (id, amount_rooms, amount_bathrooms)</code>, each tuple
+follows that exact column order:</p>
+<ul>
+<li><code>(1, 2, 1)</code> = <code>id = 1</code>, <code>amount_rooms = 2</code>, <code>amount_bathrooms = 1</code></li>
+<li><code>(2, 3, 2)</code> = <code>id = 2</code>, <code>amount_rooms = 3</code>, <code>amount_bathrooms = 2</code></li>
+<li><code>(3, 1, 1)</code> = <code>id = 3</code>, <code>amount_rooms = 1</code>, <code>amount_bathrooms = 1</code></li>
+</ul>
+<h3 id="gang-membership-data">Gang membership data</h3>
+<p>Gang membership is optional in the model, so only a subset of characters
+receives rows in <code>gang_affiliations</code>. This intentionally demonstrates
+both valid states: characters with gang membership and characters
+without gang membership.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> gang_affiliations (character_id, gang_id, join_date) <span class="hljs-keyword">VALUES</span>
+    (<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-string">'2025-01-12'</span>),
+    (<span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-string">'2025-02-03'</span>),
+    (<span class="hljs-number">3</span>, <span class="hljs-number">7</span>, <span class="hljs-string">'2025-03-22'</span>),
+    (<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-string">'2025-04-10'</span>);
+</div></code></pre>
+<p>Finally, all inserts are persisted in one atomic commit.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">COMMIT</span>;
+</div></code></pre>
+<h2 id="26-security-and-access-control">2.6. Security and access control</h2>
+<h3 id="261-explanation-of-users-and-privileges">2.6.1. Explanation of users and privileges</h3>
+<p>Database access should follow least-privilege principles, so each role
+gets only the permissions required for its tasks. A typical split is:</p>
+<ul>
+<li><code>app_user</code>: runtime role for the Java application (<code>SELECT</code>, <code>INSERT</code>,
+<code>UPDATE</code>, <code>DELETE</code> on business tables).</li>
+<li><code>report_user</code>: read-only role for analytics and reporting (<code>SELECT</code>
+only, especially on views).</li>
+<li><code>admin_user</code>: migration and maintenance role (<code>CREATE</code>, <code>ALTER</code>,
+<code>DROP</code>, and role management).</li>
+</ul>
+<p>Example grants:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">ROLE</span> app_user LOGIN <span class="hljs-keyword">PASSWORD</span> <span class="hljs-string">'change_me'</span>;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">ROLE</span> report_user LOGIN <span class="hljs-keyword">PASSWORD</span> <span class="hljs-string">'change_me'</span>;
+
+<span class="hljs-keyword">GRANT</span> <span class="hljs-keyword">USAGE</span> <span class="hljs-keyword">ON</span> <span class="hljs-keyword">SCHEMA</span> <span class="hljs-keyword">public</span> <span class="hljs-keyword">TO</span> app_user, report_user;
+<span class="hljs-keyword">GRANT</span> <span class="hljs-keyword">SELECT</span>, <span class="hljs-keyword">INSERT</span>, <span class="hljs-keyword">UPDATE</span>, <span class="hljs-keyword">DELETE</span> <span class="hljs-keyword">ON</span> <span class="hljs-keyword">ALL</span> <span class="hljs-keyword">TABLES</span> <span class="hljs-keyword">IN</span> <span class="hljs-keyword">SCHEMA</span> <span class="hljs-keyword">public</span> <span class="hljs-keyword">TO</span> app_user;
+<span class="hljs-keyword">GRANT</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">ON</span> v_character_overview, v_gang_overview, v_character_appearance <span class="hljs-keyword">TO</span> report_user;
+</div></code></pre>
+<p>This model prevents accidental schema changes from application accounts
+and limits exposure of sensitive data to only what each user type needs.</p>
+<h2 id="27-chapter-summary">2.7. Chapter summary</h2>
+<p>This chapter moved from requirements to implementation in a single
+traceable line:</p>
+<ul>
+<li>business rules were defined,</li>
+<li>relationships were modeled and normalized,</li>
+<li>schema execution and integrity constraints were documented,</li>
+<li>views/triggers/events were explained as stored objects,</li>
+<li>realistic seed data and privilege strategy completed the operational
+setup.</li>
+</ul>
+<p>Together, these elements make the database understandable, reproducible,
+and ready for both development and deployment.</p>
+<p>[^postgres]: PostgreSQL Documentation: https://www.postgresql.org/docs/</p>
+<p>[^java17]: Java 17 Documentation (Oracle): https://docs.oracle.com/en/java/javase/17/</p>
+<p>[^maven]: Apache Maven Documentation: https://maven.apache.org/guides/</p>
+<p>[^hibernate]: Hibernate ORM Documentation: https://hibernate.org/orm/documentation/</p>
+
+</body>
+</html>
