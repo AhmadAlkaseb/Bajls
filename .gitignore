@@ -4,8 +4,7 @@ target/
 !**/src/test/**/target/
 .kotlin
 .env
-report.html
-report_tmp.html
+
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
