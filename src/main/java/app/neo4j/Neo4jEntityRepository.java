@@ -86,11 +86,13 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
 
     private void writeNode(Long id, T entity) {
         String payload = Neo4jSupport.toJson(entity, objectMapper);
+        Map<String, Object> properties = toNeo4jProperties(entity, id, payload);
+
         try (Session session = driver.session()) {
             session.executeWrite(tx -> {
                 tx.run(
-                        "MERGE (n:" + label + " {id: $id}) SET n.payload = $payload",
-                        Map.of("id", id, "payload", payload)
+                        "MERGE (n:" + label + " {id: $id}) SET n += $properties",
+                        Map.of("id", id, "properties", properties)
                 );
                 return null;
             });
@@ -132,5 +134,61 @@ public class Neo4jEntityRepository<T> implements EntityRepository<T> {
                 return null;
             });
         }
+    }
+
+    private Map<String, Object> toNeo4jProperties(T entity, Long id, String payload) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = objectMapper.convertValue(entity, Map.class);
+
+        Map<String, Object> props = new java.util.HashMap<>();
+
+        raw.forEach((key, value) -> {
+            Object converted = toNeo4jValue(value);
+            if (converted != null) {
+                props.put(key, converted);
+            }
+        });
+
+        props.put("id", id);
+        //props.put("payload", payload);
+
+        return props;
+    }
+
+    private Object toNeo4jValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof java.math.BigDecimal bd) {
+            return bd.doubleValue();
+            // alternativt: return bd.toPlainString();
+        }
+
+        if (value instanceof java.math.BigInteger bi) {
+            return bi.longValue();
+        }
+
+        if (value instanceof java.time.LocalDateTime ldt) {
+            return ldt.toString();
+        }
+
+        if (value instanceof java.time.LocalDate ld) {
+            return ld.toString();
+        }
+
+        if (value instanceof java.time.LocalTime lt) {
+            return lt.toString();
+        }
+
+        if (value instanceof Enum<?> e) {
+            return e.name();
+        }
+
+        if (value instanceof Map<?, ?> || value instanceof List<?>) {
+            return Neo4jSupport.toJson(value, objectMapper);
+        }
+
+        return value;
     }
 }
