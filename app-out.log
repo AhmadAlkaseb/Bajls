@@ -1,0 +1,280 @@
+Hibernate Java Config serviceRegistry created
+Hibernate: 
+    alter table if exists quests 
+       alter column description set data type text
+Hibernate: 
+    /* SELECT
+        p 
+    FROM
+        Profile p 
+    ORDER BY
+        p.id */ select
+            p1_0.id,
+            p1_0.email,
+            p1_0.first_name,
+            p1_0.last_name,
+            p1_0.password,
+            p1_0.role,
+            p1_0.username 
+        from
+            profiles p1_0 
+        order by
+            p1_0.id
+Hibernate: 
+    /* SELECT
+        d 
+    FROM
+        Drug d 
+    ORDER BY
+        d.id */ select
+            d1_0.id,
+            d1_0.name,
+            d1_0.type 
+        from
+            drugs d1_0 
+        order by
+            d1_0.id
+Hibernate: 
+    /* SELECT
+        q 
+    FROM
+        Quest q 
+    ORDER BY
+        q.id */ select
+            q1_0.id,
+            q1_0.description,
+            q1_0.reward,
+            q1_0.title 
+        from
+            quests q1_0 
+        order by
+            q1_0.id
+Hibernate: 
+    /* SELECT
+        g 
+    FROM
+        Gang g 
+    ORDER BY
+        g.id */ select
+            g1_0.id,
+            g1_0.name,
+            g1_0.type 
+        from
+            gangs g1_0 
+        order by
+            g1_0.id
+Hibernate: 
+    /* SELECT
+        c 
+    FROM
+        GameCharacter c 
+    JOIN
+        
+    FETCH
+        c.profile 
+    JOIN
+        
+    FETCH
+        c.house 
+    JOIN
+        
+    FETCH
+        c.garage 
+    ORDER BY
+        c.id  */ select
+            gc1_0.id,
+            gc1_0.balance,
+            gc1_0.eyecolor,
+            gc1_0.garage_id,
+            g1_0.id,
+            g1_0.capacity,
+            gc1_0.gender,
+            gc1_0.height,
+            gc1_0.house_id,
+            h1_0.id,
+            h1_0.amount_bathrooms,
+            h1_0.amount_rooms,
+            gc1_0.name,
+            gc1_0.profile_id,
+            p1_0.id,
+            p1_0.email,
+            p1_0.first_name,
+            p1_0.last_name,
+            p1_0.password,
+            p1_0.role,
+            p1_0.username,
+            gc1_0.skincolor,
+            gc1_0.version,
+            gc1_0.weight 
+        from
+            characters gc1_0 
+        join
+            profiles p1_0 
+                on p1_0.id=gc1_0.profile_id 
+        join
+            houses h1_0 
+                on h1_0.id=gc1_0.house_id 
+        join
+            garages g1_0 
+                on g1_0.id=gc1_0.garage_id 
+        order by
+            gc1_0.id
+Hibernate: 
+    /* SELECT
+        v 
+    FROM
+        Vehicle v 
+    JOIN
+        
+    FETCH
+        v.garage 
+    ORDER BY
+        v.id  */ select
+            v1_0.id,
+            v1_0.garage_id,
+            g1_0.id,
+            g1_0.capacity,
+            v1_0.model,
+            v1_0.plate_number,
+            v1_0.type 
+        from
+            vehicles v1_0 
+        join
+            garages g1_0 
+                on g1_0.id=v1_0.garage_id 
+        order by
+            v1_0.id
+Hibernate: 
+    /* SELECT
+        cd 
+    FROM
+        CharacterDrug cd 
+    JOIN
+        
+    FETCH
+        cd.character 
+    JOIN
+        
+    FETCH
+        cd.drug 
+    ORDER BY
+        cd.id  */ select
+            cd1_0.id,
+            cd1_0.character_id,
+            c1_0.id,
+            c1_0.balance,
+            c1_0.eyecolor,
+            c1_0.garage_id,
+            c1_0.gender,
+            c1_0.height,
+            c1_0.house_id,
+            c1_0.name,
+            c1_0.profile_id,
+            c1_0.skincolor,
+            c1_0.version,
+            c1_0.weight,
+            cd1_0.drug_id,
+            d1_0.id,
+            d1_0.name,
+            d1_0.type,
+            cd1_0.quantity 
+        from
+            character_drug cd1_0 
+        join
+            characters c1_0 
+                on c1_0.id=cd1_0.character_id 
+        join
+            drugs d1_0 
+                on d1_0.id=cd1_0.drug_id 
+        order by
+            cd1_0.id
+Hibernate: 
+    /* SELECT
+        cq 
+    FROM
+        CharacterQuest cq 
+    JOIN
+        
+    FETCH
+        cq.character 
+    JOIN
+        
+    FETCH
+        cq.quest 
+    ORDER BY
+        cq.id  */ select
+            cq1_0.id,
+            cq1_0.accepted_at,
+            cq1_0.character_id,
+            c1_0.id,
+            c1_0.balance,
+            c1_0.eyecolor,
+            c1_0.garage_id,
+            c1_0.gender,
+            c1_0.height,
+            c1_0.house_id,
+            c1_0.name,
+            c1_0.profile_id,
+            c1_0.skincolor,
+            c1_0.version,
+            c1_0.weight,
+            cq1_0.quest_id,
+            q1_0.id,
+            q1_0.description,
+            q1_0.reward,
+            q1_0.title,
+            cq1_0.status 
+        from
+            character_quest cq1_0 
+        join
+            characters c1_0 
+                on c1_0.id=cq1_0.character_id 
+        join
+            quests q1_0 
+                on q1_0.id=cq1_0.quest_id 
+        order by
+            cq1_0.id
+Hibernate: 
+    /* SELECT
+        ga 
+    FROM
+        GangAffiliation ga 
+    JOIN
+        
+    FETCH
+        ga.character 
+    JOIN
+        
+    FETCH
+        ga.gang 
+    ORDER BY
+        ga.id  */ select
+            ga1_0.id,
+            ga1_0.character_id,
+            c1_0.id,
+            c1_0.balance,
+            c1_0.eyecolor,
+            c1_0.garage_id,
+            c1_0.gender,
+            c1_0.height,
+            c1_0.house_id,
+            c1_0.name,
+            c1_0.profile_id,
+            c1_0.skincolor,
+            c1_0.version,
+            c1_0.weight,
+            ga1_0.gang_id,
+            g1_0.id,
+            g1_0.name,
+            g1_0.type,
+            ga1_0.join_date 
+        from
+            gang_affiliations ga1_0 
+        join
+            characters c1_0 
+                on c1_0.id=ga1_0.character_id 
+        join
+            gangs g1_0 
+                on g1_0.id=ga1_0.gang_id 
+        order by
+            ga1_0.id

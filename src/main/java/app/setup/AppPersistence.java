@@ -3,7 +3,6 @@ package app.setup;
 import app.auth.AuthService;
 import app.controller.CrudController;
 import app.controller.TransactionController;
-import app.dto.AuditLogDTO;
 import app.dto.CharacterDrugDTO;
 import app.dto.CharacterQuestDTO;
 import app.dto.DrugDTO;

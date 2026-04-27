@@ -34,7 +34,6 @@ public final class MongoProfileCollectionSupport {
     public Profile findProfileByUsername(String username) {
         return MongoProfileEntityMapper.toProfile(collection.find(Filters.eq("username", username)).first());
     }
-    }
 
     public Profile saveProfile(Profile profile) {
         if (profile.getId() == null) {

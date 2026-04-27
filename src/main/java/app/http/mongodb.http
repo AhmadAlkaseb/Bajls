@@ -1,11 +1,22 @@
-@baseUrl = http://localhost:7070/api
+@baseUrl = http://localhost:7073/api
 @contentType = application/json
 @adminAuth = Basic YWFuZGVyc2VuOlBAc3NBc3RhNQ==
 @userAuth = Basic bWloYW5zZW46UEBzc01pYTE=
 @unique = {{$timestamp}}
+@profileId = 1
+@characterId = 1
+@houseId = 1
+@garageId = 1
+@vehicleId = 1
+@gangId = 1
+@gangAffiliationId = 1
+@drugId = 1
+@questId = 1
+@characterDrugId = 1
+@characterQuestId = 1
 
-# MongoDB smoke requests.
-# In Main.java, set DATABASE_TYPE = DatabaseType.MONGODB.
+# MongoDB sequential smoke flow.
+# MongoDB app runs on port 7073.
 
 ### Admin login
 POST {{baseUrl}}/auth/login
@@ -14,6 +25,15 @@ Content-Type: {{contentType}}
 {
   "username": "aandersen",
   "password": "P@ssAsta5"
+}
+
+### User login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "mihansen",
+  "password": "P@ssMia1"
 }
 
 ### List profiles
@@ -30,6 +50,25 @@ Content-Type: {{contentType}}
   "type": "METH"
 }
 
+> {%
+client.global.set("drugId", response.body.id);
+%}
+
+### Get created drug
+GET {{baseUrl}}/drugs/{{drugId}}
+Authorization: {{adminAuth}}
+
+### Update created drug
+PUT {{baseUrl}}/drugs/{{drugId}}
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{drugId}},
+  "name": "Updated Dust {{unique}}",
+  "type": "COCAINE"
+}
+
 ### Create quest
 POST {{baseUrl}}/quests
 Authorization: {{adminAuth}}
@@ -41,9 +80,58 @@ Content-Type: {{contentType}}
   "reward": 777.77
 }
 
-### List characters
-GET {{baseUrl}}/characters
+> {%
+client.global.set("questId", response.body.id);
+%}
+
+### Get created quest
+GET {{baseUrl}}/quests/{{questId}}
+Authorization: {{adminAuth}}
+
+### Update created quest
+PUT {{baseUrl}}/quests/{{questId}}
+Authorization: {{adminAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{questId}},
+  "title": "Updated Quest {{unique}}",
+  "description": "Updated description.",
+  "reward": 888.88
+}
+
+### Create gang
+POST {{baseUrl}}/gangs
 Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "name": "The Bajls {{unique}}",
+  "type": "STREET"
+}
+
+> {%
+client.global.set("gangId", response.body.id);
+%}
+
+### List gangs
+GET {{baseUrl}}/gangs
+Authorization: {{userAuth}}
+
+### Get created gang
+GET {{baseUrl}}/gangs/{{gangId}}
+Authorization: {{userAuth}}
+
+### Update created gang
+PUT {{baseUrl}}/gangs/{{gangId}}
+Authorization: {{userAuth}}
+Content-Type: {{contentType}}
+
+{
+  "id": {{gangId}},
+  "name": "The Bajls Updated {{unique}}",
+  "type": "MAFIA"
+}
 
 ### Create character
 POST {{baseUrl}}/characters
@@ -53,7 +141,7 @@ Content-Type: {{contentType}}
 {
   "name": "MongoRider {{unique}}",
   "balance": 1500.50,
-  "profile": { "id": 1 },
+  "profile": { "id": {{profileId}} },
   "gender": "FEMALE",
   "skincolor": "LIGHT",
   "eyecolor": "GREEN",
@@ -68,238 +156,199 @@ Content-Type: {{contentType}}
   }
 }
 
-### List gangs
-GET {{baseUrl}}/gangs
+> {%
+client.global.set("characterId", response.body.id);
+client.global.set("houseId", response.body.house.id);
+client.global.set("garageId", response.body.garage.id);
+%}
+
+### List characters
+GET {{baseUrl}}/characters
 Authorization: {{userAuth}}
 
-### --- Houses ---
+### Get created character
+GET {{baseUrl}}/characters/{{characterId}}
+Authorization: {{userAuth}}
+
+### List houses
 GET {{baseUrl}}/houses
 Authorization: {{userAuth}}
 
-POST {{baseUrl}}/houses
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-{
-  "amountRooms": 3,
-  "amountBathrooms": 2
-}
-
-GET {{baseUrl}}/houses/{id}
+### Get linked house
+GET {{baseUrl}}/houses/{{houseId}}
 Authorization: {{userAuth}}
 
-PUT {{baseUrl}}/houses/{id}
+### Update linked house
+PUT {{baseUrl}}/houses/{{houseId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
+  "id": {{houseId}},
   "amountRooms": 4,
-  "amountBathrooms": 3
+  "amountBathrooms": 3,
+  "character": { "id": {{characterId}} }
 }
 
-DELETE {{baseUrl}}/houses/{id}
-Authorization: {{userAuth}}
-
-### --- Garages ---
+### List garages
 GET {{baseUrl}}/garages
 Authorization: {{userAuth}}
 
-POST {{baseUrl}}/garages
+### Get linked garage
+GET {{baseUrl}}/garages/{{garageId}}
+Authorization: {{userAuth}}
+
+### Update linked garage
+PUT {{baseUrl}}/garages/{{garageId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
-  "capacity": 2
+  "id": {{garageId}},
+  "capacity": 3,
+  "character": { "id": {{characterId}} }
 }
 
-GET {{baseUrl}}/garages/{id}
-Authorization: {{userAuth}}
-
-PUT {{baseUrl}}/garages/{id}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-{
-  "capacity": 3
-}
-
-DELETE {{baseUrl}}/garages/{id}
-Authorization: {{userAuth}}
-
-### --- Vehicles ---
-GET {{baseUrl}}/vehicles
-Authorization: {{userAuth}}
-
+### Create vehicle
 POST {{baseUrl}}/vehicles
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
+  "garage": { "id": {{garageId}} },
   "type": "CAR",
-  "model": "Sedan"
+  "model": "Sedan",
+  "plateNumber": "MONGO-{{unique}}"
 }
 
-GET {{baseUrl}}/vehicles/{id}
+> {%
+client.global.set("vehicleId", response.body.id);
+%}
+
+### List vehicles
+GET {{baseUrl}}/vehicles
 Authorization: {{userAuth}}
 
-PUT {{baseUrl}}/vehicles/{id}
+### Get created vehicle
+GET {{baseUrl}}/vehicles/{{vehicleId}}
+Authorization: {{userAuth}}
+
+### Update created vehicle
+PUT {{baseUrl}}/vehicles/{{vehicleId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
+  "id": {{vehicleId}},
+  "garage": { "id": {{garageId}} },
   "type": "TRUCK",
-  "model": "Pickup"
+  "model": "Pickup",
+  "plateNumber": "MONGO-UP-{{unique}}"
 }
 
-DELETE {{baseUrl}}/vehicles/{id}
-Authorization: {{userAuth}}
-
-### --- Gangs ---
-GET {{baseUrl}}/gangs
-Authorization: {{userAuth}}
-
-POST {{baseUrl}}/gangs
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-{
-  "name": "The Bajls"
-}
-
-GET {{baseUrl}}/gangs/{id}
-Authorization: {{userAuth}}
-
-PUT {{baseUrl}}/gangs/{id}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-{
-  "name": "The Bajls Updated"
-}
-
-DELETE {{baseUrl}}/gangs/{id}
-Authorization: {{userAuth}}
-
-### --- Gang Affiliations ---
-GET {{baseUrl}}/gang-affiliations
-Authorization: {{userAuth}}
-
+### Create gang affiliation
 POST {{baseUrl}}/gang-affiliations
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
-  "gangId": 1,
-  "characterId": 2
+  "character": { "id": {{characterId}} },
+  "gang": { "id": {{gangId}} },
+  "joinDate": "2026-04-27"
 }
 
-GET {{baseUrl}}/gang-affiliations/{id}
+> {%
+client.global.set("gangAffiliationId", response.body.id);
+%}
+
+### List gang affiliations
+GET {{baseUrl}}/gang-affiliations
 Authorization: {{userAuth}}
 
-PUT {{baseUrl}}/gang-affiliations/{id}
-Authorization: {{userAuth}}
-Content-Type: {{contentType}}
-{
-  "gangId": 1,
-  "characterId": 3
-}
-
-DELETE {{baseUrl}}/gang-affiliations/{id}
+### Get created gang affiliation
+GET {{baseUrl}}/gang-affiliations/{{gangAffiliationId}}
 Authorization: {{userAuth}}
 
-### --- Drugs ---
-GET {{baseUrl}}/drugs
-Authorization: {{adminAuth}}
-
-POST {{baseUrl}}/drugs
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-{
-  "name": "Mongo Dust {{unique}}",
-  "type": "METH"
-}
-
-GET {{baseUrl}}/drugs/{id}
-Authorization: {{adminAuth}}
-
-PUT {{baseUrl}}/drugs/{id}
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-{
-  "name": "Updated Dust {{unique}}",
-  "type": "COCAINE"
-}
-
-DELETE {{baseUrl}}/drugs/{id}
-Authorization: {{adminAuth}}
-
-### --- Quests ---
-GET {{baseUrl}}/quests
-Authorization: {{adminAuth}}
-
-POST {{baseUrl}}/quests
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-{
-  "title": "Mongo Route Quest {{unique}}",
-  "description": "Quest used for route verification.",
-  "reward": 777.77
-}
-
-GET {{baseUrl}}/quests/{id}
-Authorization: {{adminAuth}}
-
-PUT {{baseUrl}}/quests/{id}
-Authorization: {{adminAuth}}
-Content-Type: {{contentType}}
-{
-  "title": "Updated Quest {{unique}}",
-  "description": "Updated description.",
-  "reward": 888.88
-}
-
-DELETE {{baseUrl}}/quests/{id}
-Authorization: {{adminAuth}}
-
-### --- Character-Drug Links ---
-GET {{baseUrl}}/character-drug
+### Update created gang affiliation
+PUT {{baseUrl}}/gang-affiliations/{{gangAffiliationId}}
 Authorization: {{userAuth}}
+Content-Type: {{contentType}}
 
+{
+  "id": {{gangAffiliationId}},
+  "character": { "id": {{characterId}} },
+  "gang": { "id": {{gangId}} },
+  "joinDate": "2026-04-28"
+}
+
+### Create character-drug link
 POST {{baseUrl}}/character-drug
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
-  "characterId": 1,
-  "drugId": 2
+  "character": { "id": {{characterId}} },
+  "drug": { "id": {{drugId}} },
+  "quantity": 1
 }
 
-GET {{baseUrl}}/character-drug/{id}
+> {%
+client.global.set("characterDrugId", response.body.id);
+%}
+
+### List character-drug links
+GET {{baseUrl}}/character-drug
 Authorization: {{userAuth}}
 
-PUT {{baseUrl}}/character-drug/{id}
+### Get created character-drug link
+GET {{baseUrl}}/character-drug/{{characterDrugId}}
+Authorization: {{userAuth}}
+
+### Update created character-drug link
+PUT {{baseUrl}}/character-drug/{{characterDrugId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
-  "characterId": 1,
-  "drugId": 3
+  "id": {{characterDrugId}},
+  "character": { "id": {{characterId}} },
+  "drug": { "id": {{drugId}} },
+  "quantity": 2
 }
 
-DELETE {{baseUrl}}/character-drug/{id}
-Authorization: {{userAuth}}
-
-### --- Character-Quest Links ---
-GET {{baseUrl}}/character-quest
-Authorization: {{userAuth}}
-
+### Create character-quest link
 POST {{baseUrl}}/character-quest
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
+
 {
-  "characterId": 1,
-  "questId": 2
+  "character": { "id": {{characterId}} },
+  "quest": { "id": {{questId}} },
+  "status": "ACCEPTED",
+  "acceptedAt": "2026-04-27T10:00:00"
 }
 
-GET {{baseUrl}}/character-quest/{id}
+> {%
+client.global.set("characterQuestId", response.body.id);
+%}
+
+### List character-quest links
+GET {{baseUrl}}/character-quest
 Authorization: {{userAuth}}
 
-PUT {{baseUrl}}/character-quest/{id}
+### Get created character-quest link
+GET {{baseUrl}}/character-quest/{{characterQuestId}}
+Authorization: {{userAuth}}
+
+### Update created character-quest link
+PUT {{baseUrl}}/character-quest/{{characterQuestId}}
 Authorization: {{userAuth}}
 Content-Type: {{contentType}}
-{
-  "characterId": 1,
-  "questId": 3
-}
 
-DELETE {{baseUrl}}/character-quest/{id}
-Authorization: {{userAuth}}
+{
+  "id": {{characterQuestId}},
+  "character": { "id": {{characterId}} },
+  "quest": { "id": {{questId}} },
+  "status": "IN_PROGRESS",
+  "acceptedAt": "2026-04-28T10:00:00"
+}

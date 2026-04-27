@@ -167,6 +167,11 @@ Typical local startup command:
 docker compose up -d
 ```
 
+After the containers are running, the Java application is started from
+the IDE or Maven. On startup it resets PostgreSQL, reseeds it from
+`sqls/seed.sql`, migrates the fresh snapshot into MongoDB and Neo4j, and
+then starts three HTTP servers.
+
 \newpage
 
 ## 1.2. Explanation of choices for databases and programming languages, and other tools
@@ -1296,7 +1301,9 @@ creates a realistic baseline dataset for demos, testing, and validation.
 Instead of random values, the script inserts coherent player profiles,
 characters, houses, garages, vehicles, quests, drugs, and gang
 memberships, so queries return believable results and relationship rules
-can be verified in practice.
+can be verified in practice. The current dataset is intentionally large
+and connected, so it is also useful for MongoDB document inspection and
+Neo4j graph visualization.
 
 ### Script Structure
 
@@ -1329,6 +1336,19 @@ values, and `CASCADE` ensures dependent tables are also cleared safely.
 
 After reset, the script inserts profiles, houses, garages, characters,
 vehicles, drugs, quests, gangs, and finally the relationship rows.
+The current version seeds:
+
+- 82 profiles
+- 82 houses
+- 82 garages
+- 82 characters
+- 123 vehicles
+- 40 drugs
+- 48 quests
+- 40 gangs
+- 266 `character_drug` rows
+- 246 `character_quest` rows
+- 291 `gang_affiliations` rows
 
 ### Character, house, and garage seeding
 
@@ -1345,17 +1365,20 @@ follows the actual foreign keys directly:
 
 ### Gang membership data
 
-Gang membership is optional in the model, so only a subset of characters
-receives rows in `gang_affiliations`. The seed follows the same idea for
-drugs and quests, so the dataset demonstrates both empty and populated
-many-to-many relationships.
+Gang membership is optional in the domain model, but the seed is
+deliberately denser than the minimum model requires. Most characters
+receive multiple rows in `gang_affiliations`, and several gangs are used
+as hub gangs with many members. This makes the graph representation much
+more informative, because a Neo4j visualization now shows clusters and
+shared memberships instead of mostly isolated pairs.
 
 ```sql
 INSERT INTO gang_affiliations (character_id, gang_id, join_date) VALUES
-    (1, 2, '2025-01-12'),
-    (2, 1, '2025-02-03'),
-    (3, 7, '2025-03-22'),
-    (4, 5, '2025-04-10');
+    (1, 1, '2026-02-01'),
+    (1, 10, '2026-03-05'),
+    (1, 22, '2026-04-09'),
+    (5, 2, '2026-04-04'),
+    (41, 2, '2026-01-19');
 ```
 
 Finally, all inserts are persisted in one atomic commit.
@@ -1713,15 +1736,26 @@ problems with lazy-loaded relationships.
 
 #### Main startup integration
 
-`Main` wires persistence and HTTP startup:
+`Main` wires reset, migration, persistence, and HTTP startup:
 
 ```java
-EntityManagerFactory emf = HibernateConfig.getEntityManagerFactoryConfig(false);
-new ApplicationConfig().start(port, Routes.getRoutes(emf));
+PostgresReset.resetAndSeed(false);
+PostgresMigration.migrateAll(false);
+
+AppPersistence postgresPersistence = PersistenceBootstrap.createPersistence(DatabaseType.POSTGRES, false);
+AppPersistence mongoPersistence = PersistenceBootstrap.createPersistence(DatabaseType.MONGODB, false);
+AppPersistence neo4jPersistence = PersistenceBootstrap.createPersistence(DatabaseType.NEO4J, false);
+
+new ApplicationConfig().start(7072, AppRoutes.build(postgresPersistence));
+new ApplicationConfig().start(7073, AppRoutes.build(mongoPersistence));
+new ApplicationConfig().start(7074, AppRoutes.build(neo4jPersistence));
 ```
 
-This startup flow ensures that all routes, auth checks, and DB access
-are active when the application launches.
+This startup flow ensures that PostgreSQL is always rebuilt from a clean
+seed before MongoDB and Neo4j are repopulated from the same source
+snapshot. It also makes the three API implementations available at fixed
+ports in one run: PostgreSQL on `7072`, MongoDB on `7073`, and Neo4j on
+`7074`.
 
 ### 2.8.1. Required delivery artifacts
 
@@ -1796,13 +1830,15 @@ This sequence creates users/privileges, tables/constraints, read models,
 trigger logic, reusable database code, scheduled behavior, and finally
 realistic test data.
 
+In the current startup flow, PostgreSQL will be reset and reseeded again
+automatically when `app.Main` starts.
+
 5. Set application environment variables (example values):
 
 ```bash
 DB_URL=jdbc:postgresql://localhost:5432/bajls
 DB_USER=postgres
 DB_PASSWORD=postgres
-PORT=7070
 ```
 
 6. Build and run the application:
@@ -1812,17 +1848,23 @@ mvn clean compile
 mvn exec:java -Dexec.mainClass=app.Main
 ```
 
+This starts all three API variants at the same time:
+
+- PostgreSQL API: `http://localhost:7072/api`
+- MongoDB API: `http://localhost:7073/api`
+- Neo4j API: `http://localhost:7074/api`
+
 7. Validate API availability:
 
 ```bash
-POST http://localhost:7070/api/auth/login
+POST http://localhost:7072/api/auth/login
 ```
 
 8. Authenticate and test secured CRUD endpoints:
 
 ```bash
-POST http://localhost:7070/api/auth/register
-GET  http://localhost:7070/api/characters
+POST http://localhost:7072/api/auth/register
+GET  http://localhost:7072/api/characters
 ```
 
 Use Basic Authentication in the `Authorization` header for secured
@@ -2269,9 +2311,9 @@ DELETE & /api/quests/\{id\} & ADMIN & Delete one quest. \\
 The migration application migrates data from the relational PostgreSQL
 database into both MongoDB and Neo4j. PostgreSQL is treated as the
 source database because it has the strictest normalized model and the
-clearest integrity rules. The migration is started from `Main` when
-`RUN_POSTGRES_MIGRATION_ON_STARTUP` is set to `true` and the selected
-database type is `MONGODB` or `NEO4J`.
+clearest integrity rules. In the current implementation, `Main` always
+starts by resetting PostgreSQL, reseeding it, loading a fresh snapshot,
+and then rewriting both MongoDB and Neo4j from that snapshot.
 
 The migration is split into small classes:
 

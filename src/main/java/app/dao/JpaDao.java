@@ -80,6 +80,10 @@ public class JpaDao<T> implements EntityRepository<T> {
         return entityManagerFactory;
     }
 
+    protected EntityManagerFactory getEntityManagerFactory() {
+        return entityManagerFactory;
+    }
+
     private void rollbackIfActive(EntityTransaction tx) {
         if (tx != null && tx.isActive()) {
             tx.rollback();
