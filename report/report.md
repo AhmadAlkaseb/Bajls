@@ -41,7 +41,7 @@ Laith Abdel Razak Hussein Alkaseb\\
 | **Project**                                 | RPG Game by Bajls   |
 | **Group number**                            | Bajls |
 | **Date of delivery**                        | 20/4/2026 |
-| **List of figures**                         | Generated in PDF |
+| **List of figures**                         | 10 |
 
 \vspace{0.5cm}
 \begin{center}
@@ -216,6 +216,22 @@ Additional tools include:
   which improves repeatability and reduces local setup variance.
 - **pgAdmin** for visual inspection of the physical schema and foreign
   key network.
+
+### HTTP Request Files for API Testing
+
+Rather than adopting external API testing tools like Postman, the project uses native HTTP request files (`*.http`) directly within the development environment. This lightweight approach provides several advantages:
+
+- **Minimal tooling overhead**: HTTP files are plain-text files that can be version-controlled in Git, eliminating the need to learn and manage a separate desktop application.
+- **Built-in IDE support**: Modern code editors (e.g., VS Code with REST Client extensions) natively execute HTTP requests, offering seamless integration with the development workflow.
+- **Standardized format**: HTTP request files are portable and maintainable across team members.
+
+The project includes three HTTP request files:
+
+- **`mongodb.http`** – Contains test requests for MongoDB queries, document operations, and validation of the document-centric data model.
+- **`neo4j.http`** – Contains test requests for Neo4j graph queries, traversals, and relationship-based operations on gang and quest networks.
+- **`postgres.http`** – Contains test requests for PostgreSQL operations, including profile creation, character management, and relational constraint validation.
+
+These files serve as executable documentation and rapid testing aids, allowing developers to validate database behavior and API contracts without context-switching to external applications. They also facilitate team collaboration by embedding request templates and expected response patterns directly in the codebase.
 
 The next chapter turns these technology choices into concrete database
 rules and schema decisions.
@@ -2311,20 +2327,23 @@ DELETE & /api/quests/\{id\} & ADMIN & Delete one quest. \\
 The migration application migrates data from the relational PostgreSQL
 database into both MongoDB and Neo4j. PostgreSQL is treated as the
 source database because it has the strictest normalized model and the
-clearest integrity rules. In the current implementation, `Main` always
-starts by resetting PostgreSQL, reseeding it, loading a fresh snapshot,
-and then rewriting both MongoDB and Neo4j from that snapshot.
+clearest integrity rules. The startup process, defined in `Main.java`,
+orchestrates the complete flow:
 
-The migration is split into small classes:
+1. **Reset**: `PostgresReset.resetAndSeed(false)` truncates all PostgreSQL tables and reseeds them from `sqls/seed.sql`.
+2. **Migrate**: `PostgresMigration.migrateAll(false)` loads the fresh PostgreSQL snapshot and transforms it into MongoDB and Neo4j.
+3. **Persistence Setup**: Three `AppPersistence` instances are created via `PersistenceBootstrap.createPersistence()`, one for each database type (POSTGRES, MONGODB, NEO4J).
+4. **HTTP Startup**: Three independent REST API instances are launched, each bound to a different port (7072 for PostgreSQL, 7073 for MongoDB, 7074 for Neo4j), each with their corresponding persistence layer.
 
-- `PostgresMigration` coordinates the migration.
-- `PostgresSnapshotLoader` reads all source data from PostgreSQL.
-- `MigrationSnapshot` carries the loaded data.
-- `MongoMigration` writes profile-centered documents and catalog
-  collections.
-- `Neo4jMigration` writes nodes and relationships.
-- `EntityCopies` creates detached entity copies so the migration does
-  not depend on lazy JPA state.
+The migration is split into small, focused classes:
+
+- `PostgresReset` truncates and reseeds PostgreSQL from `seed.sql`.
+- `PostgresMigration` coordinates the entire migration workflow.
+- `PostgresSnapshotLoader` reads all source data from PostgreSQL into memory.
+- `MigrationSnapshot` acts as a container for the loaded data during transformation.
+- `MongoMigration` writes profile-centered documents and catalog collections to MongoDB.
+- `Neo4jMigration` writes nodes and relationships to Neo4j.
+- `EntityCopies` creates detached entity copies so the migration process does not depend on lazy-loaded JPA state.
 
 For MongoDB, profile data becomes the main aggregate. Characters,
 houses, garages, vehicles, and relationship metadata are embedded inside
@@ -2332,6 +2351,8 @@ profile documents, while drugs, quests, and gangs remain separate
 catalog collections. For Neo4j, relational foreign keys and junction
 tables are transformed into relationships such as `OWNS`, `HAS_HOUSE`,
 `HAS_GARAGE`, `STORES`, `HAS_DRUG`, `HAS_QUEST`, and `MEMBER_OF`.
+
+This design ensures that PostgreSQL remains the authoritative source of truth during development, while MongoDB and Neo4j are always regenerated as fresh projections of the normalized relational data.
 
 \newpage
 
