@@ -12,15 +12,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.MongoDBContainer;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 class MongoIntegrationTest {
 
-    static final MongoDBContainer MONGO = new MongoDBContainer("mongo:7");
     static final String DB_NAME = "bajls_test";
+    static final String MONGO_URL = "mongodb://localhost:27017";
 
     static MongoClient client;
     static AppPersistence persistence;
@@ -28,12 +27,10 @@ class MongoIntegrationTest {
 
     @BeforeAll
     static void startAll() {
-        MONGO.start();
-
-        System.setProperty("MONGO_URL", MONGO.getReplicaSetUrl());
+        System.setProperty("MONGO_URL", MONGO_URL);
         System.setProperty("MONGO_DB_NAME", DB_NAME);
 
-        client = MongoClients.create(MONGO.getReplicaSetUrl());
+        client = MongoClients.create(MONGO_URL);
         persistence = PersistenceBootstrap.createPersistence(DatabaseType.MONGODB, false);
         port = TestServer.start(persistence);
 
@@ -46,7 +43,6 @@ class MongoIntegrationTest {
     static void stopAll() throws Exception {
         if (persistence != null) persistence.close();
         if (client != null) client.close();
-        MONGO.stop();
 
         System.clearProperty("MONGO_URL");
         System.clearProperty("MONGO_DB_NAME");

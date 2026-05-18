@@ -75,13 +75,15 @@ public class HibernateConfig {
             Configuration configuration = new Configuration();
             Properties props = new Properties();
             props.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-            props.put("hibernate.connection.driver_class", "org.testcontainers.jdbc.ContainerDatabaseDriver");
-            props.put("hibernate.connection.url", "jdbc:tc:postgresql:15.3-alpine3.18:///test-db");
+            props.put("hibernate.connection.driver_class", "org.postgresql.Driver");
+            // Use separate test database to avoid deleting production data
+            props.put("hibernate.connection.url", "jdbc:postgresql://localhost:5432/bajls_test");
             props.put("hibernate.connection.username", "postgres");
             props.put("hibernate.connection.password", "postgres");
             props.put("hibernate.archive.autodetection", "class");
             props.put("hibernate.show_sql", "true");
-            props.put("hibernate.hbm2ddl.auto", "create-drop");
+            // create: creates tables on startup (safer than create-drop)
+            props.put("hibernate.hbm2ddl.auto", "create");
             return getEntityManagerFactory(configuration, props);
         } catch (Throwable ex) {
             System.err.println("Initial SessionFactory creation failed." + ex);

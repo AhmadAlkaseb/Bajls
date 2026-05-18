@@ -14,15 +14,13 @@ import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
-import org.testcontainers.containers.Neo4jContainer;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 class Neo4jIntegrationTest {
 
-    static final Neo4jContainer<?> NEO4J =
-            new Neo4jContainer<>("neo4j:5").withoutAuthentication();
+    static final String NEO4J_URI = "bolt://localhost:7687";
 
     static Driver driver;
     static AppPersistence persistence;
@@ -30,14 +28,13 @@ class Neo4jIntegrationTest {
 
     @BeforeAll
     static void startAll() {
-        NEO4J.start();
-
-        // Inject test container URI into prod code via system properties.
-        System.setProperty("NEO4J_URI", NEO4J.getBoltUrl());
+        // Use local Neo4j instance via system properties.
+        // Note: Neo4j:5 has authentication enabled by default (neo4j:password)
+        System.setProperty("NEO4J_URI", NEO4J_URI);
         System.setProperty("NEO4J_USER", "neo4j");
-        System.setProperty("NEO4J_PASSWORD", "");
+        System.setProperty("NEO4J_PASSWORD", "password");
 
-        driver = GraphDatabase.driver(NEO4J.getBoltUrl(), AuthTokens.none());
+        driver = GraphDatabase.driver(NEO4J_URI, AuthTokens.basic("neo4j", "password"));
         persistence = PersistenceBootstrap.createPersistence(DatabaseType.NEO4J, false);
         port = TestServer.start(persistence);
 
@@ -50,7 +47,6 @@ class Neo4jIntegrationTest {
     static void stopAll() throws Exception {
         if (persistence != null) persistence.close();
         if (driver != null) driver.close();
-        NEO4J.stop();
 
         System.clearProperty("NEO4J_URI");
         System.clearProperty("NEO4J_USER");
