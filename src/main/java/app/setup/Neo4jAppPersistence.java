@@ -96,7 +96,7 @@ public final class Neo4jAppPersistence implements AppPersistence {
                 Gang.class
         );
         this.gangAffiliationController = PersistenceSupport.mappedCrudController(new Neo4jGangAffiliationRepository(driver, sequenceRepository), DtoMappers::toGangAffiliationDto, GangAffiliation.class);
-    }
+}
 
     @Override public AuthService authService() { return authService; }
     @Override public CrudController<ProfileDTO, Profile> profileController() { return profileController; }
