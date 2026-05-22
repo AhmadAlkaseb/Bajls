@@ -40,7 +40,7 @@ Laith Abdel Razak Hussein Alkaseb\\
 | ------------------------------------------- | ------------------- |
 | **Project**                                 | RPG Game by Bajls   |
 | **Group number**                            | Bajls |
-| **Date of delivery**                        | 19/5/2026 |
+| **Date of delivery**                        | 22/5/2026 |
 | **List of figures**                         | 10 |
 
 \vspace{0.5cm}
