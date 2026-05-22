@@ -23,7 +23,7 @@ header-includes:
 \begin{center}
 \textbf{RPG Game Database Design}
 
-Version 2
+Version final
 
 Group: Bajls
 
@@ -1056,8 +1056,6 @@ application use, administration, and reporting.
 
 ### Gang Overview View
 
-### Gang Overview View
-
 The `v_gang_overview` view provides a summarized overview of each gang,
 its type, and its members.
 
@@ -1071,8 +1069,6 @@ LEFT JOIN gang_affiliations ON gang_affiliations.gang_id = gangs.id
 LEFT JOIN characters ON characters.id = gang_affiliations.character_id
 GROUP BY gangs.name;
 ```
-
-**Result**
 
 **Result**
 
@@ -1187,8 +1183,6 @@ notice to the client application that performed the insert. This allows
 real-time feedback without modifying the data model or adding extra
 tables for logging.
 
-
-### Design considerations
 
 ### Design considerations
 Using a trigger for this purpose has both advantages and disadvantages:
