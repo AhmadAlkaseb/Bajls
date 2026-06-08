@@ -19,7 +19,7 @@ INSERT INTO profiles (first_name, last_name, email, username, password, role) VA
     ('Noah', 'Larsen', 'nlarsen@bajls.dev', 'nlarsen', '$2a$10$C0SlCAM7V8DFB6x9dp5cPewmUwPGvMHaZe/n8OJeXMjtO4U3biGCq', 'USER'),
     ('Emma', 'Nielsen', 'enielsen@bajls.dev', 'enielsen', '$2a$10$8nenJVTdifv9TkRAhw6e6OeCA3FLyP6W7ayK3Nb1GpeARypx2HbDi', 'USER'),
     ('Lucas', 'Pedersen', 'lpedersen@bajls.dev', 'lpedersen', '$2a$10$rM5uHwFf8ZhSELhtzN80R.mKsap7FDk7kaIBGw.urfDAq6CBvc2eC', 'USER'),
-    ('Asta', 'Andersen', 'aandersen@bajls.dev', 'aandersen', '$2a$10$MJjPc4CsOn947xLgzAItyO722X6VlOpPnY7PoIChBUt8M4qA6qPJi', 'ADMIN'),
+    ('Asta', 'Andersen', 'aandersen@bajls.dev', 'aandersen', '$2a$10$BCkPoIWjaKUIpNZXSvngR.P1qjaZoCaplPLR12DEBzL5m5/o6Dvre', 'ADMIN'),
     ('Freja', 'Madsen', 'fmadsen@bajls.dev', 'fmadsen', '$2a$10$C0SlCAM7V8DFB6x9dp5cPewmUwPGvMHaZe/n8OJeXMjtO4U3biGCq', 'USER'),
     ('Oliver', 'Kristensen', 'okristensen@bajls.dev', 'okristensen', '$2a$10$8nenJVTdifv9TkRAhw6e6OeCA3FLyP6W7ayK3Nb1GpeARypx2HbDi', 'USER'),
     ('Sofie', 'Mortensen', 'smortensen@bajls.dev', 'smortensen', '$2a$10$rM5uHwFf8ZhSELhtzN80R.mKsap7FDk7kaIBGw.urfDAq6CBvc2eC', 'USER'),
@@ -113,7 +113,8 @@ INSERT INTO profiles (first_name, last_name, email, username, password, role) VA
     ('Jens', 'Bladt', 'jbladt@bajls.dev', 'jbladt', '$2a$10$C0SlCAM7V8DFB6x9dp5cPewmUwPGvMHaZe/n8OJeXMjtO4U3biGCq', 'USER'),
     ('Inger', 'Hartmann', 'ihartmann@bajls.dev', 'ihartmann', '$2a$10$8nenJVTdifv9TkRAhw6e6OeCA3FLyP6W7ayK3Nb1GpeARypx2HbDi', 'USER'),
     ('Peter', 'Jørgensen', 'pjorgensen@bajls.dev', 'pjorgensen', '$2a$10$rM5uHwFf8ZhSELhtzN80R.mKsap7FDk7kaIBGw.urfDAq6CBvc2eC', 'USER'),
-    ('Gitte', 'Hedegaard', 'ghedegaard@bajls.dev', 'ghedegaard', '$2a$10$MJjPc4CsOn947xLgzAItyO722X6VlOpPnY7PoIChBUt8M4qA6qPJi', 'USER');
+    ('Gitte', 'Hedegaard', 'ghedegaard@bajls.dev', 'ghedegaard', '$2a$10$MJjPc4CsOn947xLgzAItyO722X6VlOpPnY7PoIChBUt8M4qA6qPJi', 'USER'),
+    ('Mads', 'Ravn', 'mravn@bajls.dev', 'mravn', '$2a$10$C0SlCAM7V8DFB6x9dp5cPewmUwPGvMHaZe/n8OJeXMjtO4U3biGCq', 'USER');
 
 INSERT INTO houses (amount_rooms, amount_bathrooms) VALUES
     (2, 1),
@@ -184,7 +185,38 @@ INSERT INTO houses (amount_rooms, amount_bathrooms) VALUES
     (3, 2),
     (6, 3),
     (1, 1),
-    (3, 1);
+    (3, 1),
+    (2, 1),
+    (3, 2),
+    (4, 2),
+    (5, 3),
+    (2, 2),
+    (6, 3),
+    (1, 1),
+    (3, 1),
+    (4, 2),
+    (5, 2),
+    (2, 1),
+    (3, 3),
+    (4, 2),
+    (1, 1),
+    (5, 4),
+    (6, 2),
+    (2, 2),
+    (3, 1),
+    (4, 3),
+    (5, 2),
+    (4, 2),
+    (2, 1),
+    (3, 2),
+    (1, 1),
+    (4, 2),
+    (6, 3),
+    (2, 2),
+    (3, 1),
+    (4, 3),
+    (1, 1),
+    (3, 2);
 
 INSERT INTO garages (capacity) VALUES
     (2),
@@ -285,7 +317,8 @@ INSERT INTO garages (capacity) VALUES
     (3),
     (4),
     (2),
-    (1);
+    (1),
+    (3);
 
 INSERT INTO characters (profile_id, house_id, garage_id, name, balance, gender, skincolor, eyecolor, height, weight) VALUES
     (1, 1, 1, 'ShadowMia', 937.37, 'FEMALE', 'LIGHT', 'BLUE', 'AVERAGE', 'LIGHT'),

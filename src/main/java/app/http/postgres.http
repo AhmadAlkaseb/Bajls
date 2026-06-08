@@ -1,19 +1,9 @@
-@baseUrl = http://localhost:7072/api
+@baseUrl = http://localhost:7075/api
 @contentType = application/json
 @adminAuth = Basic YWFuZGVyc2VuOlBAc3NBc3RhNQ==
 @userAuth = Basic bWloYW5zZW46UEBzc01pYTE=
 @unique = {{$timestamp}}
 @profileId = 1
-@characterId = 1
-@houseId = 1
-@garageId = 1
-@vehicleId = 1
-@gangId = 1
-@gangAffiliationId = 1
-@drugId = 1
-@questId = 1
-@characterDrugId = 1
-@characterQuestId = 1
 
 # PostgreSQL sequential smoke flow.
 # PostgreSQL app runs on port 7072.
@@ -158,8 +148,8 @@ Content-Type: {{contentType}}
 
 > {%
 client.global.set("characterId", response.body.id);
-client.global.set("houseId", response.body.house.id);
-client.global.set("garageId", response.body.garage.id);
+client.global.set("houseId", response.body.houseId);
+client.global.set("garageId", response.body.garageId);
 %}
 
 ### List characters
@@ -218,7 +208,7 @@ Content-Type: {{contentType}}
   "garage": { "id": {{garageId}} },
   "type": "CAR",
   "model": "Sedan",
-  "plateNumber": "HTTP-{{unique}}"
+  "plateNumber": "H-{{unique}}"
 }
 
 > {%
@@ -243,7 +233,7 @@ Content-Type: {{contentType}}
   "garage": { "id": {{garageId}} },
   "type": "TRUCK",
   "model": "Pickup",
-  "plateNumber": "HTTP-UP-{{unique}}"
+  "plateNumber": "HU-{{unique}}"
 }
 
 ### Create gang affiliation

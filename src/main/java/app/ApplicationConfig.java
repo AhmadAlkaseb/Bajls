@@ -6,6 +6,9 @@ import io.javalin.Javalin;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.json.JavalinJackson;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+
 public class ApplicationConfig {
     private static final String API_CONTEXT_PATH = "/api";
     private static final String DEFAULT_CONTENT_TYPE = "application/json";
@@ -21,9 +24,29 @@ public class ApplicationConfig {
         });
     }
 
-    public void start(int portNumber, EndpointGroup routes) {
+    public int start(int portNumber, EndpointGroup routes) {
         app.routes(routes);
-        app.start(portNumber);
+        int availablePort = findAvailablePort(portNumber);
+        app.start(availablePort);
+        return availablePort;
+    }
+
+    private int findAvailablePort(int preferredPort) {
+        int maxPort = 65535;
+        for (int port = preferredPort; port <= maxPort; port++) {
+            if (isPortAvailable(port)) {
+                return port;
+            }
+        }
+        throw new IllegalStateException("No available port found from " + preferredPort + " to " + maxPort);
+    }
+
+    private boolean isPortAvailable(int port) {
+        try (ServerSocket ignored = new ServerSocket(port)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private ObjectMapper createObjectMapper() {

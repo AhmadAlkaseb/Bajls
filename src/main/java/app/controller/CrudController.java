@@ -2,6 +2,7 @@ package app.controller;
 
 import app.dao.ReadRepository;
 import app.dao.WriteRepository;
+import app.setup.EntityIds;
 import io.javalin.http.Context;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.NotFoundResponse;
@@ -34,13 +35,13 @@ public class CrudController<R, W> {
     public void create(Context ctx) {
         W entity = ctx.bodyAsClass(bodyClass);
         W saved = writeDao.save(entity);
-        ctx.status(201).json(saved);
+        ctx.status(201).json(responseBody(saved));
     }
 
     public void update(Context ctx) {
         W entity = ctx.bodyAsClass(bodyClass);
         W updated = writeDao.update(entity);
-        ctx.json(updated);
+        ctx.json(responseBody(updated));
     }
 
     public void delete(Context ctx) {
@@ -54,5 +55,14 @@ public class CrudController<R, W> {
         } catch (NumberFormatException e) {
             throw new BadRequestResponse("Invalid id");
         }
+    }
+
+    private Object responseBody(W entity) {
+        Long id = EntityIds.get(entity);
+        if (id == null) {
+            return entity;
+        }
+        R result = readDao.findById(id);
+        return result == null ? entity : result;
     }
 }

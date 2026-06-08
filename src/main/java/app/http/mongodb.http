@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:7073/api
+@baseUrl = http://localhost:7076/api
 @contentType = application/json
 @adminAuth = Basic YWFuZGVyc2VuOlBAc3NBc3RhNQ==
 @userAuth = Basic bWloYW5zZW46UEBzc01pYTE=
@@ -158,8 +158,8 @@ Content-Type: {{contentType}}
 
 > {%
 client.global.set("characterId", response.body.id);
-client.global.set("houseId", response.body.house.id);
-client.global.set("garageId", response.body.garage.id);
+client.global.set("houseId", response.body.houseId);
+client.global.set("garageId", response.body.garageId);
 %}
 
 ### List characters

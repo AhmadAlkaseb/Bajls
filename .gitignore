@@ -35,6 +35,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### IntelliJ project files ###
+.idea/
+
 ### Mac OS ###
 .DS_Store
 
@@ -44,3 +47,9 @@ pgadmin-data/
 mongodb-data/
 neo4j-data/
 neo4j-logs/
+
+### Runtime/generated local files ###
+*.log
+cp.txt
+cp-runtime.txt
+seed_generated.sql

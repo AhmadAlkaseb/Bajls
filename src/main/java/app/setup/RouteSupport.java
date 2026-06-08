@@ -3,7 +3,6 @@ package app.setup;
 import app.auth.AuthService;
 import app.controller.CrudController;
 import app.dao.JpaReadDao;
-import app.dao.ReadRepository;
 import app.dao.WriteRepository;
 import jakarta.persistence.EntityManagerFactory;
 import persistence.enums.ProfileRole;
@@ -77,6 +76,6 @@ public final class RouteSupport {
         get("{id}", ctx -> controller.getById(ctx));
         post(ctx -> controller.create(ctx));
         put("{id}", ctx -> controller.update(ctx));
-        delete(ctx -> controller.delete(ctx));
+        delete("{id}", ctx -> controller.delete(ctx));
     }
 }

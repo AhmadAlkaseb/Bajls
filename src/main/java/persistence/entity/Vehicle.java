@@ -7,7 +7,7 @@ import persistence.enums.VehicleType;
 
 @Entity
 @Table(name = "vehicles")
-@JsonIgnoreProperties({"garage"})
+@JsonIgnoreProperties(value = {"garage"}, allowSetters = true)
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Vehicle {

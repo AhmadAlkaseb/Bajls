@@ -9,8 +9,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
 import org.bson.Document;
 
 import java.lang.reflect.Field;
@@ -19,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 public final class MongoSupport {
-    private static final String COUNTERS_COLLECTION = "_counters";
-
     private MongoSupport() {
     }
 
@@ -67,7 +63,7 @@ public final class MongoSupport {
             return id;
         }
 
-        Long nextId = nextSequenceValue(database, collectionName);
+        Long nextId = new MongoProfileCollectionSupport(database).nextId(collectionName);
         writeEntityId(entity, nextId);
         return nextId;
     }
@@ -103,15 +99,5 @@ public final class MongoSupport {
             }
         }
         throw new IllegalStateException("Entity class does not define an id field: " + type.getName());
-    }
-
-    static Long nextSequenceValue(MongoDatabase database, String collectionName) {
-        MongoCollection<Document> counters = database.getCollection(COUNTERS_COLLECTION);
-        Document counter = counters.findOneAndUpdate(
-                Filters.eq("_id", collectionName),
-                new Document("$inc", new Document("seq", 1L)),
-                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-        );
-        return counter.getLong("seq");
     }
 }
